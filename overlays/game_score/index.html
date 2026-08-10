@@ -3,14 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Score</title>
+    <title>VCT Top Scoreboard Overlay</title>
     <link rel="stylesheet" href="./game_score.css">
     <link rel="stylesheet" href="../tungstenFont.css">
+    <script src="/socket.io/socket.io.js"></script>
     <script src="./game_score.js" defer></script>
 </head>
 <body>
     
-    <!--<img src="../visual_assets/nik.png" alt="" style="position: absolute; left: 0; top:0; opacity: 1;">-->
+    <!-- Tournament Stage / Custom Stage Header -->
+    <div id="tournament-stage" class="tournament-stage-header">2026 AMERICAS STAGE 2 : WEEK 4</div>
+
     <div id="left-team" class="team-container left-team green-team">
         <!-- Left Team Html Goad here -->
     </div>

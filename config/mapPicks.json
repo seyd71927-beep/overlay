@@ -1,36 +1,37 @@
 {
-  "teams": [
-    "HLV",
-    "FNC"
-  ],
-  "picks": [
-    [
-      "bind",
-      "ban"
+    "teams": [
+        "NEXAURA",
+        "IDLISAMBAR"
     ],
-    [
-      "ascent",
-      "ban"
+    "picks": [
+        [
+            "ascent",
+            "ban"
+        ],
+        [
+            "bind",
+            "ban"
+        ],
+        [
+            "haven",
+            "ban"
+        ],
+        [
+            "split",
+            "ban"
+        ],
+        [
+            "breeze",
+            "ban"
+        ],
+        [
+            "lotus",
+            "ban"
+        ],
+        [
+            "sunset",
+            "attack"
+        ]
     ],
-    [
-      "breeze",
-      "attack"
-    ],
-    [
-      "haven",
-      "attack"
-    ],
-    [
-      "split",
-      "defense"
-    ],
-    [
-      "sunset",
-      "defense"
-    ],
-    [
-      "pearl",
-      "defense"
-    ]
-  ]
+    "series_type": "bo1"
 }

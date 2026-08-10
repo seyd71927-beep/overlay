@@ -14,10 +14,9 @@
 body{
     padding: 0px;
     margin: 0;
-    font-family: 'Montserrat';
-    /*background-image: url('https://sm.ign.com/t/ign_br/screenshot/a/a-gameplay/a-gameplay-screenshot-of-from-valorants-closed-beta_z548.1080.jpg');*/
-    background-color: rgba(0,0,0,1);
-    background-size: 100%;
+    font-family: 'Montserrat', sans-serif;
+    background-color: transparent !important;
+    overflow: hidden;
 }
 body::after, body::before{
     padding: 0px;

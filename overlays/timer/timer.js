@@ -1,95 +1,106 @@
-class Timer{
-    constructor(start_time, timer_target, timer_target_label, timer_container){
+class Timer {
+    constructor(start_time, timer_target, timer_target_label, timer_container) {
         this.milliseconds = start_time || 0;
         this.timer_display = timer_target;
         this.label = timer_target_label;
         this.container = timer_container;
-    }
-    format_timer(){
+        this.timerRunning = false;
+        this.timerInterval = null;
 
+        if (typeof io !== 'undefined') {
+            const socket = io();
+            socket.on('timerUpdate', (data) => {
+                this.handleTimerData(data);
+            });
+        }
     }
-    async get_data(){
-        const res = await fetch('../get_timer_info', { method: 'GET'});
-        const json = await res.json();
-        if(json.isOn){
-            //Update Core Values Of timer
-            this.milliseconds = json.time;
-            document.getElementById(this.label).innerText = json.description;
-            //Start the animation of the timer
+
+    async get_data() {
+        try {
+            const res = await fetch('../get_timer_info', { method: 'GET' });
+            const json = await res.json();
+            this.handleTimerData(json);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    handleTimerData(json) {
+        if (json.isOn) {
+            const labelEl = document.getElementById(this.label);
+            if (labelEl) labelEl.innerText = json.description || 'MATCH BREAK';
+
+            let remaining = json.time;
+            if (json.startTime) {
+                const elapsed = Date.now() - json.startTime;
+                remaining = Math.max(0, json.time - elapsed);
+            }
+
+            this.milliseconds = remaining;
             this.animate_timer_in();
-            //Start the countdown
             this.start_timer();
         } else {
-            //If  there is no timer, wait for a bit until requerying a request.
-            setTimeout(() => {
-                this.get_data()
-            }, 2000)
+            this.stop_timer();
+            this.animate_timer_out();
         }
     }
-    async reset_timer(){
-        //Call api to change value of server data from true to false
-        const res = await fetch('../reset_timer', { method: 'GET'});
-        const json = await res.json();
-        if(res.status === 200){
-            return 0
-        } else {
-            console.log('Error while querying api');
+
+    animate_timer_in() {
+        const el = document.getElementById(this.container);
+        if (el) {
+            el.style.transform = 'translateX(0px)';
+            el.style.transition = 'transform 0.4s ease-out';
         }
     }
-    animate_timer_in(){
-        document.getElementById(this.container).animate(
-            [
-                {transform: 'translateX(-650px)'},
-                {transform: 'translateX(0px)'}
-            ], {
-                duration: 400,
-                fill: 'forwards',
-                iterations: 1
-            }
-        )
+
+    animate_timer_out() {
+        const el = document.getElementById(this.container);
+        if (el) {
+            el.style.transform = 'translateX(-650px)';
+            el.style.transition = 'transform 0.4s ease-in';
+        }
     }
-    animate_timer_out(){
-        document.getElementById(this.container).animate(
-            [
-                {transform: 'translateX(0px)'},
-                {transform: 'translateX(-650px)'}
-            ], {
-                duration: 400,
-                fill: 'forwards',
-                iterations: 1
-            }
-        )
+
+    stop_timer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+        this.timerRunning = false;
     }
-    start_timer(){
-        //Update timer each 1/10 second
-        setTimeout(() => {
-            this.milliseconds -= 10
-            if(this.milliseconds <= 0){
-                //If time is zero change string to zero and animate timer out
-                document.getElementById(this.timer_display).textContent = `00:00:000`;
+
+    start_timer() {
+        if (this.timerRunning) return;
+        this.timerRunning = true;
+
+        this.timerInterval = setInterval(() => {
+            this.milliseconds -= 100;
+            if (this.milliseconds <= 0) {
+                this.milliseconds = 0;
+                this.renderTime(0);
+                this.stop_timer();
                 this.animate_timer_out();
-                //call api to reset timer
-                this.reset_timer();
-                //Wait until refetching data as to not trigger a timer twice.
-                setTimeout(() => {
-                    this.get_data();
-                }, 500)
-                return 0
+                return;
             }
-            let milliseconds = this.milliseconds % 1000;
-            let seconds = Math.floor((this.milliseconds / 1000) % 60);
-            let minutes = Math.floor((this.milliseconds / (1000 * 60)) % 60);
-    
-            // Formatting to ensure two digits for minutes and seconds, three for milliseconds
-            minutes = minutes < 10 ? `0${minutes}` : minutes;
-            seconds = seconds < 10 ? `0${seconds}` : seconds;
-            milliseconds = milliseconds < 100 ? (milliseconds < 10 ? `00${milliseconds}` : `0${milliseconds}`) : milliseconds;
-            document.getElementById(this.timer_display).textContent = `${minutes}:${seconds}:${milliseconds}`;
-            this.start_timer()
-        }, 10)
+            this.renderTime(this.milliseconds);
+        }, 100);
+    }
+
+    renderTime(ms) {
+        let milliseconds = Math.floor((ms % 1000) / 10);
+        let seconds = Math.floor((ms / 1000) % 60);
+        let minutes = Math.floor((ms / (1000 * 60)) % 60);
+
+        minutes = minutes < 10 ? `0${minutes}` : minutes;
+        seconds = seconds < 10 ? `0${seconds}` : seconds;
+        milliseconds = milliseconds < 10 ? `0${milliseconds}` : milliseconds;
+
+        const displayEl = document.getElementById(this.timer_display);
+        if (displayEl) {
+            displayEl.textContent = `${minutes}:${seconds}:${milliseconds}`;
+        }
     }
 }
 
-
-const timer = new Timer(0, 'timer', 'timer-label', 'timer-container')
-timer.get_data()
+const timerInstance = new Timer(0, 'timer', 'timer-label', 'timer-container');
+timerInstance.get_data();

@@ -1,5 +1,6 @@
 {
-  "isOn": true,
-  "time": 30000,
-  "description": "Tech Pause (Gear)"
+    "isOn": true,
+    "time": 300000,
+    "description": "MATCH STARTING SOON",
+    "startTime": 1786351079313
 }

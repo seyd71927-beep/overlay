@@ -1,144 +1,64 @@
-# Valorant Overlay
+# A Community made VALORANT Tournament Overlay
+> This is made by the community and is not affiliated with Riot Games and/or VALORANT.
 
-A comprehensive tournament overlay system for Valorant esports broadcasts, featuring real-time game data integration, customizable overlays, and an admin control panel.
 
-## Overview
+![Map Picks Top Left Bar](./readme_assets/AppFullIcon.png)
+### Warning
+```diff
+- This Repository is under construction and is not working yet ! Developpment is underway but slowed drastically by my current service at the swiss army. Only visualy assets are working right now but they are STATIC, meaning there is currently no way to get them to update live from a game
+```
 
-The Valorant Overlay is a complete solution for tournament organizers and broadcasters to create professional Valorant esports streams. The system consists of:
+### Content
+>[Introduction](#the-concept)\
+>[App Setup](#setup-host-server)\
+>[Client App Setup](#setup-client-app)\
+>[Adding Scenes to OBS](#adding-sources-to-obs-open-broadcast-software)\
+>[FAQ](./FAQ.md)
 
-1. **Overwolf Client** - A desktop application that captures real-time game data from players' Valorant clients
-2. **Admin Panel** - A web interface for tournament organizers to control overlays and manage match information
-3. **Overlay System** - Customizable browser-source overlays for OBS or other streaming software
+### The concept
+We always wanted to have a real tournament overlay for community hosted events. As it seems like Riot only gives access to their "VCT Style" overlay to prominent groups (OfflineTV, AfreecaTV, ...) we tried to replicate the overlay as much as possible in the form of an HTML overlay and a user downloadable Overwolf app that sends the required data to the server in order to be shown on screen.
+We aim to create the best possible overlay for smaller communities that would like to host VALORANT events. The overlay should resemble the VCT overlay as much as possible without needing tournament organizers to be registered and partnered with Riot Games.
+The main app works as a central server hosting ```.html``` files such as ```.json``` files. The overlays refresh every second by querying the files on the server. At the same time, each player in the current game will be sending their game state through the ```Overwolf App``` every second. The data is the parsed and stored in the files on the server thus updating the overlay on it's next update.
 
-## Features
+### Why create a tournament overlay?
+While the community has used some basic visual assets for hosted tournaents that do not fall in the small exclusive group of partnered event sby riot, the need for a solid system remains. This system is built to be modular and customizable. Each element of the VCT-Style overlay can be added individually and edited to your need.\
+The different API-Endpoints being well defined on what they send back and do, it allows the user to potentially redo the entire overlay in their own style and build a 100% custom overlay while keeping all the possibilites the base overlay allows. (While not every function of the official overlay are available, we work on adding as many as possible.)
 
-- Real-time player statistics (health, shields, weapons, abilities)
-- Map pick/ban visualization
-- Team information display
-- Match score tracking
-- Customizable timers for breaks and pauses
-- Admin control panel for tournament operators
-- Seamless integration with OBS Studio
+## Setup
 
-## Installation
+### Setup Host Server
+- Download or clone the repository in a desired folder
+- Download all dependencies needed for the program to work (fs, express)
+- Make sure that the place where you will run the application has an open endpoint accessible from outside your local network.
+- start the server client with ```node .```
+- Go ```/``` to access a greeting page with all the possible endpoints for overlays and for admin panels. Note that you'll need to update the admin password in the ```app_config.json```file as the default password is ```password```. The admin panel allows you to manage everything in the overlay.
 
-### Prerequisites
+### Setup Client App
+- Each user in your VALORANT game must have downloaded Overwolf and the coresponding HelValorant Overlay app.
+- On startup, the app will ask the user for a 'game_token' and an 'endpoint'. The token is given by the tournament organiser and can be generated in the admin panel. The endpoint will be what you've defined the hosts entrypoint to be, for example ```  {yourcustomdomain.com}/```
+- The user's client will then connect to the host and start transmitting data as soon as the valorant game starts.
+- The admin can then invalidate tokens after the game session is over thus terminating the transmission of data to the server of non-players.
 
-- Node.js (v14 or higher)
-- Overwolf client (for players)
-- OBS Studio or similar streaming software (for broadcasters)
+### Adding sources to OBS (Open Broadcast Software)
+- Download OBS if not already done at [this link](https://obsproject.com/)
+- Create your scenes and add a ```Browser Source``` to your scene.
+- In the browser add the different pages available to you. For example ```/game_score``` or ```map_picks```. A full list of all visual assets can be found at ```/```
+- Choose the corresponding page for each overlay component you'd like to add to your stream. (Don't forget to set the source's resolution to be 1920x1080 for best results)
 
-### Setup
 
-1. Clone this repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Configure your server settings in `config/appConfig.json`
-4. Start the server:
-   ```bash
-   node server.js
-   ```
+### Examples
+![Map Picks Top Left Bar](./readme_assets/map_picks_bar.png)
+> Used to display which map is currently played and which one is up next. Works with either manual local data modification or with server data fetching.
 
-## Usage
+![Map State Counter](./readme_assets/game_score.png)
+> Built to resemble the official VCT overlay, the top part of the screen boasts information on the team seeding, maps won in the series (small diamond shapes), round counter and timer and information on who has to plant the spike (indicated by the small arrow pointing to either team)
 
-### For Tournament Organizers
+![Player Stats](./readme_assets/finished_player_stats.png)
+> Player Scores progress, player healt, ult points, agent, and name are displayed as in the VCT. The overlay updates every second by getting information from the main application server. Right now editing the json file live also updates the overlay.
 
-1. Access the admin panel at `http://your-server-address/panel/admin_pre_live.html`
-2. Log in with the credentials set in `config/appConfig.json`
-3. Configure team information, map picks, and match settings
-4. Share player tokens with participating teams
+### References
+![VCT Overlay Reference](https://preview.redd.it/izxic4tn0cab1.jpg?width=640&crop=smart&auto=webp&s=3400e7a4badb75196a13e87b5eb47d3819577784)
+> VCT Overlay from which the overlay is extremely inspired (made to look almost identical)
 
-### For Players
-
-1. Install the Overwolf client provided by the tournament organizer
-2. Enter the tournament server URL and your player token
-3. Launch Valorant and join your match
-4. The client will automatically send game data to the overlay server
-
-### For Broadcasters
-
-1. Add browser sources to your OBS scene pointing to the overlay URLs
-2. Customize the appearance using CSS if needed
-3. The overlays will automatically update based on game state and admin panel inputs
-
-## Configuration
-
-### Team Setup
-
-Edit team information in the admin panel, including:
-- Team names and abbreviations
-- Team logos (via URL)
-- Player information
-
-### Map Pool
-
-Configure the map pool and pick/ban process in the admin panel:
-- Set available maps
-- Track map picks, bans and results
-- Display current, upcoming, and completed maps
-
-### Timers
-
-Create custom timers for:
-- Technical pauses
-- Tactical timeouts
-- Breaks between maps
-- Pre-match countdowns
-
-## Development
-
-### Client Development
-
-The Overwolf client can be loaded as an unpacked extension for development:
-1. Enable Developer Mode in Overwolf settings
-2. Load the `valorant-overlay-client` folder as an unpacked extension
-3. Make changes to the client code as needed
-
-#### Client HTML Components
-
-1. **Main Window** (`windows/main.html`)
-   - Connection interface with fields for server URL and player token
-   - Styled with Valorant's color scheme (dark blue background, red accents)
-   - Status indicator showing connection state
-
-2. **In-Game Window** (`windows/in_game.html`)
-   - Compact, semi-transparent overlay visible during gameplay
-   - Shows connection status with color indicators (green/red)
-   - Can be hidden with a "Hide" button
-
-3. **Background Process** (`windows/background.html`)
-   - Invisible component that handles game data crawling
-   - Manages server communication and reconnection logic
-
-#### Game Data Crawling
-
-The client automatically crawls the following data from Valorant:
-- Player health and shield values
-- Selected agent and abilities status
-- Ultimate charge progress
-- Current weapon and credits
-- Spike possession status
-- Player death state
-
-After crawling, the data is:
-1. Formatted according to the server's expected structure
-2. Sent to the server via HTTP POST requests
-3. Transmitted at regular intervals while the game is running
-4. Used to update the broadcast overlays in real-time
-
-### Overlay Development
-
-Customize overlays by editing the HTML, CSS, and JavaScript files in the `overlays` directory.
-
-## Troubleshooting
-
-- If players cannot connect, verify server URL and token validity
-- Check server logs for connection issues
-- Ensure Valorant is running before attempting to connect
-- Verify network connectivity between players and the overlay server
-
-## License
-
-This project is proprietary software. All rights reserved.
+[Valorant Fandom](https://valorant.fandom.com/wiki/VALORANT_Wiki)
+> All assets that originate from inside the game are taken from there. (Agent icons, gun icons, game icons, etc...)

@@ -1,139 +1,108 @@
-async function fetch_data(route){
-    const map_picks_query = await fetch(route);
-    const map_picks_json = await map_picks_query.json();
-    if(map_picks_json){
-        console.log(map_picks_json)
-        return map_picks_json
-    } else {
-        return false
+class MapPickVetoOverlay {
+    constructor() {
+        this.container = document.getElementById('map-pick-adding-div');
+        this.seriesBadge = document.getElementById('series-badge-text');
+        this.data = null;
     }
-}
-class mapPickInterface {
-    constructor(json) {
-        this.amount_of_maps = json.picks.length; //fixed to a maximum of 7 maps as in VCT (changing this may required changes to the code)
-        this.teams = json.teams;
-        this.picks = json.picks;
-    }
-    //Creates the empty map pick cards with none of the picks shown
-    createBasicLayout() {
-        let return_html_string = document.createElement('div');
-        return_html_string.classList.add('map-pick-container');
-        for(let i=0; i<this.amount_of_maps;i++){
-            if(i == this.amount_of_maps - 1){
-                return_html_string.innerHTML += `<div class="map-pick-card card-no-${i}" style="animation-delay: ${100 + i*100}ms;">
-                    <div class="map-pick-side">
-                        DECIDER
-                    </div>
-                    <div class="map-pick-image">
 
-                    </div>
-                </div>`
-            } else {
-                if(this.picks[i][1] == "ban"){
-                    return_html_string.innerHTML += `
-                    <div class="map-pick-card card-no-${i}" style="animation-delay: ${100 + i*100}ms;">
-                        <div class="map-pick-side">
-                            ${this.teams[i%2]} VETO MAP
-                        </div>
-                        <div class="map-pick-image">
-        
-                        </div>
-                    </div>`    
-                } else {
-                    return_html_string.innerHTML += `
-                    <div class="map-pick-card card-no-${i}" style="animation-delay: ${100 + i*100}ms;">
-                        <div class="map-pick-side">
-                            ${this.teams[i%2]} MAP PICK
-                        </div>
-                        <div class="map-pick-image">
-        
-                        </div>
-                    </div>`  
-                }
+    async init() {
+        await this.fetchData();
+        this.initSocket();
+    }
+
+    initSocket() {
+        if (typeof io !== 'undefined') {
+            const socket = io();
+            socket.on('mapPicksUpdate', (data) => {
+                this.data = data;
+                this.render();
+            });
+            socket.on('configUpdate', () => {
+                this.fetchData();
+            });
+        }
+    }
+
+    async fetchData() {
+        try {
+            const res = await fetch('../get_map_picks');
+            if (res.status === 200) {
+                this.data = await res.json();
+                this.render();
             }
-        }
-        return return_html_string;
-    }
-    //allows the user to show the picked map at each step individually.
-    showMapAtIndex(index){
-        if(index > this.amount_of_maps){
-            return false;
-        }
-        const target_card = document.getElementsByClassName(`card-no-${index}`)[0].getElementsByClassName('map-pick-image')[0];
-        let map_image_div = document.createElement('div');
-        map_image_div.classList.add('map-image', `map-${this.picks[index][0]}`);
-        let map_image_cover = document.createElement('div');
-        map_image_cover.classList.add('map-image-cover');
-        map_image_div.appendChild(map_image_cover);
-        target_card.appendChild(map_image_div);
-        return true
-    }
-    //allows the user to show the selected action (ban / attack pick / defense pick) at each step individually.
-    showMapActionAtIndex(index){
-        if(index > this.amount_of_maps){
-            return false;
-        }
-        const target_card = document.getElementsByClassName(`card-no-${index}`)[0].getElementsByClassName('map-pick-image')[0];
-        let map_action_card = document.createElement('div');
-        if(this.picks[index][1] == 'ban'){
-            map_action_card.classList.add('map-banned-card');
-            let icon = document.createElement('i');
-            icon.classList.add('fa-solid', 'fa-xmark', 'fa-4x');
-            map_action_card.appendChild(icon);
-            target_card.appendChild(map_action_card);
-            return true
-        } else {
-            map_action_card.classList.add('map-picked-by-side');
-            let cover = document.createElement('div');
-            cover.classList.add('map-picked-by-side-cover');
-            let text = document.createElement('span');
-            text.innerText = `${this.teams[index >= 6 ? index%2 : (index + 1)%2]} PICKS ${(this.picks[index][1] == 'attack') ? "ATTACK" : "DEFENSE"}`
-            map_action_card.appendChild(cover);
-            map_action_card.appendChild(text);
-            target_card.appendChild(map_action_card);
-            return true
+        } catch (e) {
+            console.error('Error fetching map picks:', e);
         }
     }
-    updateTile(index){
-        if(index > this.amount_of_maps){
-            return false;
+
+    render() {
+        if (!this.data || !this.data.picks || !this.container) return;
+
+        const seriesType = (this.data.series_type || 'bo3').toUpperCase();
+        let seriesLabel = 'BEST OF 3';
+        if (seriesType === 'BO1') seriesLabel = 'BEST OF 1 (1 GAME)';
+        else if (seriesType === 'BO5') seriesLabel = 'BEST OF 5 (5 GAMES)';
+        else seriesLabel = 'BEST OF 3 (3 GAMES)';
+
+        if (this.seriesBadge) {
+            this.seriesBadge.textContent = seriesLabel;
         }
-        this.showMapAtIndex(index)
-        setTimeout(() => {
-            this.showMapActionAtIndex(index);
-            return true
-        }, 700)
-    }
-    startAutoUpdateAtIndex(index){
-        if(index < this.amount_of_maps){
-            this.updateTile(index)
-            setTimeout(() => {
-                this.startAutoUpdateAtIndex(index + 1);
-            }, 1550)
-        } else {
-            return 0
+
+        const teams = this.data.teams || ['TEAM 1', 'TEAM 2'];
+        const picks = this.data.picks;
+        const totalCards = picks.length;
+
+        let html = '<div class="map-pick-container">';
+
+        for (let i = 0; i < totalCards; i++) {
+            const mapName = (picks[i][0] || 'ascent').toLowerCase();
+            const action = (picks[i][1] || 'ban').toLowerCase();
+            const isLast = (i === totalCards - 1);
+            const teamName = teams[i % 2] || `TEAM ${(i % 2) + 1}`;
+
+            let cardTypeClass = 'pick-card';
+            let headerText = `${teamName} PICK`;
+            let sideBadgeHtml = '';
+
+            if (isLast) {
+                cardTypeClass = 'decider-card';
+                headerText = 'DECIDER MAP';
+                sideBadgeHtml = `<div class="map-picked-by-side decider-side"><i class="fa-solid fa-trophy" style="margin-right: 6px;"></i> DECIDER</div>`;
+            } else if (action === 'ban') {
+                cardTypeClass = 'ban-card';
+                headerText = `${teamName} BAN`;
+                sideBadgeHtml = `
+                <div class="map-banned-card">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>BANNED</span>
+                </div>`;
+            } else if (action === 'attack') {
+                cardTypeClass = 'pick-card';
+                headerText = `${teamName} PICK`;
+                sideBadgeHtml = `<div class="map-picked-by-side attack-side"><i class="fa-solid fa-crosshairs" style="margin-right: 6px;"></i> ${teamName} ATK</div>`;
+            } else if (action === 'defense') {
+                cardTypeClass = 'pick-card';
+                headerText = `${teamName} PICK`;
+                sideBadgeHtml = `<div class="map-picked-by-side defense-side"><i class="fa-solid fa-shield-halved" style="margin-right: 6px;"></i> ${teamName} DEF</div>`;
+            }
+
+            html += `
+            <div class="map-pick-card ${cardTypeClass}" style="animation-delay: ${i * 80}ms;">
+                <div class="map-pick-side">${headerText}</div>
+                <div class="map-pick-image">
+                    <div class="map-image map-${mapName}"></div>
+                    <div class="map-name-label">${mapName}</div>
+                    ${sideBadgeHtml}
+                </div>
+            </div>`;
         }
-    }
-    hideCards(){
-        for(let i = 0; i<this.amount_of_maps; i++){
-            let target = document.getElementsByClassName(`card-no-${i}`)[0];
-            target.classList.add(`animation-delay-${i * 100}`, 'slide-down-animation');
-        }
+
+        html += '</div>';
+        this.container.innerHTML = html;
     }
 }
-/*
-Create server fetching to gather data from server
-*/
 
-async function init() {
-    const map_picks_json = await fetch_data('../get_map_picks');
-    const interface = new mapPickInterface(map_picks_json);
-
-    const adding_div = document.getElementById('map-pick-adding-div');
-    adding_div.appendChild(interface.createBasicLayout());
-    setTimeout(() => {
-        interface.startAutoUpdateAtIndex(0);
-    }, 3000);
-}
-
-init()
+document.addEventListener('DOMContentLoaded', () => {
+    const vetoOverlay = new MapPickVetoOverlay();
+    vetoOverlay.init();
+});

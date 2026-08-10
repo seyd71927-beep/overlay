@@ -3,49 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HelValorant Admin</title>
-    <script src="../resources/js/auth.js" defer></script>
+    <title>HelValorant Admin - Pre-Stream Studio</title>
     <link rel="stylesheet" href="../resources/css/admin.css">
     <link rel="stylesheet" href="../resources/css/alerts.css">
-    <script src="https://kit.fontawesome.com/1061ea1575.js" crossorigin="anonymous"></script>
-    <script src="../resources/js/pre_stream.js" defer></script>
+    <script src="../resources/js/auth.js" defer></script>
     <script src="../resources/js/alerts.js" defer></script>
+    <script src="../resources/js/pre_stream.js" defer></script>
+    <script src="https://kit.fontawesome.com/1061ea1575.js" crossorigin="anonymous"></script>
 </head>
 <body>
+
     <div class="admin-header">
-        <img src="../visual_assets/HelValorantOverlay_Icon.png">
+        <img src="../visual_assets/HelValorantOverlay_Icon.png" alt="Logo">
         <h3>Stream Management Panel</h3>
-        <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></button>
-    </div>
-    <div class="tabs">
-        <a class="tab selected" href="?page=prestream">Pre-Stream</a>
-        <a class="tab" href="?page=stream">Stream</a>
-        <a class="tab" href="?page=settings">Settings</a>
+        <div class="status-badge">LIVE SERVER ONLINE</div>
+        <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
     </div>
 
-    <div class="panel">
-        <div class="team-preview">
-            <h4>Series Preview</h4>
-            <div class="teams">
+    <div class="tabs-container">
+        <div class="tabs">
+            <a class="tab selected" href="?page=prestream"><i class="fa-solid fa-sliders"></i> Pre-Stream Setup</a>
+            <a class="tab" href="?page=stream"><i class="fa-solid fa-play"></i> Live Match Operator</a>
+            <a class="tab" href="?page=settings"><i class="fa-solid fa-gear"></i> Settings & Tokens</a>
+        </div>
+    </div>
 
-            </div>
-            <div class="map-flow">
-                <div class="map-being-played">
-                    <select class="map-flow-state-selector">
-                        <option value="upcomming">Upcomming</option>
-                        <option value="current">Current</option>
-                        <option value="over">Over</option>
-                    </select>
-                    <input type="number" placeholder="Team 1 Points">
-                    <input type="number" placeholder="Team 2 Points">
+    <div class="panel-wrapper">
+        <div class="panel">
+            <div class="grid-container" style="width: 100%;">
+                
+                <!-- Team Setup Card -->
+                <div class="card" style="grid-column: span 7;">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-users"></i> Team Setup & Matchup Config</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <label style="font-size: 0.8rem; color: var(--accent-secondary); cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                                <input type="checkbox" id="lock-manual-teams-toggle" style="accent-color: var(--accent-secondary); width: 16px; height: 16px;">
+                                🔒 Lock Custom Names & Logos
+                            </label>
+                            <button id="save-teams-btn" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Team Settings</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
+
+                        
+                        <!-- Team 1 -->
+                        <div style="background: rgba(0, 230, 118, 0.04); border: 1px solid rgba(0, 230, 118, 0.2); border-radius: var(--radius-md); padding: 16px;">
+                            <h4 style="color: var(--green-team); margin-bottom: 12px; font-family: var(--font-display); font-size: 1.2rem;">
+                                <i class="fa-solid fa-shield"></i> TEAM 1 (Green/Attacker Init)
+                            </h4>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">TAG / Abbreviation (3-4 chars)</label>
+                                    <input id="team1-abbr" type="text" class="input-field" value="FNC">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seed / Subtitle Info</label>
+                                    <input id="team1-info" type="text" class="input-field" value="#1 Seed">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Team Logo URL</label>
+                                    <input id="team1-icon" type="text" class="input-field" placeholder="../visual_assets/blueTeamPlaceholder.jpg">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Team 2 -->
+                        <div style="background: rgba(255, 42, 95, 0.04); border: 1px solid rgba(255, 42, 95, 0.2); border-radius: var(--radius-md); padding: 16px;">
+                            <h4 style="color: var(--red-team); margin-bottom: 12px; font-family: var(--font-display); font-size: 1.2rem;">
+                                <i class="fa-solid fa-shield"></i> TEAM 2 (Red/Defender Init)
+                            </h4>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">TAG / Abbreviation (3-4 chars)</label>
+                                    <input id="team2-abbr" type="text" class="input-field" value="HLV">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seed / Subtitle Info</label>
+                                    <input id="team2-info" type="text" class="input-field" value="#2 Seed">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Team Logo URL</label>
+                                    <input id="team2-icon" type="text" class="input-field" placeholder="../visual_assets/redTeamPlaceholder.jpg">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
+
+                <!-- Map Veto Picks Card -->
+                <div class="card" style="grid-column: span 5;">
+                    <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fa-solid fa-map-location-dot"></i> Map Pick & Ban Veto</span>
+                            <div style="display: flex; gap: 6px;">
+                                <a href="../map_picks/" target="_blank" class="btn" style="padding: 2px 8px; font-size: 0.7rem; text-decoration: none;">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Veto Overlay
+                                </a>
+                                <a href="../upcomming_maps/" target="_blank" class="btn" style="padding: 2px 8px; font-size: 0.7rem; text-decoration: none;">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Schedule
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Series Format Selector -->
+                        <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">MATCH FORMAT PRESET:</span>
+                                <span id="current-series-badge" style="font-size: 0.75rem; font-weight: 800; color: var(--accent-secondary);">BO3 (3 GAMES)</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                                <button type="button" id="set-bo1-btn" class="btn btn-accent" style="padding: 6px 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="fa-solid fa-dice-one"></i> BO1 (1 Game)
+                                </button>
+                                <button type="button" id="set-bo3-btn" class="btn btn-primary" style="padding: 6px 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="fa-solid fa-dice-three"></i> BO3 (3 Games)
+                                </button>
+                                <button type="button" id="set-bo5-btn" class="btn btn-success" style="padding: 6px 4px; font-size: 0.75rem; font-weight: 700;">
+                                    <i class="fa-solid fa-dice-five"></i> BO5 (5 Games)
+                                </button>
+                            </div>
+                        </div>
+                        <!-- MapBan.gg Integration Box -->
+                        <div style="background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.25); border-radius: var(--radius-md); padding: 8px 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 0.75rem; font-weight: 800; color: var(--accent-secondary);">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i> MapBan.gg Live Importer
+                                </span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);">Auto-Sync Picks & Bans</span>
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <input id="mapban-url-input" type="text" class="input-field" placeholder="MapBan.gg Viewer URL or ID (e.g. 1LzBFUAJA6bdst16)" style="font-size: 0.75rem; flex-grow: 1;">
+                                <button type="button" id="sync-mapban-btn" class="btn btn-accent" style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
+                                    <i class="fa-solid fa-arrows-rotate"></i> Sync
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="map-pick-holder" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+                        <!-- Dynamically populated map veto slots -->
+                    </div>
+                </div>
+
             </div>
-        </div>
-        <div class="team-editor">
-            <h4>Team Settings</h4>
-        </div>
-        <div class="map-pick-holder" id="map-pick-holder">
-            
         </div>
     </div>
 

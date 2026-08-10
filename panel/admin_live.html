@@ -3,33 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HelValorant Admin</title>
-    <script src="../resources/js/auth.js" defer></script>
+    <title>HelValorant Admin - Live Match Operator</title>
     <link rel="stylesheet" href="../resources/css/admin.css">
+    <link rel="stylesheet" href="../resources/css/alerts.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../resources/js/auth.js" defer></script>
+    <script src="../resources/js/alerts.js" defer></script>
+    <script src="../resources/js/live_stream.js" defer></script>
     <script src="https://kit.fontawesome.com/1061ea1575.js" crossorigin="anonymous"></script>
 </head>
 <body>
+
     <div class="admin-header">
-        <img src="../visual_assets/HelValorantOverlay_Icon.png">
+        <img src="../visual_assets/HelValorantOverlay_Icon.png" alt="Logo">
         <h3>Stream Management Panel</h3>
-        <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <div class="status-badge" id="socket-status-badge">CONNECTED (WEBSOCKET LIVE)</div>
+        <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
     </div>
-    <div class="tabs">
-        <a class="tab" href="?page=prestream">Pre-Stream</a>
-        <a class="tab selected" href="?page=stream">Stream</a>
-        <a class="tab" href="?page=settings">Settings</a>
+
+    <div class="tabs-container">
+        <div class="tabs">
+            <a class="tab" href="?page=prestream"><i class="fa-solid fa-sliders"></i> Pre-Stream Setup</a>
+            <a class="tab selected" href="?page=stream"><i class="fa-solid fa-play"></i> Live Match Operator</a>
+            <a class="tab" href="?page=settings"><i class="fa-solid fa-gear"></i> Settings & Tokens</a>
+        </div>
     </div>
-    <div class="panel">
-        <div class="timer-list">
-            <div class="timer-history-container">
-                <div class="timer-history-element">
-                    Pc Crash | 00:20:00
+
+    <div class="panel-wrapper">
+        <div class="panel">
+            <div class="grid-container" style="width: 100%;">
+                
+                <!-- Match Score & Spike Controller Card -->
+                <div class="card" style="grid-column: span 6;">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-trophy"></i> Scoreboard & Spike Controller</span>
+                        <button id="reset-match-btn" class="btn btn-danger" style="font-size: 0.75rem; padding: 4px 10px;">Reset Match</button>
+                    </div>
+
+                    <!-- Tournament Stage / Custom Header Section -->
+                    <div style="margin-bottom: 14px; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--panel-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--accent-secondary);"><i class="fa-solid fa-trophy"></i> TOURNAMENT STAGE / CUSTOM HEADER (Top-Right of Scoreboard):</label>
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Displays live on Scoreboard Overlay</span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                            <input id="tournament-stage-input" type="text" class="input-field" style="padding: 6px 10px; font-size: 0.85rem; font-weight: 600; flex-grow: 1;" placeholder="e.g. 2026 AMERICAS STAGE 2 : WEEK 4" value="2026 AMERICAS STAGE 2 : WEEK 4">
+                            <button id="save-tournament-stage-btn" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.8rem; white-space: nowrap;"><i class="fa-solid fa-floppy-disk"></i> Update Header</button>
+                        </div>
+                        <!-- Quick Presets -->
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">Quick Presets:</span>
+                            <button type="button" class="btn" style="padding: 2px 7px; font-size: 0.7rem; background: rgba(255,255,255,0.06);" onclick="document.getElementById('tournament-stage-input').value='2026 AMERICAS STAGE 2 : WEEK 4'; document.getElementById('save-tournament-stage-btn').click();">Americas Stage 2</button>
+                            <button type="button" class="btn" style="padding: 2px 7px; font-size: 0.7rem; background: rgba(255,255,255,0.06);" onclick="document.getElementById('tournament-stage-input').value='GRAND FINALS | BEST OF 5'; document.getElementById('save-tournament-stage-btn').click();">Grand Finals BO5</button>
+                            <button type="button" class="btn" style="padding: 2px 7px; font-size: 0.7rem; background: rgba(255,255,255,0.06);" onclick="document.getElementById('tournament-stage-input').value='VCT MASTERS : PLAYOFFS'; document.getElementById('save-tournament-stage-btn').click();">VCT Masters</button>
+                            <button type="button" class="btn" style="padding: 2px 7px; font-size: 0.7rem; background: rgba(255,255,255,0.06);" onclick="document.getElementById('tournament-stage-input').value='GROUP STAGE : DAY 1'; document.getElementById('save-tournament-stage-btn').click();">Group Stage</button>
+                            <button type="button" class="btn" style="padding: 2px 7px; font-size: 0.7rem; background: rgba(255,255,255,0.06);" onclick="document.getElementById('tournament-stage-input').value=''; document.getElementById('save-tournament-stage-btn').click();">Clear Header</button>
+                        </div>
+                    </div>
+
+                    <div class="score-box" style="margin-bottom: 16px;">
+                        <div class="team-score-card left">
+                            <span id="display-team1-name" style="font-weight: 700; font-size: 1.1rem; color: var(--green-team);">TEAM 1</span>
+                            <span id="display-team1-score" class="score-display">0</span>
+                            <div class="score-btn-group">
+                                <button id="t1-score-minus" class="btn btn-danger" style="padding: 4px 12px;">-1</button>
+                                <button id="t1-score-plus" class="btn btn-success" style="padding: 4px 12px;">+1</button>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; padding: 0 10px;">
+                            <span id="display-round-num" style="font-family: var(--font-display); font-size: 1.6rem; color: var(--accent-secondary); display: block;">ROUND 1</span>
+                            <div style="display: flex; gap: 4px; margin: 8px 0; justify-content: center;">
+                                <button id="round-minus" class="btn" style="padding: 2px 8px; font-size: 0.75rem;">- Round</button>
+                                <button id="round-plus" class="btn" style="padding: 2px 8px; font-size: 0.75rem;">+ Round</button>
+                            </div>
+                            <button id="toggle-sides-btn" class="btn btn-accent" style="font-size: 0.8rem; padding: 6px 12px; margin-top: 4px;">
+                                <i class="fa-solid fa-right-left"></i> Switch Sides
+                            </button>
+                        </div>
+
+                        <div class="team-score-card right">
+                            <span id="display-team2-name" style="font-weight: 700; font-size: 1.1rem; color: var(--red-team);">TEAM 2</span>
+                            <span id="display-team2-score" class="score-display">0</span>
+                            <div class="score-btn-group">
+                                <button id="t2-score-minus" class="btn btn-danger" style="padding: 4px 12px;">-1</button>
+                                <button id="t2-score-plus" class="btn btn-success" style="padding: 4px 12px;">+1</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Round Win & Spike Controls -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button id="win-team1-btn" class="btn btn-success" style="padding: 12px;">
+                            <i class="fa-solid fa-crown"></i> Trigger Team 1 Win
+                        </button>
+                        <button id="win-team2-btn" class="btn btn-danger" style="padding: 12px;">
+                            <i class="fa-solid fa-crown"></i> Trigger Team 2 Win
+                        </button>
+
+                        <button id="plant-spike-btn" class="btn" style="background: rgba(255, 70, 85, 0.2); border-color: var(--accent-primary); color: #fff;">
+                            <i class="fa-solid fa-bomb"></i> Plant Spike (45s)
+                        </button>
+                        <button id="defuse-spike-btn" class="btn" style="background: rgba(0, 242, 254, 0.15); border-color: var(--accent-secondary); color: var(--accent-secondary);">
+                            <i class="fa-solid fa-shield-halved"></i> Clear / Defuse Spike
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <div class="timer-input">
-                <input class="text" type="text">
-                <input class="num" type="number">
-                <button>New</button>
+
+                <!-- Intermission Timer & Casters Card -->
+                <div class="card" style="grid-column: span 6;">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-stopwatch"></i> Stream Break Timer & Talent Desk</span>
+                    </div>
+
+                    <!-- Break Timer Box -->
+                    <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border); margin-bottom: 16px;">
+                        <h5 style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 8px;">INTERMISSION / BREAK TIMER</h5>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <input id="timer-desc-input" type="text" class="input-field" placeholder="Timer Title (e.g., Match Starting Soon)" value="MATCH STARTING SOON">
+                            <input id="timer-mins-input" type="number" class="input-field" style="width: 100px;" value="5" placeholder="Mins">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="start-timer-btn" class="btn btn-primary" style="flex: 1;"><i class="fa-solid fa-play"></i> Start Timer</button>
+                            <button id="stop-timer-btn" class="btn btn-danger" style="flex: 1;"><i class="fa-solid fa-stop"></i> Stop Timer</button>
+                        </div>
+                    </div>
+
+                    <!-- Caster Desk Box -->
+                    <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h5 style="color: var(--text-muted); font-size: 0.8rem;">CASTERS / TALENT LOWER THIRD</h5>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <label style="font-size: 0.72rem; color: var(--text-muted);">Show:</label>
+                                    <select id="caster-duration-select" class="input-field" style="padding: 2px 4px; font-size: 0.72rem; width: 68px;">
+                                        <option value="3000">3s</option>
+                                        <option value="5000">5s</option>
+                                        <option value="6000" selected>6s</option>
+                                        <option value="8000">8s</option>
+                                        <option value="10000">10s</option>
+                                    </select>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <label style="font-size: 0.72rem; color: var(--text-muted);">Every:</label>
+                                    <select id="caster-interval-select" class="input-field" style="padding: 2px 4px; font-size: 0.72rem; width: 75px;">
+                                        <option value="15000">15s</option>
+                                        <option value="30000" selected>30s</option>
+                                        <option value="45000">45s</option>
+                                        <option value="60000">60s</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                            <div>
+                                <input id="caster1-name" type="text" class="input-field" placeholder="Caster 1 Name" value="Ailyrr">
+                                <input id="caster1-handle" type="text" class="input-field" style="margin-top: 4px;" placeholder="Handle (e.g. @ailyrr)" value="@ailyrr">
+                            </div>
+                            <div>
+                                <input id="caster2-name" type="text" class="input-field" placeholder="Caster 2 Name" value="Vanguard">
+                                <input id="caster2-handle" type="text" class="input-field" style="margin-top: 4px;" placeholder="Handle (e.g. @vanguard)" value="@vanguard">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1.3fr 1fr 0.9fr 0.9fr; gap: 6px;">
+                            <button id="loop-casters-btn" class="btn" style="font-weight: 700; background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.3);">
+                                <i class="fa-solid fa-repeat"></i> Loop: OFF
+                            </button>
+                            <button id="popup-casters-btn" class="btn btn-primary" style="font-weight: 700;">
+                                <i class="fa-solid fa-bolt"></i> Popup (6s)
+                            </button>
+                            <button id="save-casters-btn" class="btn btn-accent">
+                                <i class="fa-solid fa-floppy-disk"></i> Save
+                            </button>
+                            <button id="toggle-lower-third-btn" class="btn btn-success">
+                                <i class="fa-solid fa-eye"></i> Toggle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 10 Player Live Stats Table Card -->
+                <div class="card" style="grid-column: span 12;">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-address-card"></i> 10-Player Live Stats & Simulation Controller</span>
+                        <button id="quick-sim-btn" class="btn btn-accent" style="font-size: 0.8rem; padding: 6px 12px;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Simulate Random Combat Stats
+                        </button>
+                    </div>
+
+                    <div class="player-table-container">
+                        <table class="player-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Team</th>
+                                    <th>Player Name</th>
+                                    <th>Agent</th>
+                                    <th>HP</th>
+                                    <th>Shield</th>
+                                    <th>Weapon</th>
+                                    <th>Abilities (C / Q / E)</th>
+                                    <th>Ult Pts</th>
+                                    <th>Credits</th>
+                                    <th>Spike</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="player-table-body">
+                                <!-- Populated dynamically by live_stream.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

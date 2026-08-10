@@ -3,24 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HelValorant Admin</title>
-    <script src="../resources/js/auth.js" defer></script>
+    <title>HelValorant Admin - Settings & Tokens</title>
     <link rel="stylesheet" href="../resources/css/admin.css">
+    <link rel="stylesheet" href="../resources/css/alerts.css">
+    <script src="../resources/js/auth.js" defer></script>
+    <script src="../resources/js/alerts.js" defer></script>
+    <script src="../resources/js/settings.js" defer></script>
     <script src="https://kit.fontawesome.com/1061ea1575.js" crossorigin="anonymous"></script>
 </head>
 <body>
+
     <div class="admin-header">
-        <img src="../visual_assets/HelValorantOverlay_Icon.png">
+        <img src="../visual_assets/HelValorantOverlay_Icon.png" alt="Logo">
         <h3>Stream Management Panel</h3>
-        <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <div class="status-badge">LIVE SERVER ONLINE</div>
+        <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
     </div>
-    <div class="tabs">
-        <a class="tab" href="?page=prestream">Pre-Stream</a>
-        <a class="tab" href="?page=stream">Stream</a>
-        <a class="tab selected" href="?page=settings">Settings</a>
+
+    <div class="tabs-container">
+        <div class="tabs">
+            <a class="tab" href="?page=prestream"><i class="fa-solid fa-sliders"></i> Pre-Stream Setup</a>
+            <a class="tab" href="?page=stream"><i class="fa-solid fa-play"></i> Live Match Operator</a>
+            <a class="tab selected" href="?page=settings"><i class="fa-solid fa-gear"></i> Settings & Tokens</a>
+        </div>
     </div>
-    <div class="panel">
-        <h3>Settings PANNEL !</h3>
+
+    <div class="panel-wrapper">
+        <div class="panel">
+            <div class="grid-container" style="width: 100%;">
+                
+                <!-- Automated In-Game Live Sync Card -->
+                <div class="card" style="grid-column: span 12; border-color: rgba(0, 242, 254, 0.4); background: linear-gradient(180deg, rgba(20, 24, 36, 0.95), rgba(16, 24, 36, 0.95));">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-satellite-dish" style="color: var(--accent-secondary);"></i> Real-Time Automated Valorant Data Fetcher</span>
+                        <span id="auto-sync-badge" class="status-badge" style="background: rgba(0,242,254,0.15); color: #00f2fe; border-color: rgba(0,242,254,0.3);">SCANNING GAME...</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Auto-Fetch Engine Status</label>
+                            <select id="auto-fetch-toggle" class="input-field">
+                                <option value="true">ENABLED (Auto-Detect Live Matches)</option>
+                                <option value="false">DISABLED (Manual Controls Only)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Data Source Mode</label>
+                            <select id="auto-fetch-mode" class="input-field">
+                                <option value="local">Local Valorant In-Game Client (Zero Config / Free)</option>
+                                <option value="cloud">Cloud Tracker API (Remote by Riot ID)</option>
+                            </select>
+                        </div>
+                        <div id="cloud-riot-group">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Player / Observer Riot ID (Cloud Mode)</label>
+                            <input id="cloud-riot-id" type="text" class="input-field" placeholder="e.g. MAD BASHA#BOSS">
+                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">*Pulls live match for any player/spectator in the game</span>
+                        </div>
+                        <div id="cloud-api-key-group">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px;">HenrikDev API Key (Cloud Mode Only)</label>
+                            <input id="cloud-api-key" type="password" class="input-field" placeholder="HDEV-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">*Get a free API key at <a href="https://api.henrikdev.xyz/dashboard/" target="_blank" style="color: var(--accent-secondary); text-decoration: underline;">api.henrikdev.xyz/dashboard</a> or <a href="https://discord.gg/henrikdev" target="_blank" style="color: var(--accent-secondary); text-decoration: underline;">Discord (#get-a-key)</a></span>
+                        </div>
+                    </div>
+
+
+                    <div style="background: rgba(0,0,0,0.35); border: 1px solid var(--panel-border); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                        <div style="font-size: 0.9rem; color: #fff;">
+                            <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">LIVE SYNC STATUS:</span>
+                            <span id="live-sync-status-text" style="font-weight: 700; color: var(--accent-secondary);">Checking Valorant game process...</span>
+                        </div>
+                        <button id="save-auto-fetch-btn" class="btn btn-accent" style="padding: 8px 18px;">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> Save Auto-Fetch Settings
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Security Card -->
+                <div class="card" style="grid-column: span 6;">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-key"></i> Security & Password Management</span>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                        <div>
+                            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">New Admin Password</label>
+                            <input id="new-pw-input" type="password" class="input-field" placeholder="Enter new password...">
+                        </div>
+                        <button id="change-pw-btn" class="btn btn-primary">
+                            <i class="fa-solid fa-lock"></i> Update Admin Password
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Demo Simulator Card -->
+                <div class="card" style="grid-column: span 6;">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-vr-cardboard"></i> Automated Demo Match Simulator</span>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
+                            Start automated simulation mode to test OBS overlays live with dynamic round scores, spike plant countdowns, and player HP updates!
+                        </p>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="start-sim-btn" class="btn btn-accent" style="flex: 1;"><i class="fa-solid fa-play"></i> Start Demo Match (60s)</button>
+                            <button id="stop-sim-btn" class="btn btn-danger" style="flex: 1;"><i class="fa-solid fa-square"></i> Stop Demo</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Player Tokens Card -->
+                <div class="card" style="grid-column: span 12;">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-shield-cat"></i> External Player Tokens (Overwolf / Game Client Bridge)</span>
+                        <button id="regen-tokens-btn" class="btn btn-danger" style="font-size: 0.8rem; padding: 6px 12px;">
+                            <i class="fa-solid fa-rotate"></i> Regenerate All Tokens
+                        </button>
+                    </div>
+
+                    <div class="player-table-container">
+                        <table class="player-table">
+                            <thead>
+                                <tr>
+                                    <th>Player Slot</th>
+                                    <th>Team</th>
+                                    <th>Registered Status</th>
+                                    <th>Game Token</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tokens-table-body">
+                                <!-- Dynamically populated by settings.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 
 </body>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caster & Talent Lower Third Overlay</title>
+    <link rel="stylesheet" href="../tungstenFont.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;800;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: transparent !important;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .caster-banner-container {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(200px);
+            opacity: 0;
+            display: flex;
+            gap: 20px;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .caster-banner-container.visible {
+            transform: translateX(-50%) translateY(0px);
+            opacity: 1;
+        }
+
+        .caster-card {
+            background: rgba(16, 24, 36, 0.92);
+            backdrop-filter: blur(12px);
+            border-left: 4px solid #ff4655;
+            border-right: 4px solid #00f2fe;
+            border-radius: 8px;
+            padding: 14px 28px;
+            min-width: 320px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        .caster-badge {
+            background: linear-gradient(135deg, #ff4655, #d62828);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .caster-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .caster-name {
+            color: #ffffff;
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .caster-handle {
+            color: #00f2fe;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="caster-container" class="caster-banner-container">
+        <div class="caster-card">
+            <div class="caster-badge">TALENT</div>
+            <div class="caster-info">
+                <span id="c1-name" class="caster-name">AILYRR</span>
+                <span id="c1-handle" class="caster-handle">@ailyrr</span>
+            </div>
+        </div>
+
+        <div class="caster-card" style="border-left-color: #00f2fe; border-right-color: #ff4655;">
+            <div class="caster-badge" style="background: linear-gradient(135deg, #00f2fe, #00b4d8); color: #000;">ANALYST</div>
+            <div class="caster-info">
+                <span id="c2-name" class="caster-name">VANGUARD</span>
+                <span id="c2-handle" class="caster-handle">@vanguard_val</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoHideTimer = null;
+        let autoLoopInterval = null;
+
+        function showPopup(duration = 6000) {
+            const container = document.getElementById('caster-container');
+            if (autoHideTimer) {
+                clearTimeout(autoHideTimer);
+                autoHideTimer = null;
+            }
+            container.classList.add('visible');
+            if (duration > 0) {
+                autoHideTimer = setTimeout(() => {
+                    container.classList.remove('visible');
+                }, duration);
+            }
+        }
+
+        function startLoop(duration = 6000, interval = 30000) {
+            stopLoop();
+            showPopup(duration);
+            autoLoopInterval = setInterval(() => {
+                showPopup(duration);
+            }, interval + duration);
+        }
+
+        function stopLoop() {
+            if (autoLoopInterval) {
+                clearInterval(autoLoopInterval);
+                autoLoopInterval = null;
+            }
+        }
+
+        async function fetchCasters() {
+            try {
+                const res = await fetch('../get_casters');
+                if (res.status === 200) {
+                    const data = await res.json();
+                    updateCasterDisplay(data);
+                }
+            } catch(e) {}
+        }
+
+        function updateCasterDisplay(data) {
+            const container = document.getElementById('caster-container');
+            const c1Name = document.getElementById('c1-name');
+            const c1Handle = document.getElementById('c1-handle');
+            const c2Name = document.getElementById('c2-name');
+            const c2Handle = document.getElementById('c2-handle');
+
+            if (data.caster_1) {
+                if (c1Name) c1Name.textContent = (data.caster_1.name || 'CASTER 1').toUpperCase();
+                if (c1Handle) c1Handle.textContent = data.caster_1.handle || '';
+            }
+            if (data.caster_2) {
+                if (c2Name) c2Name.textContent = (data.caster_2.name || 'CASTER 2').toUpperCase();
+                if (c2Handle) c2Handle.textContent = data.caster_2.handle || '';
+            }
+
+            const dur = data.duration || 6000;
+            const intv = data.interval || 30000;
+
+            if (data.auto_loop) {
+                startLoop(dur, intv);
+            } else {
+                stopLoop();
+                if (data.show_lower_third) {
+                    showPopup(dur);
+                } else {
+                    if (autoHideTimer) {
+                        clearTimeout(autoHideTimer);
+                        autoHideTimer = null;
+                    }
+                    container.classList.remove('visible');
+                }
+            }
+        }
+
+        if (typeof io !== 'undefined') {
+            const socket = io();
+            socket.on('castersUpdate', (data) => {
+                updateCasterDisplay(data);
+            });
+        }
+
+        fetchCasters();
+    </script>
+</body>
+</html>

@@ -3,34 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Jeff's Den Overlay</title>
-    <link rel="stylesheet" href="./welcome.css">
+    <title>HEL Valorant - Tournament Overlay Host</title>
+    <link rel="stylesheet" href="./resources/css/admin.css">
+    <script src="https://kit.fontawesome.com/1061ea1575.js" crossorigin="anonymous"></script>
+    <style>
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .overlay-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+        }
+
+        .overlay-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(255, 70, 85, 0.2);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(255, 70, 85, 0.12);
+            color: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .url-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-md);
+            padding: 8px 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--accent-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+    </style>
 </head>
 <body>
-    <div class="wrapper">
-        <img src="./visual_assets/HelValorantOverlay_Icon.png" alt="">
-        <h1>Valorant Overlay System by Bilal</h1>
-        <h4>Private Overlay System</h4>
-        <br><br>
-        <div class="app-nav">
-            <ul>
-                <li><h4>Tournament Host</h4></li>
-                <br>
-                <li>> <a href="./admin" target="_blank">Admin Pannel</a></li>
-            </ul>
-            <ul>
-                <li><h4>Available Overlays</h4></li>
-                <br>
-                <li>> <a href="./map_picks/" target="_blank">Map Picks</a></li>
-                <li>> <a href="./player_stats/" target="_blank">Player Stats</a></li>
-                <li>> <a href="./upcomming_maps/" target="_blank">Upcomming Maps</a></li>
-                <li>> <a href="./game_score/" target="_blank">Game Score</a></li>
-                <li>> <a href="./timer/" target="_blank">Timer</a></li>
-            </ul>
-        </div>
-        
-    </div>
-    <h5>©2025 April(<a href="https://x.com/ailyrr" target="_blank">Bilal</a>) Alam | All rights reserved | Game Art owned by Riot Games Inc.</h5>
 
+    <div class="admin-header" style="justify-content: space-between;">
+        <div style="display: flex; align-items: center;">
+            <img src="./visual_assets/HelValorantOverlay_Icon.png" alt="Logo">
+            <h3>HEL VALORANT OVERLAY HOST</h3>
+        </div>
+        <a href="./admin" class="btn btn-primary" style="text-decoration: none;">
+            <i class="fa-solid fa-gauge-high"></i> Open Admin Control Panel
+        </a>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding: 0 20px;">
+        <h1 style="font-family: var(--font-display); font-size: 2.8rem; letter-spacing: 1px; color: #fff; margin-bottom: 8px;">
+            VALORANT TOURNAMENT OVERLAYS
+        </h1>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 0.95rem;">
+            Transparent OBS Studio & Streamlabs Browser Sources with Real-Time WebSockets Sync. Set resolution to 1920x1080 in OBS.
+        </p>
+    </div>
+
+    <div class="portal-grid">
+        
+        <!-- VCT Top Scoreboard -->
+        <div class="overlay-card">
+            <div>
+                <div class="card-icon"><i class="fa-solid fa-trophy"></i></div>
+                <div class="card-title">VCT Top Scoreboard</div>
+                <div class="card-desc">Top-of-screen series scoreboard with team logos, map win diamonds, round counter, spike plant pulse, and round-win banner.</div>
+                <div class="url-box">
+                    <span id="url-game_score">/game_score/</span>
+                    <button class="btn" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUrl('/game_score/')"><i class="fa-solid fa-copy"></i> Copy</button>
+                </div>
+            </div>
+            <a href="./game_score/" target="_blank" class="btn btn-accent" style="text-decoration: none; text-align: center;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Preview
+            </a>
+        </div>
+
+        <!-- 10-Player Stats HUD -->
+        <div class="overlay-card">
+            <div>
+                <div class="card-icon" style="background: rgba(0, 242, 254, 0.12); color: var(--accent-secondary);"><i class="fa-solid fa-users"></i></div>
+                <div class="card-title">10-Player Stats HUD</div>
+                <div class="card-desc">Bottom screen HUD showcasing agent portraits, real-time HP/Shield bars, weapons, ultimate progress, and death states.</div>
+                <div class="url-box">
+                    <span id="url-player_stats">/player_stats/</span>
+                    <button class="btn" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUrl('/player_stats/')"><i class="fa-solid fa-copy"></i> Copy</button>
+                </div>
+            </div>
+            <a href="./player_stats/" target="_blank" class="btn btn-accent" style="text-decoration: none; text-align: center;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Preview
+            </a>
+        </div>
+
+        <!-- Map Pick & Ban Veto Bar -->
+        <div class="overlay-card">
+            <div>
+                <div class="card-icon" style="background: rgba(123, 44, 191, 0.15); color: #b388f5;"><i class="fa-solid fa-map-location-dot"></i></div>
+                <div class="card-title">Map Pick & Ban Veto Bar</div>
+                <div class="card-desc">Horizontal veto bar displaying team map picks, bans, attack/defense side selections, and active map indicators.</div>
+                <div class="url-box">
+                    <span id="url-map_picks">/map_picks/</span>
+                    <button class="btn" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUrl('/map_picks/')"><i class="fa-solid fa-copy"></i> Copy</button>
+                </div>
+            </div>
+            <a href="./map_picks/" target="_blank" class="btn btn-accent" style="text-decoration: none; text-align: center;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Preview
+            </a>
+        </div>
+
+        <!-- Intermission & Break Timer -->
+        <div class="overlay-card">
+            <div>
+                <div class="card-icon" style="background: rgba(0, 230, 118, 0.15); color: var(--green-team);"><i class="fa-solid fa-stopwatch"></i></div>
+                <div class="card-title">Stream Intermission Timer</div>
+                <div class="card-desc">Lower-left countdown timer overlay for tech pauses, match starting soon countdowns, and stream breaks.</div>
+                <div class="url-box">
+                    <span id="url-timer">/timer/</span>
+                    <button class="btn" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUrl('/timer/')"><i class="fa-solid fa-copy"></i> Copy</button>
+                </div>
+            </div>
+            <a href="./timer/" target="_blank" class="btn btn-accent" style="text-decoration: none; text-align: center;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Preview
+            </a>
+        </div>
+
+        <!-- Caster Desk Lower Third -->
+        <div class="overlay-card">
+            <div>
+                <div class="card-icon" style="background: rgba(255, 190, 118, 0.15); color: #ffbe76;"><i class="fa-solid fa-microphone-lines"></i></div>
+                <div class="card-title">Caster Desk Lower Third</div>
+                <div class="card-desc">Lower-third popup banner for stream talent, casters, and analysts with custom names and social handles.</div>
+                <div class="url-box">
+                    <span id="url-caster_desk">/caster_desk/</span>
+                    <button class="btn" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUrl('/caster_desk/')"><i class="fa-solid fa-copy"></i> Copy</button>
+                </div>
+            </div>
+            <a href="./caster_desk/" target="_blank" class="btn btn-accent" style="text-decoration: none; text-align: center;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Preview
+            </a>
+        </div>
+
+        <!-- Upcoming Maps Schedule -->
+        <div class="overlay-card">
+            <div>
+                <div class="card-icon" style="background: rgba(126, 214, 223, 0.15); color: #7ed6df;"><i class="fa-solid fa-calendar-days"></i></div>
+                <div class="card-title">Upcoming Maps Breakdown</div>
+                <div class="card-desc">Map schedule breakdown displaying past map scores, active map, and upcoming map previews.</div>
+                <div class="url-box">
+                    <span id="url-upcomming_maps">/upcomming_maps/</span>
+                    <button class="btn" style="padding: 2px 8px; font-size: 0.7rem;" onclick="copyUrl('/upcomming_maps/')"><i class="fa-solid fa-copy"></i> Copy</button>
+                </div>
+            </div>
+            <a href="./upcomming_maps/" target="_blank" class="btn btn-accent" style="text-decoration: none; text-align: center;">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Launch Preview
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        function copyUrl(path) {
+            const fullUrl = window.location.origin + path;
+            navigator.clipboard.writeText(fullUrl);
+            alert('Copied OBS Browser Source URL to Clipboard:\n' + fullUrl);
+        }
+    </script>
 </body>
 </html>

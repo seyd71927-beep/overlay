@@ -3,198 +3,156 @@ const path = require('path');
 const fs = require('fs');
 const router = express.Router();
 const multer = require('multer');
-const session = require('express-session');
 const upload = multer();
 const fileLoader = require('../fileLoader');
+let dataBus = new fileLoader();
+dataBus.init('./config');
 
-const dataBus = new fileLoader();
-dataBus.init('./config'); //Init dataBus by loading the config files into the instance of fileLoader()
+function setDataBus(instance) {
+    if (instance) {
+        dataBus = instance;
+    }
+}
+router.setDataBus = setDataBus;
 
-// Endpoint to get map picks
+// Helper to broadcast socket events safely
+function emitEvent(req, eventName, payload) {
+    const io = req.app.get('io');
+    if (io) {
+        io.emit(eventName, payload);
+    }
+}
+
+/*
+-----------------------------------------
+           PUBLIC OVERLAY REST ENDPOINTS
+-----------------------------------------
+*/
+
 router.get('/get_map_picks', (req, res) => {
-    return res.status(200).send(dataBus.config.mapPicks)
+    return res.status(200).send(dataBus.config.mapPicks);
 });
 
-// Endpoint for Player Stats and inventory information
 router.get('/get_player_stats', (req, res) => {
-    // Parse the JSON data
     let responseObject = {
         status: true,
-        switch_teams: dataBus.config.gameState.switch_sides,
+        switch_teams: dataBus.config.gameState.switch_sides || false,
         team_1: {},
         team_2: {}
     };
-    //Reformat the json files to correspond to team_1 and team_2 respectively
-    for(let i = 0; i < 5; i++){
+    for (let i = 0; i < 5; i++) {
         responseObject.team_1[`player_${i}`] = dataBus.config.players[`player_${i}`]['data'];
-        responseObject.team_1[`player_${i}`]['is_registered'] =  dataBus.config.players[`player_${i}`].is_registered
+        responseObject.team_1[`player_${i}`]['is_registered'] = dataBus.config.players[`player_${i}`].is_registered;
     }
-    for(let i = 5; i < 10; i++){
-        responseObject.team_2[`player_${i-5}`] = dataBus.config.players[`player_${i}`]['data'];
-        responseObject.team_2[`player_${i-5}`]['is_registered'] =  dataBus.config.players[`player_${i}`].is_registered
+    for (let i = 5; i < 10; i++) {
+        responseObject.team_2[`player_${i - 5}`] = dataBus.config.players[`player_${i}`]['data'];
+        responseObject.team_2[`player_${i - 5}`]['is_registered'] = dataBus.config.players[`player_${i}`].is_registered;
     }
-    res.status(200).send(responseObject);
+    return res.status(200).send(responseObject);
 });
 
-//Return the timer information { isOn: bool, time: int, description: str }
 router.get('/get_timer_info', upload.none(), (req, res) => {
     return res.status(200).send(dataBus.getTimer());
-})
+});
 
-//Sets timer to specified time and descriotion as well as start the timer.
 router.post('/set_timer', upload.none(), (req, res) => {
-    const { timeMiliseconds, description }  = req.body;
-    if(!timeMiliseconds || !description){
+    const { timeMiliseconds, description } = req.body;
+    if (!timeMiliseconds || !description) {
         return res.status(406).send({ status: false, message: 'Missing Arguments' });
     }
-    dataBus.setTimer(timeMiliseconds, description);
+    dataBus.setTimer(parseInt(timeMiliseconds), description);
+    emitEvent(req, 'timerUpdate', dataBus.getTimer());
     return res.status(200).send({ status: true });
-})
+});
 
-//Get Initual game configuration usually requested once on load of overlay
+router.post('/stop_timer', upload.none(), (req, res) => {
+    dataBus.stopTimer();
+    emitEvent(req, 'timerUpdate', dataBus.getTimer());
+    return res.status(200).send({ status: true });
+});
+
 router.get('/get_game_configuration', (req, res) => {
     return res.status(200).send(dataBus.getGameConfiguration());
-})
-//Get current game state requested every 200ms
+});
+
 router.get('/get_game_state', (req, res) => {
     return res.status(200).send(dataBus.getGameState());
-})
-router.post('/change_game_state', upload.none(), (req, res) => {
-    const { stage, spike } = req.body;
-    console.log(stage)
-    let spikeDown = false;
-    if(spike == 'down') spikeDown = true;
-    dataBus.config.gameState.game_stage = stage;
-    dataBus.config.gameState.spike_down = spikeDown;
-    return res.status(200).send({ status: true });
-})
-/*
--------------------------
-Externally used endpoints
--------------------------
-*/
+});
 
-/*
-Update player states
-Recieve json to update each player's game information, health, weapon, credits, shield, etc...
-*/
+router.post('/change_game_state', upload.none(), (req, res) => {
+    const { round_number, team_1_score, team_2_score, spike, switch_sides, round_over, tournament_stage } = req.body;
+    
+    if (typeof round_number !== 'undefined') dataBus.config.gameState.round_number = parseInt(round_number);
+    if (typeof team_1_score !== 'undefined') dataBus.config.gameState.team_1_score = parseInt(team_1_score);
+    if (typeof team_2_score !== 'undefined') dataBus.config.gameState.team_2_score = parseInt(team_2_score);
+    if (typeof spike !== 'undefined') dataBus.config.gameState.spike_down = (spike === 'down' || spike === 'true' || spike === true);
+    if (typeof switch_sides !== 'undefined') dataBus.config.gameState.switch_sides = (switch_sides === 'true' || switch_sides === true);
+    if (typeof round_over !== 'undefined') dataBus.config.gameState.round_over = (round_over === 'true' || round_over === true);
+    if (typeof tournament_stage !== 'undefined') dataBus.config.gameState.tournament_stage = tournament_stage.trim();
+
+    dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+    emitEvent(req, 'stateUpdate', dataBus.getGameState());
+    return res.status(200).send({ status: true, state: dataBus.getGameState() });
+});
 
 router.post('/update_player_state', upload.none(), (req, res) => {
     var { playerData } = req.body;
-    playerData = JSON.parse(playerData)
-    console.log('\x1b[34m%s\x1b[0m', new Date().toLocaleString(), ' | Player Stats recieved by player with token: ', playerData.token);
-    let updateSuccess = dataBus.updatePlayerData(playerData);
-    if(!updateSuccess){
-        return res.status(500).send({ status: false })
-    }
-    return res.status(200).send({ status: true })
-});
-
-/* 
-Update team information
-Update team names, abbreviations, icons, info, and scores without affecting game state
-*/
-router.post('/update_team_info', upload.none(), (req, res) => {
     try {
-        const { team_1, team_2, team_1_score, team_2_score } = req.body;
-        
-        if (team_1) {
-            if (team_1.abbreviation) dataBus.config.gameState.team_1.abbreviation = team_1.abbreviation;
-            if (team_1.icon_link) dataBus.config.gameState.team_1.icon_link = team_1.icon_link;
-            if (team_1.team_info) dataBus.config.gameState.team_1.team_info = team_1.team_info;
-            if (team_1.team_name) dataBus.config.gameState.team_1.team_name = team_1.team_name;
+        if (typeof playerData === 'string') playerData = JSON.parse(playerData);
+        let updateSuccess = dataBus.updatePlayerData(playerData);
+        if (!updateSuccess) {
+            return res.status(500).send({ status: false });
         }
-        
-        if (team_2) {
-            if (team_2.abbreviation) dataBus.config.gameState.team_2.abbreviation = team_2.abbreviation;
-            if (team_2.icon_link) dataBus.config.gameState.team_2.icon_link = team_2.icon_link;
-            if (team_2.team_info) dataBus.config.gameState.team_2.team_info = team_2.team_info;
-            if (team_2.team_name) dataBus.config.gameState.team_2.team_name = team_2.team_name;
-        }
-        
-        if (team_1_score !== undefined) {
-            dataBus.config.gameState.team_1_score = parseInt(team_1_score);
-        }
-        
-        if (team_2_score !== undefined) {
-            dataBus.config.gameState.team_2_score = parseInt(team_2_score);
-        }
-        
-        console.log('\x1b[34m%s\x1b[0m', new Date().toLocaleString(), ' | Team information updated');
+        emitEvent(req, 'playerUpdate', dataBus.config.players);
         return res.status(200).send({ status: true });
-    } catch (error) {
-        console.error('Error updating team info:', error);
-        return res.status(500).send({ status: false, message: 'Internal server error' });
+    } catch (e) {
+        return res.status(400).send({ status: false, message: 'Invalid JSON' });
     }
 });
 
-/*  
-Update Game state
-Send json information to update the game state information, round number, round won/lost, spike planted/defused, etc...
-*/
 router.post('/register_external_user', upload.none(), (req, res) => {
     const { playerToken } = req.body;
-    if(!playerToken){
+    if (!playerToken) {
         return res.status(406).send({ status: false, message: 'Missing Arguments!' });
     }
-    //Check if token is valid and not yet taken.
     let playerTokenKey = dataBus.checkGameTokenValidity(playerToken);
-    if(playerTokenKey.status){
-        playerTokenKey = playerTokenKey.key;
-        dataBus.config.players[playerTokenKey].is_registered = true;
-        dataBus.config.players[playerTokenKey].last_updated = Date.now();
-        
-        console.log('\x1b[34m%s\x1b[0m', new Date().toLocaleString(), " | Registered user with token:", playerToken);
-
-        return res.status(200).send({ status: true, message: 'User Registerd on offsite server!'});
+    if (playerTokenKey.status) {
+        let key = playerTokenKey.key;
+        dataBus.config.players[key].is_registered = true;
+        dataBus.config.players[key].last_updated = Date.now();
+        emitEvent(req, 'playerUpdate', dataBus.config.players);
+        return res.status(200).send({ status: true, message: 'User Registered on server!' });
     } else {
-        return res.status(400).send({ status: false, message: playerTokenKey.message});
+        return res.status(400).send({ status: false, message: playerTokenKey.message });
     }
-})
+});
+
 router.post('/clear_external_user', upload.none(), (req, res) => {
     const { playerToken } = req.body;
-    if(!playerToken){
+    if (!playerToken) {
         return res.status(406).send({ status: false, message: 'Missing Arguments!' });
     }
-    //Check if token is valid and not yet taken.
     let playerTokenKey = dataBus.findPlayerKeyByToken(playerToken);
-    if(playerTokenKey.status){
-        playerTokenKey = playerTokenKey.key;
-        dataBus.config.players[playerTokenKey].is_registered = false;
-        
-        console.log('\x1b[34m%s\x1b[0m', new Date().toLocaleString(), " | User with token:", playerToken, " has de-registered");
-
-        return res.status(200).send({ status: true, message: 'User cleared from offsite server!'});
+    if (playerTokenKey.status) {
+        let key = playerTokenKey.key;
+        dataBus.config.players[key].is_registered = false;
+        emitEvent(req, 'playerUpdate', dataBus.config.players);
+        return res.status(200).send({ status: true, message: 'User cleared!' });
     } else {
-        return res.status(400).send({ status: false, message: playerTokenKey.message});
+        return res.status(400).send({ status: false, message: playerTokenKey.message });
     }
-})
-/*
---------------------------
-      ADMIN ROUTES
---------------------------
-*/
-
-//Update map pick at some 
-router.post('/set_map_picks', upload.none(), (req, res) => {
-    const { index, map, action } = req.body;
-    //Check for empty inputs
-    if(!index || !map || !action){
-        return res.status(400).send({
-            status: false,
-            message: "Missing Arguments"
-        });
-    }
-
-    dataBus.updateMapPick(index, map, action);
-    
-    return res.status(200).send({ status: true })
 });
+
+/*
+-----------------------------------------
+               ADMIN ROUTES
+-----------------------------------------
+*/
 
 router.get('/admin', (req, res) => {
     if (req.session.user && req.session.user.loggedIn) {
         const target_page = req.query.page || 'prestream';
-        switch(target_page){
+        switch (target_page) {
             case 'prestream':
                 return res.status(200).sendFile(path.join(__dirname, '../panel/admin_pre_live.html'));
             case 'stream':
@@ -207,74 +165,282 @@ router.get('/admin', (req, res) => {
     } else {
         return res.status(401).send(`<script>location.href = '../auth'</script>`);
     }
-})
+});
 
 router.get('/auth', (req, res) => {
-    if(req.session && req.session.loggedIn){
-        res.sendFile(path.join(__dirname, '../panel/admin_pre_live.html'))
+    if (req.session && req.session.user && req.session.user.loggedIn) {
+        return res.sendFile(path.join(__dirname, '../panel/admin_pre_live.html'));
     } else {
-        res.sendFile(path.join(__dirname, '../panel/auth.html'));
+        return res.sendFile(path.join(__dirname, '../panel/auth.html'));
     }
-})
+});
 
-router.get('/regenerate_user_tokens', (req, res) => {
-    dataBus.regeneratePlayerTokens();
-    return res.status(200).send({ status: true });
-})
-//Main Login Method, create a session cookie for staying connected over multiple pages.
 router.post('/authenticate', upload.none(), (req, res) => {
     const { pw } = req.body;
-
-    // Check if the password is provided and not empty
     if (!pw || typeof pw !== 'string' || pw.trim() === '') {
-        return res.status(400).json({ message: 'Password is required and cannot be empty' });
+        return res.status(400).json({ message: 'Password is required' });
     }
-
-    // Check if the provided password matches the admin password
     if (!dataBus.checkPassword(pw)) {
         return res.status(401).json({ message: 'Authentication failed' });
     }
-    //Set Session Cookie and respond with 200
-    req.session.user = { loggedIn: true }
+    req.session.user = { loggedIn: true };
     return res.status(200).json({ message: 'Authentication successful' });
 });
 
-//De-authenticates the user and destroys the session cookie
 router.post('/deauthenticate', (req, res) => {
-    //Check if there is a session active
-    if(!req.session){
+    if (!req.session) {
         return res.status(400).json({ message: 'No active session found' });
     }
-    //clear session
     req.session.destroy(error => {
-        if(error) return res.status(500).json({ message: 'Failed to log out'});
+        if (error) return res.status(500).json({ message: 'Failed to log out' });
+        res.clearCookie('connect.sid');
+        return res.status(200).json({ message: 'Logged out successfully' });
+    });
+});
 
-        res.clearCookie('connect.sid'); //Default name of express cookie
-        return res.status(200).json({ message: 'logged out successfully' });
-    })
-})
+router.post('/set_team_info', upload.none(), (req, res) => {
+    const { team_1, team_2, lockTeams } = req.body;
+    try {
+        let t1 = typeof team_1 === 'string' ? JSON.parse(team_1) : team_1;
+        let t2 = typeof team_2 === 'string' ? JSON.parse(team_2) : team_2;
+        dataBus.updateTeamInfo(t1, t2);
 
-/*
------------------------------------------
-  UTILITY STATE (REMOVE FOR PRODUCTION)
------------------------------------------
-*/
+        const liveService = req.app.get('liveService');
+        if (liveService && typeof lockTeams !== 'undefined') {
+            liveService.lockManualTeamInfo = (lockTeams === 'true' || lockTeams === true);
+        }
+
+        emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+        return res.status(200).send({ status: true });
+    } catch (e) {
+        return res.status(400).send({ status: false, message: 'Invalid team data' });
+    }
+});
+
+
+router.post('/set_series_format', upload.none(), (req, res) => {
+    const { format } = req.body;
+    if (!format) {
+        return res.status(400).send({ status: false, message: 'Missing format' });
+    }
+    const updated = dataBus.setSeriesFormat(format.toLowerCase());
+    emitEvent(req, 'mapPicksUpdate', updated);
+    emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+    return res.status(200).send({ status: true, mapPicks: updated, gameConfig: dataBus.getGameConfiguration() });
+});
+
+router.post('/sync_mapban', upload.none(), async (req, res) => {
+    const { urlOrId, jsonData } = req.body;
+
+    if (jsonData) {
+        try {
+            const parsed = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+            const updated = dataBus.applyMapBanData(parsed);
+            emitEvent(req, 'mapPicksUpdate', updated);
+            emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+            return res.status(200).send({ status: true, message: 'Imported MapBan.gg data successfully', mapPicks: updated });
+        } catch (e) {
+            return res.status(400).send({ status: false, message: 'Invalid JSON data' });
+        }
+    }
+
+    if (!urlOrId || typeof urlOrId !== 'string' || urlOrId.trim() === '') {
+        return res.status(400).send({ status: false, message: 'Please provide a MapBan.gg URL or Room ID' });
+    }
+
+    let input = urlOrId.trim();
+    let match = input.match(/([a-zA-Z0-9]{10,32})/);
+    let viewId = match ? match[1] : input;
+
+    const tryUrls = [
+        `https://api.mapban.gg/v1/ban/log/${viewId}`,
+        `https://api.mapban.gg/v1/ban/view/${viewId}`
+    ];
+
+    const https = require('https');
+    let fetchedData = null;
+
+    for (const targetUrl of tryUrls) {
+        try {
+            const result = await new Promise((resolve) => {
+                const reqHttps = https.get(targetUrl, {
+                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Accept': 'application/json' },
+                    timeout: 4000
+                }, (response) => {
+                    let body = '';
+                    response.on('data', chunk => body += chunk);
+                    response.on('end', () => {
+                        try {
+                            const parsed = JSON.parse(body);
+                            resolve(parsed);
+                        } catch (e) {
+                            resolve(null);
+                        }
+                    });
+                });
+                reqHttps.on('error', () => resolve(null));
+                reqHttps.on('timeout', () => { reqHttps.destroy(); resolve(null); });
+            });
+
+            if (result && (result.log || result.lobby || result.picks || result.teamNames)) {
+                fetchedData = result;
+                break;
+            }
+        } catch (e) {}
+    }
+
+    if (fetchedData) {
+        const updated = dataBus.applyMapBanData(fetchedData);
+        emitEvent(req, 'mapPicksUpdate', updated);
+        emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+        return res.status(200).send({ status: true, message: `Synced from MapBan.gg (${viewId})!`, mapPicks: updated });
+    } else {
+        return res.status(200).send({ 
+            status: true, 
+            warning: true, 
+            viewId: viewId,
+            message: `MapBan.gg linked: ID ${viewId}. You can also use Browser Source URL https://www.mapban.gg/ban/view/${viewId} in OBS!` 
+        });
+    }
+});
+
+router.post('/set_map_picks', upload.none(), (req, res) => {
+    const { index, map, action } = req.body;
+    if (typeof index === 'undefined' || !map || !action) {
+        return res.status(400).send({ status: false, message: "Missing Arguments" });
+    }
+    dataBus.updateMapPick(index, map, action);
+    emitEvent(req, 'mapPicksUpdate', dataBus.config.mapPicks);
+    emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+    return res.status(200).send({ status: true });
+});
+
+router.post('/update_player_direct', upload.none(), (req, res) => {
+    const { playerIndex, playerData } = req.body;
+    if (typeof playerIndex === 'undefined' || !playerData) {
+        return res.status(400).send({ status: false, message: 'Missing parameters' });
+    }
+    try {
+        let pData = typeof playerData === 'string' ? JSON.parse(playerData) : playerData;
+        dataBus.updatePlayerDirect(playerIndex, pData);
+        emitEvent(req, 'playerUpdate', dataBus.config.players);
+        return res.status(200).send({ status: true });
+    } catch (e) {
+        return res.status(400).send({ status: false, message: 'Invalid JSON data' });
+    }
+});
+
+router.post('/trigger_win_banner', upload.none(), (req, res) => {
+    const { winningTeam } = req.body; // 'team_1' or 'team_2'
+    if (winningTeam === 'team_1') {
+        dataBus.config.gameState.team_1_score += 1;
+    } else if (winningTeam === 'team_2') {
+        dataBus.config.gameState.team_2_score += 1;
+    }
+    dataBus.config.gameState.round_number += 1;
+    dataBus.config.gameState.round_over = true;
+    dataBus.config.gameState.spike_down = false;
+
+    dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+
+    emitEvent(req, 'winBannerTrigger', {
+        winningTeam,
+        team_1_score: dataBus.config.gameState.team_1_score,
+        team_2_score: dataBus.config.gameState.team_2_score,
+        round_number: dataBus.config.gameState.round_number
+    });
+    emitEvent(req, 'stateUpdate', dataBus.getGameState());
+    return res.status(200).send({ status: true, state: dataBus.getGameState() });
+});
+
+router.get('/get_casters', (req, res) => {
+    return res.status(200).send(dataBus.getCasters());
+});
+
+router.post('/set_casters', upload.none(), (req, res) => {
+    const { caster_1, caster_2, show_lower_third, duration, auto_loop, interval } = req.body;
+    try {
+        let c1 = typeof caster_1 === 'string' ? JSON.parse(caster_1) : caster_1;
+        let c2 = typeof caster_2 === 'string' ? JSON.parse(caster_2) : caster_2;
+        let show = (show_lower_third === 'true' || show_lower_third === true);
+        let loop = (auto_loop === 'true' || auto_loop === true);
+        const dur = duration ? parseInt(duration) : 6000;
+        const intv = interval ? parseInt(interval) : 30000;
+
+        const updated = dataBus.updateCasters(c1, c2, show, loop, dur, intv);
+        emitEvent(req, 'castersUpdate', updated);
+
+        if (show && dur > 0 && !loop) {
+            setTimeout(() => {
+                dataBus.updateCasters(null, null, false);
+                emitEvent(req, 'castersUpdate', { ...dataBus.getCasters(), duration: 0 });
+            }, dur);
+        }
+
+        return res.status(200).send({ status: true, casters: updated });
+    } catch (e) {
+        return res.status(400).send({ status: false, message: 'Invalid JSON' });
+    }
+});
+
+router.get('/regenerate_user_tokens', (req, res) => {
+    const updated = dataBus.regeneratePlayerTokens();
+    emitEvent(req, 'playerUpdate', updated);
+    return res.status(200).send({ status: true, players: updated });
+});
+
+router.post('/change_password', upload.none(), (req, res) => {
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.trim() === '') {
+        return res.status(400).send({ status: false, message: 'Password required' });
+    }
+    dataBus.updateAdminPassword(newPassword.trim());
+    return res.status(200).send({ status: true });
+});
+
+router.post('/reset_match_state', upload.none(), (req, res) => {
+    dataBus.config.gameState.round_number = 1;
+    dataBus.config.gameState.team_1_score = 0;
+    dataBus.config.gameState.team_2_score = 0;
+    dataBus.config.gameState.spike_down = false;
+    dataBus.config.gameState.switch_sides = false;
+    dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+    
+    emitEvent(req, 'stateUpdate', dataBus.getGameState());
+    emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+    return res.status(200).send({ status: true });
+});
+
+router.get('/get_auto_fetch_status', (req, res) => {
+    const liveService = req.app.get('liveService');
+    if (liveService) {
+        return res.status(200).send(liveService.getStatus());
+    }
+    return res.status(200).send({
+        autoFetchEnabled: false,
+        statusText: 'Live service offline',
+        clientDetected: false,
+        gameRunning: false,
+        inGame: false
+    });
+});
+
+router.post('/set_auto_fetch_config', upload.none(), (req, res) => {
+    const { enabled, mode, riotId, apiKey, lockTeams } = req.body;
+    const liveService = req.app.get('liveService');
+    if (liveService) {
+        const isEnabled = (enabled === 'true' || enabled === true);
+        const isLock = (typeof lockTeams !== 'undefined') ? (lockTeams === 'true' || lockTeams === true) : undefined;
+        const updated = liveService.updateConfig(isEnabled, mode, riotId, apiKey, isLock);
+        return res.status(200).send({ status: true, config: updated });
+    }
+    return res.status(500).send({ status: false, message: 'Live service not initialized' });
+});
 
 router.get('/print_state', (req, res) => {
     return res.status(200).send(dataBus.config);
-})
-router.post('/end_round', upload.none(), (req, res) => {
-    const { winningTeam } = req.body;
-    if(winningTeam == 'team_1'){
-        dataBus.config.gameState.team_1_score += 1;
-    } else {
-        dataBus.config.gameState.team_2_score += 1;
-    }
-    dataBus.config.gameState.round_over = true;
-    return res.status(200).send({ status: true })
-})
-router.get('/recalculate_maps', (req, res) => {
-    dataBus.reCalculateMapFlow();
-    return res.status(200).send({ status: true });
-})
+});
+
 module.exports = router;
+
+

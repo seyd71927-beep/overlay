@@ -1,3 +1,10 @@
 {
-    "admin_key": "password"
+    "admin_key": "password",
+    "auto_fetch": {
+        "enabled": true,
+        "mode": "cloud",
+        "riot_id": "MAD BASHA#BOSS",
+        "api_key": "",
+        "lock_manual_teams": false
+    }
 }

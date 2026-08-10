@@ -1,307 +1,524 @@
-:root{
-    --overlay_black: #181818;
-    --overlay_dark: #23232388;
-    --map_select_light_trans: #43434300;
-    --overlay_green: #71edc0;
-    --overlay_trans_green: #397b63b5;
-    --overlay_red: #eb535d;
-    --overlay_trans_red: #913238ad;
-    --overlay_dark: #101824;
-    --overlay_dark_trans: #10182495;
+:root {
+    --vct-dark-bg: rgba(6, 12, 18, 0.90);
+    --vct-card-border: rgba(255, 255, 255, 0.12);
+    --green-team: #00f5c4;
+    --green-team-glow: rgba(0, 245, 196, 0.65);
+    --red-team: #ff4655;
+    --red-team-glow: rgba(255, 70, 85, 0.65);
+    --text-primary: #ffffff;
+    --text-muted: #94a3b8;
+    --text-dead: #64748b;
+    --font-main: 'Montserrat', 'Inter', -apple-system, sans-serif;
+    --font-num: 'Outfit', 'Montserrat', sans-serif;
 }
-/*------ UTILITY CLASSES ------*/
-*{
+
+* {
     box-sizing: border-box;
-}
-body{
-    padding: 0px;
     margin: 0;
-    font-family: 'Montserrat';
-    /*background-image: url('https://sm.ign.com/t/ign_br/screenshot/a/a-gameplay/a-gameplay-screenshot-of-from-valorants-closed-beta_z548.1080.jpg');*/
-    background-color: rgba(0,0,0,0);
-    background-size: 100%;
-}
-body::after, body::before{
-    padding: 0px;
-}
-.flex{
-    display: flex;
     padding: 0;
+    user-select: none;
 }
-.left-team{
+
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: transparent !important;
+    font-family: var(--font-main);
+}
+
+/* =========================================
+   HUD TEAM COLUMNS (Fixed Screen Placement)
+   ========================================= */
+.hud-team-column {
+    position: fixed;
+    bottom: 20px;
+    width: 290px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 100;
+}
+
+.left-hud {
     left: 20px;
-    bottom: 20px;
 }
-.right-team{
+
+.right-hud {
     right: 20px;
-    bottom: 20px;
-}
-.player-list-red-team{
-    position: absolute;
-    display: flex;
-    gap: 10px;
-    flex-direction: column;
-    width: 360px;
-    --team-color: var(--overlay_red);
-    --team-color-transparent: var(--overlay_trans_red);
 }
 
-.player-list-green-team{
-    position: absolute;
-    display: flex;
-    gap: 10px;
-    flex-direction: column;
-    width: 360px;
-    --team-color: var(--overlay_green);
-    --team-color-transparent: var(--overlay_trans_green);
-}
-
-.player-stat-container{
-    position: relative;
-    aspect-ratio: 3/1;
-    height: 100px;
-    background-color: transparent;
+.team-column {
     display: flex;
     flex-direction: column;
-}
-.player-status{
+    gap: 6px;
     width: 100%;
-    flex-grow: 1;
-    background-color: var(--overlay_dark_trans);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+}
+
+/* =========================================
+   VCT PLAYER CARD CONTAINER
+   ========================================= */
+.vct-player-card {
     position: relative;
-}
-.player-status .player-weapon{
-    max-height: 29px;
-    transform: scaleX(-1);
-    margin-right: auto;
-    margin-left: 10px;
-    max-width: 150px;
-    height: auto;
-}
-.player-status .player-ability{
-    width: 25px;
-    height: auto;
-    filter: opacity(.4);
-}
-.player-status .ability-available{
-    filter: unset;
-}
-.player-status .player-credits{
-    margin-left: auto;
-    margin-right: 10px;
-    margin-bottom: 5px;
-    margin-top: auto;
-    color: #fff;
+    width: 100%;
+    height: 64px;
+    background: linear-gradient(180deg, rgba(8, 15, 22, 0.92) 0%, rgba(4, 9, 14, 0.95) 100%);
+    border: 1px solid var(--vct-card-border);
+    border-radius: 3px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     display: flex;
-    gap: 4px;
-    font-weight: 700;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Active Spectated Card Highlight */
+.spectated-active {
+    border: 1.5px solid #fde047 !important;
+    box-shadow: 0 0 14px rgba(253, 224, 71, 0.45), 0 4px 14px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* =========================================
+   TOP SECTION (Avatar, Name, Shield, HP)
+   ========================================= */
+.vct-card-top {
+    height: 32px;
+    display: flex;
     align-items: center;
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
+    justify-content: space-between;
+    padding: 0 10px 0 2px;
 }
-.right-team .player-status .player-credits{
-    margin-left: 10px;
-    margin-right: auto;
-    flex-direction: row-reverse;
-    position: absolute;
-    right: unset !important;
-    left: 3px;
-    bottom: 3px;
+
+.vct-right .vct-card-top {
+    padding: 0 2px 0 10px;
 }
-.player-status .player-credits img{
-    height: 12px;
-}
-.right-team .player-status .player-weapon{
-    transform: scaleX(1);
-    margin-right: 10px;
-    margin-left: auto;
-}
-.right-team .player-status{
-    flex-direction: row-reverse;
-}
-.right-team .player-status .player-agent{
-    transform: scaleX(-1);
-}
-.player-health{
+
+.vct-identity {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    gap: 7px;
+    height: 100%;
+    min-width: 0;
+}
+
+.left-identity {
     justify-content: flex-start;
-    width: 100%;
-    height: 8px;
-    background-color: var(--overlay_black);
 }
-.right-team .player-health{
+
+.right-identity {
     justify-content: flex-end;
 }
-.player-health .player-health-bar{  
-    height: 100%;
-    background-color: var(--team-color);
-}
-.player-name{
-    background-color: var(--team-color-transparent);
-    height: 36px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px;
+
+/* Agent Portrait */
+.vct-avatar-frame {
+    width: 35px;
+    height: 35px;
+    border-radius: 2px;
+    overflow: hidden;
+    background: transparent;
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
     align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
 }
-.right-team .player-name{
-    flex-direction: row-reverse;
+
+.vct-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 10%;
+    transform: scale(1.25);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
 }
-.player-name .player-name-container{
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
+.vct-right .vct-avatar-img {
+    transform: scale(1.25) scaleX(-1);
+}
+
+/* Player Name */
+.vct-player-name {
+    font-family: var(--font-main);
     font-weight: 700;
-    color: #fff;
-    max-width: 30%;
-    width: 100px;
+    font-size: 15px;
+    color: #ffffff;
+    letter-spacing: 0.3px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 120px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
-.right-team .player-name-container{
-    text-align: right;
 
-    margin-left: auto;
-    margin-right: 0;
-}
-.player-status{
+/* Combat Group (Shield & HP) */
+.combat-group {
     display: flex;
-}
-.player-status img{
-    height: 56px;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
-.player-name .player-health{
+.left-combat {
+    justify-content: flex-start;
+}
+
+.right-combat {
+    justify-content: flex-end;
+}
+
+/* Health Number */
+.vct-hp-val {
+    font-family: var(--font-num);
     font-weight: 800;
-    color: #fff;
-    background-color: none;
+    font-size: 17px;
+    color: #ffffff;
+    min-width: 28px;
+    text-align: right;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    line-height: 1;
 }
-.player-ult-point-container{
-    display: flex;
-    gap: 5px;
-    max-width: 30%;
-    margin-left: auto;
-    margin-right: 0;
+
+.left-combat .vct-hp-val {
+    text-align: left;
 }
-.right-team .player-ult-point-container{
-    margin-left: 0;
-    margin-right: auto;
-}
-.player-ult-point{
-    --side-length: 10px;
-    height: var(--side-length);
-    width: var(--side-length);
-}
-.full-point{
-    color: #fff;
-    filter: invert(1);
-}
-.player-ult-indicator-container{
+
+/* Shield Badge */
+.vct-shield-badge {
+    position: relative;
+    width: 23px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 36px;
-    min-width: 30px;
-    width: fit-content;
+}
+
+.shield-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.shield-val {
+    position: relative;
+    z-index: 2;
+    font-family: var(--font-num);
+    font-weight: 800;
+    font-size: 10.5px;
+    color: #ffffff;
+    line-height: 1;
+    margin-top: 1px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Spike Indicator */
+.vct-spike-carrier {
+    width: 15px;
+    height: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 70, 85, 0.25);
+    border: 1px solid var(--red-team);
+    border-radius: 50%;
+    animation: spikePulse 1.2s infinite alternate;
+}
+
+.vct-spike-carrier img {
+    height: 9px;
+    filter: brightness(0) invert(1);
+}
+
+@keyframes spikePulse {
+    from {
+        box-shadow: 0 0 2px rgba(255, 70, 85, 0.4);
+    }
+
+    to {
+        box-shadow: 0 0 8px rgba(255, 70, 85, 0.9);
+    }
+}
+
+/* =========================================
+   MIDDLE DIVIDER (Health Bar Line)
+   ========================================= */
+.vct-health-track {
+    width: 100%;
+    height: 2.5px;
+    background: rgba(0, 0, 0, 0.75);
+    overflow: hidden;
     position: relative;
 }
-.player-ult-indicator-container .border{
-    height: 28px;
+
+.vct-health-fill {
+    height: 100%;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.player-ult-indicator-container .ult-icon{
-    position: absolute;
-    height: 26px;
-    width: auto;
-    filter: invert(1);
+
+.team-green .vct-health-fill {
+    background: var(--green-team);
+    box-shadow: 0 0 7px var(--green-team-glow);
 }
-.player-name .player-health-count{
-    display: flex;
-    gap: 5px;
-    align-items: center;
+
+.team-red .vct-health-fill {
+    background: var(--red-team);
+    box-shadow: 0 0 7px var(--red-team-glow);
+}
+
+.vct-right .vct-health-fill {
     margin-left: auto;
-    margin-right: 0;
 }
-.right-team .player-health-count{
-    margin-left: 0;
-    margin-right: auto;
+
+/* =========================================
+   BOTTOM SECTION (Ult, Abilities, Weapon, Creds)
+   ========================================= */
+.vct-card-bottom {
+    height: 29.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px 2px 8px;
 }
-.player-name .player-health-count .player-health-count-number{
-    color: #fff;
+
+/* Abilities Group */
+.abilities-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.left-abilities {
+    justify-content: flex-start;
+}
+
+.right-abilities {
+    justify-content: flex-end;
+}
+
+/* Ability Slot */
+.vct-ability-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 24px;
+}
+
+.vct-ability-icon {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(255, 255, 255, 0.6));
+    transition: opacity 0.2s ease;
+}
+
+.ability-spent .vct-ability-icon {
+    opacity: 0.22;
+    filter: brightness(0) invert(1) grayscale(1) !important;
+}
+
+.ability-dash-container {
+    display: flex;
+    gap: 1.5px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    height: 3px;
+}
+
+.ability-dash {
+    width: 7.5px;
+    height: 2px;
+    border-radius: 1px;
+    background: #ffffff;
+    box-shadow: 0 0 2px #ffffff;
+}
+
+.ability-dash.dash-dim {
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: none;
+}
+
+/* Ultimate Circular Dial */
+.vct-ult-dial {
+    position: relative;
+    width: 27px;
+    height: 27px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ult-dial-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.ult-seg {
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    transition: stroke 0.3s ease;
+}
+
+.seg-filled {
+    stroke: #ffffff;
+}
+
+.seg-unfilled {
+    stroke: rgba(255, 255, 255, 0.22);
+}
+
+.ult-icon-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ult-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    transition: opacity 0.2s ease;
+}
+
+.ult-charging .ult-icon-img {
+    opacity: 0.55;
+}
+
+.ult-ready .seg-filled {
+    stroke: #ffffff;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.9));
+}
+
+.ult-ready {
+    animation: ultPulse 1.3s infinite alternate;
+}
+
+@keyframes ultPulse {
+    from {
+        transform: scale(1);
+        filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.6));
+    }
+
+    to {
+        transform: scale(1.06);
+        filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.95));
+    }
+}
+
+/* Weapon & Economy Block */
+.weapon-creds-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1px;
+}
+
+.wc-right {
+    align-items: flex-start;
+}
+
+.weapon-silhouette-box {
+    display: flex;
+    align-items: center;
+    height: 13px;
+    max-width: 65px;
+}
+
+.vct-weapon-img {
+    max-height: 13px;
+    max-width: 65px;
+    width: auto;
+    object-fit: contain;
+    filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+}
+
+.vct-right .vct-weapon-img {
+    transform: scaleX(-1);
+}
+
+.weapon-fallback-text {
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 9px;
+    color: #cbd5e1;
+}
+
+.vct-creds-box {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    line-height: 1;
+}
+
+.creds-symbol {
+    font-size: 10.5px;
+    color: #94a3b8;
     font-weight: 800;
 }
-.player-shield-count{
-    background-color: var(--overlay_black);
-    color: #fff;
-    font-size: small;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-bottom: 3px;
-    --side-length: 25px;
-    height: var(--side-length);
-    width: var(--side-length);
-    clip-path: polygon(calc(50%) 0px , calc(100%) calc(15%) , calc(100%) calc(65%), calc(50%) calc(100%), 0px calc(65%), 0px calc(15%));
-}
-.player-shield-outline{
-    background-color: var(--team-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    --side-length: 29px;
-    height: var(--side-length);
-    width: var(--side-length);
-    clip-path: polygon(calc(50%) 0px , calc(100%) calc(15%) , calc(100%) calc(65%), calc(50%) calc(100%), 0px calc(65%), 0px calc(15%));
-}
-.shield-down{
-    background-color: transparent;
+
+.creds-num {
+    font-family: var(--font-num);
+    font-weight: 700;
+    font-size: 11.5px;
+    color: #ffffff;
+    letter-spacing: 0.2px;
 }
 
+/* =========================================
+   DEAD STATE
+   ========================================= */
+.card-dead {
+    opacity: 0.55;
+    background: rgba(6, 10, 15, 0.85) !important;
+}
 
-.has-spike-indicator{
-    position: absolute;
-    background-color: #fff;
-    height: 30px;
-    width: 30px;
-    border-radius: 40000px;
+.card-dead .vct-avatar-img {
+    filter: grayscale(1) opacity(0.3) !important;
+}
+
+.dead-name {
+    color: var(--text-dead) !important;
+}
+
+.vct-dead-placeholder {
+    width: 34px;
+    height: 28px;
+}
+
+.dead-bottom {
+    background: rgba(3, 6, 9, 0.5) !important;
+}
+
+.dead-left-group,
+.dead-right-group {
     display: flex;
     align-items: center;
-    justify-content: center;
-    left: -15px;
-    top: 13px;
-    z-index: 9999;
-    opacity: 0;
-}
-.has-spike{
-    opacity: 1;
-}
-.has-spike-indicator img{
-    height: 55%;
-    filter:invert();
-}
-.right-team .has-spike-indicator{
-    right: -15px;
-    left: unset;
+    gap: 12px;
 }
 
-.right-team > .player-dead{
-    -webkit-filter: grayscale();
-    filter: grayscale();
-    -webkit-mask-image: linear-gradient(to left, black 0%, transparent 60%);
-    mask-image: linear-gradient(to left, black 0%, transparent 60%);
-}
-.left-team > .player-dead{
-    -webkit-filter: grayscale();
-    filter: grayscale();
-    -webkit-mask-image: linear-gradient(to right, black, transparent);
-    mask-image: linear-gradient(to right, black, transparent);
-}
-.player-dead > .player-status{
-    background-color: transparent !important;
+.vct-kda-text {
+    font-family: var(--font-num);
+    font-weight: 800;
+    font-size: 15px;
+    color: #ffffff;
+    letter-spacing: 0.6px;
+    line-height: 1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }

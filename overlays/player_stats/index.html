@@ -3,12 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Status</title>
+    <title>10-Player Stats Overlay - VCT Broadcast Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Outfit:wght@500;600;700;800;900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/1061ea1575.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="./player_stats.css">
+    <script src="/socket.io/socket.io.js"></script>
     <script src="./player_stats.js" defer></script>
 </head>
 <body>
-    
-</div>
+    <div id="left-team-container" class="hud-team-column left-hud"></div>
+    <div id="right-team-container" class="hud-team-column right-hud"></div>
 </body>
 </html>
