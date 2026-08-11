@@ -1,249 +1,333 @@
 {
-    "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing",
+    "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1Ij5h7sD0iEXTX4PMNg8kSixQX6aF6IFDqQVyd4bbEYI/edit?usp=sharing",
     "autoSync": false,
     "syncInterval": 60,
-    "lastSync": 1786438636241,
+    "lastSync": 1786441729008,
     "tournamentName": "ZENX VALORANT INVITATIONAL 2026",
     "teams": [
         {
-            "id": "team_1_1786438636241",
-            "name": "Alexandra",
-            "tag": "ALEX",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_1_1786441729008",
+            "name": "S1N eSports",
+            "tag": "S1N",
+            "logo": "https://drive.google.com/thumbnail?id=1gJaMqGxn3tMFJ75lofrxA-2Xsr3NDdY-&sz=w500",
+            "seed": "Asc 3",
+            "players": [
+                "Knight #diff",
+                "Vajra #diff",
+                "Salamander#iwin",
+                "Hmza #diff",
+                "Desert#faked",
+                "Headshotz#Head"
+            ]
         },
         {
-            "id": "team_2_1786438636241",
-            "name": "Andrew",
-            "tag": "ANDR",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_2_1786441729008",
+            "name": "Acceleration Esports",
+            "tag": "ACCE",
+            "logo": "https://drive.google.com/thumbnail?id=1yga077_G35M_NgA8ragAUoSRFeAnHMOJ&sz=w500",
+            "seed": "D1",
+            "players": [
+                "Acn s1ck #igl",
+                "Acn ronny #cris",
+                "Igh v1n1 #fln",
+                "Addythegoat #kid",
+                "馬特卡特山羊#Easy",
+                "Itzzdexterr #devil",
+                "Silky ladumaaaa #sulky"
+            ]
         },
         {
-            "id": "team_3_1786438636241",
-            "name": "Anna",
-            "tag": "ANNA",
+            "id": "team_3_1786441729008",
+            "name": "Eternals",
+            "tag": "ETER",
             "logo": "",
-            "seed": "",
-            "players": []
+            "seed": "Immo 1",
+            "players": [
+                "Azrael#007",
+                "s1lent#yami",
+                "Cry me a river#tear",
+                "Embrace it#wynot",
+                "Flickzz#Blind",
+                "no",
+                "K1thu#kithu"
+            ]
         },
         {
-            "id": "team_4_1786438636241",
-            "name": "Becky",
-            "tag": "BECK",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_4_1786441729008",
+            "name": "ZENX",
+            "tag": "ZENX",
+            "logo": "https://drive.google.com/thumbnail?id=1W92yvhQG438hQ70h06NyUAJ97pkOYrQR&sz=w500",
+            "seed": "Gold 2",
+            "players": [
+                "XLMNDR#Natsu",
+                "ZELDARIA#brokn",
+                "KICHU#5656",
+                "imCute#5656",
+                "xav1#911",
+                "愛媛に行くために#mikan",
+                "YUn0#god",
+                "MAD BASHA#BOSS"
+            ]
         },
         {
-            "id": "team_5_1786438636241",
-            "name": "Benjamin",
-            "tag": "BENJ",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_5_1786441729008",
+            "name": "EXB",
+            "tag": "EXB",
+            "logo": "https://drive.google.com/thumbnail?id=1ywBFty6dCraxB1fX2qhR4Sk6hWieSSrT&sz=w500",
+            "seed": "D1",
+            "players": [
+                "smokey#721",
+                "sam#hsc",
+                "K1thu#kithu",
+                "slime#hey",
+                "third eye yt#exe",
+                "wizzardiel#myr",
+                "SolarisDale#4456"
+            ]
         },
         {
-            "id": "team_6_1786438636241",
-            "name": "Carl",
-            "tag": "CARL",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_6_1786441729008",
+            "name": "HSC",
+            "tag": "HSC",
+            "logo": "https://drive.google.com/thumbnail?id=1ZBuyzT7jDOiFhsE9hweYzqbo7OHe81fN&sz=w500",
+            "seed": "g2",
+            "players": [
+                "kilaasyyy#sam",
+                "N O V A#FXXK",
+                "NOOBSTER#nubie",
+                "zyco#hsc",
+                "RobberHonor#aurh",
+                "HSC exe#noob",
+                "NOT SO GOOD#NOOB",
+                "PALS#HSC"
+            ]
         },
         {
-            "id": "team_7_1786438636241",
-            "name": "Carrie",
-            "tag": "CARR",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_7_1786441729008",
+            "name": "ORIGINALs",
+            "tag": "ORIG",
+            "logo": "https://drive.google.com/thumbnail?id=1rNovWRVC7VYLfZKfJJQq-BCOrJFQ1Oa2&sz=w500",
+            "seed": "Gold 1",
+            "players": [
+                "Jubro#Death",
+                "SECARIO#APEX",
+                "AnonymousIcicle#3614",
+                "REYNER#7528",
+                "IRIS#2631",
+                "naadhns#naadh",
+                "NEX#9306"
+            ]
         },
         {
-            "id": "team_8_1786438636241",
-            "name": "Dorothy",
-            "tag": "DORO",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_8_1786441729008",
+            "name": "NORTX",
+            "tag": "NORT",
+            "logo": "https://drive.google.com/thumbnail?id=1-gimfDXZGIKQUfw27kFIl4f31Z8YpXn3&sz=w500",
+            "seed": "Ascendant 3",
+            "players": [
+                "ToM#149",
+                "ABSOLUTiON#5055",
+                "Whiskey#3892",
+                "QueenA#KiKi",
+                "Mr FliQ#8350",
+                "Sushi#spyop"
+            ]
         },
         {
-            "id": "team_9_1786438636241",
-            "name": "Dylan",
-            "tag": "DYLA",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_9_1786441729008",
+            "name": "TEAM SYNDICATE",
+            "tag": "TEAM",
+            "logo": "https://drive.google.com/thumbnail?id=1lX1Qvm22CVAgzw5Lo02Gczv1tsOzX0PL&sz=w500",
+            "seed": "DIAMOND 1",
+            "players": [
+                "TSD SCARCY#fAR",
+                "TSD PETER X ROG #pxr",
+                "TSD ALIEN#JEEZZ",
+                "PodaMone#KL00",
+                "TSD Techbee#HAWK",
+                "Ezzz bro #Noobs",
+                "TheLast#1225",
+                "TSD Randomizer#SKULL"
+            ]
         },
         {
-            "id": "team_10_1786438636241",
-            "name": "Edward",
-            "tag": "EDWA",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_10_1786441729008",
+            "name": "Only frens",
+            "tag": "ONLY",
+            "logo": "https://drive.google.com/thumbnail?id=1jcO9krqRQAtNTOK8NkgZ28GVYGz5KO3t&sz=w500",
+            "seed": "Immo 2",
+            "players": [
+                "Akrasia#NINJA",
+                "Fr0sty#idek",
+                "NOOBIE#pluck",
+                "Kry#vrtx",
+                "Thunder#",
+                "Sureji#sura",
+                "Assass1n#K1NG",
+                "LORD#AGR"
+            ]
         },
         {
-            "id": "team_11_1786438636241",
-            "name": "Ellen",
-            "tag": "ELLE",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_11_1786441729008",
+            "name": "Cpt",
+            "tag": "CPT",
+            "logo": "https://drive.google.com/thumbnail?id=1WHfZthBlu8FRA7sMMFDP4FQFyRYc7Khn&sz=w500",
+            "seed": "Gold 3",
+            "players": [
+                "RON777 #ronnie",
+                "CPT JJ #MstrJ",
+                "Shonshang #kok",
+                "LauncelotX #3366",
+                "Mist #Stoic",
+                "cptEren #2580",
+                "Kanao Tsuyuri",
+                "Mstr.jj #mstrjj"
+            ]
         },
         {
-            "id": "team_12_1786438636241",
-            "name": "Fiona",
-            "tag": "FION",
+            "id": "team_12_1786441729008",
+            "name": "Wyvern",
+            "tag": "WYVE",
             "logo": "",
-            "seed": "",
-            "players": []
+            "seed": "Bronze",
+            "players": [
+                "Deceptikong#6969",
+                "PewPewKing#Segsi",
+                "kumbidi#9275",
+                "DetroiD#4400",
+                "E4U1N0X#MOGG"
+            ]
         },
         {
-            "id": "team_13_1786438636241",
-            "name": "John",
-            "tag": "JOHN",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_13_1786441729008",
+            "name": "JMP Esports",
+            "tag": "JMP",
+            "logo": "https://drive.google.com/thumbnail?id=19EmCs-9bedsg9d4vY0xc4F4jwzKIzlyA&sz=w500",
+            "seed": "Ascendant",
+            "players": [
+                "L E V I#H1NT",
+                "uZee#csgo",
+                "ZL Mugiwara#ZLT",
+                "Fr0st#Pavam",
+                "ZL Sensei#ZLT",
+                "Kronos#eksde",
+                "wixi#mallu",
+                "Kubo#JEE26"
+            ]
         },
         {
-            "id": "team_14_1786438636241",
-            "name": "Jonathan",
-            "tag": "JONA",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_14_1786441729008",
+            "name": "Quantum Elite",
+            "tag": "QUAN",
+            "logo": "https://drive.google.com/thumbnail?id=1TivMZbvQiE3V-srF8ni4k7HaSY9TJ4LW&sz=w500",
+            "seed": "PLATINUM 3",
+            "players": [
+                "LEVIXX#P4NEL",
+                "always alone#LBgod",
+                "See you in Hell #Demon",
+                "Apz #143",
+                "McB Obsido #McB5",
+                "ItzMeMinion #bello",
+                "KANNAN#777"
+            ]
         },
         {
-            "id": "team_15_1786438636241",
-            "name": "Joseph",
-            "tag": "JOSE",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_15_1786441729008",
+            "name": "XLANTIS",
+            "tag": "XLAN",
+            "logo": "https://drive.google.com/thumbnail?id=16AVAzn8tuFSP72QlC4Tn6p9RIM0oe2Zg&sz=w500",
+            "seed": "Silver 1",
+            "players": [
+                "SEMPAI#2412",
+                "ashiiiii1#ashi",
+                "LUKE#LK66",
+                "cr0nixx#clips",
+                "EddyTheTeddy94#9280",
+                "kili kunju#4515",
+                "solosniper#2007"
+            ]
         },
         {
-            "id": "team_16_1786438636241",
-            "name": "Josephine",
-            "tag": "JOSE",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_16_1786441729008",
+            "name": "idlisambar",
+            "tag": "IDLI",
+            "logo": "https://drive.google.com/thumbnail?id=11KiBkcZrYpW-I7BOMgOXPv0bHuSU4EkQ&sz=w500",
+            "seed": "plat 1",
+            "players": [
+                "payback#bot",
+                "Ghostie #Nub",
+                "rekt#xxx",
+                "branstarkgaming#007",
+                "robin#god",
+                "Sh4ADoW#0707"
+            ]
         },
         {
-            "id": "team_17_1786438636241",
-            "name": "Karen",
-            "tag": "KARE",
+            "id": "team_17_1786441729008",
+            "name": "Pookie gamers",
+            "tag": "POOK",
             "logo": "",
-            "seed": "",
-            "players": []
+            "seed": "Bronze 1",
+            "players": [
+                "gundrawhith#999",
+                "ducky#4608",
+                "Iluv advaithnadi#2230",
+                "Aidenn#8847",
+                "Aryan#GOAT1",
+                "NarutoUz#Ninja",
+                "chapioo#3232"
+            ]
         },
         {
-            "id": "team_18_1786438636241",
-            "name": "Kevin",
-            "tag": "KEVI",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_18_1786441729008",
+            "name": "Zycon",
+            "tag": "ZYCO",
+            "logo": "https://drive.google.com/thumbnail?id=19QDrJ1AsH8IVMo83qb8xqTpqLn9RqMzR&sz=w500",
+            "seed": "silver 1",
+            "players": [
+                "PEDRI#7643",
+                "VichuXd#kl02",
+                "Bruxzo#f09",
+                "Number#6640",
+                "Nyxen#trick",
+                "OCEANUS#6431",
+                "WRCNIGHT#30304",
+                "CHAKKARA KUTTAN#YOGOD"
+            ]
         },
         {
-            "id": "team_19_1786438636241",
-            "name": "Lisa",
-            "tag": "LISA",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_19_1786441729008",
+            "name": "KIDILOSKI Ronin",
+            "tag": "KIDI",
+            "logo": "https://drive.google.com/thumbnail?id=1hJ6ki3tpnCwmBLjTOIkF0HbjpMAVC_Hy&sz=w500",
+            "seed": "Plat 1",
+            "players": [
+                "RuinΣd#DΣAD",
+                "NephewTACO#bell",
+                "CRIZ#80085",
+                "DrStrange#Denji NXXXN - Nejin - NXXXN#1234",
+                "NXXXN#1234",
+                "Risky#RAGE",
+                "AetherGN#URGAE",
+                "sleep神 #isbck"
+            ]
         },
         {
-            "id": "team_20_1786438636241",
-            "name": "Mary",
-            "tag": "MARY",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_21_1786438636241",
-            "name": "Maureen",
-            "tag": "MAUR",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_22_1786438636241",
-            "name": "Nick",
-            "tag": "NICK",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_23_1786438636241",
-            "name": "Olivia",
-            "tag": "OLIV",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_24_1786438636241",
-            "name": "Pamela",
-            "tag": "PAME",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_25_1786438636241",
-            "name": "Patrick",
-            "tag": "PATR",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_26_1786438636241",
-            "name": "Robert",
-            "tag": "ROBE",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_27_1786438636241",
-            "name": "Sean",
-            "tag": "SEAN",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_28_1786438636241",
-            "name": "Stacy",
-            "tag": "STAC",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_29_1786438636241",
-            "name": "Thomas",
-            "tag": "THOM",
-            "logo": "",
-            "seed": "",
-            "players": []
-        },
-        {
-            "id": "team_30_1786438636241",
-            "name": "Will",
-            "tag": "WILL",
-            "logo": "",
-            "seed": "",
-            "players": []
+            "id": "team_20_1786441729008",
+            "name": "NEXAURA",
+            "tag": "NEXA",
+            "logo": "https://drive.google.com/thumbnail?id=1tBtG5JWBZr_0hlqHSs8GfBWyHoocFvDN&sz=w500",
+            "seed": "Gold 3",
+            "players": [
+                "NXR DOOMONKEY #DOOM",
+                "NRX Xavi#616",
+                "NXR BaBz #PlayZ",
+                "NXR XStillDark #XSD",
+                "NXR NanduPC#Peace",
+                "NXR IdivettuSukhu#96669",
+                "NXR LUCIFER#NEFO",
+                "S U G A R D A D D Y G #xmax"
+            ]
         }
     ],
     "matches": [

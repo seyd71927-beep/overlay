@@ -976,15 +976,23 @@ class fileLoader {
 
         // Parse Teams
         const teamNameIdx = findCol('teamname', 'team', 'name', 'org');
-        const tagIdx = findCol('tag', 'abbr', 'abbreviation', 'code', 'short');
+        const tagIdx = findCol('teamshorttag', 'tag', 'abbr', 'abbreviation', 'code', 'short');
         const logoIdx = findCol('logo', 'teamlogo', 'logourl', 'icon', 'teamicon', 'image', 'teamimage', 'avatar', 'pic', 'picture', 'photo', 'badge', 'emblem', 'banner', 'crest', 'symbol', 'img', 'upload', 'file', 'attachment', 'drive', 'link');
-        const seedIdx = findCol('seed', 'rank', 'group', 'division', 'pool', 'tier');
+        const seedIdx = findCol('currentrank', 'rank', 'seed', 'group', 'division', 'pool', 'tier', 'peakrank');
         const p1Idx = findCol('player1', 'p1', 'roster1');
         const p2Idx = findCol('player2', 'p2', 'roster2');
         const p3Idx = findCol('player3', 'p3', 'roster3');
         const p4Idx = findCol('player4', 'p4', 'roster4');
         const p5Idx = findCol('player5', 'p5', 'roster5');
         const rosterIdx = findCol('roster', 'players', 'lineup', 'member');
+
+        // Dynamic player Riot ID columns detector (for Google Forms with multiple Riot ID columns)
+        const playerCols = [];
+        headers.forEach((h, idx) => {
+            if (h.includes('riotid') || h.includes('ign') || h.includes('ingamename') || h.includes('playername') || (h.includes('player') && !h.includes('yt') && !h.includes('channel') && !h.includes('channelurl'))) {
+                playerCols.push(idx);
+            }
+        });
 
         // Parse Matches
         const matchIdIdx = findCol('matchid', 'match', 'game', 'id');
@@ -1002,7 +1010,13 @@ class fileLoader {
             // 1. Extract Team if row contains team data
             if (teamNameIdx !== -1 && row[teamNameIdx] && String(row[teamNameIdx]).trim() !== '') {
                 const teamName = String(row[teamNameIdx]).trim();
-                let teamTag = tagIdx !== -1 && row[tagIdx] ? String(row[tagIdx]).trim() : teamName.slice(0, 4).toUpperCase();
+                let teamTag = '';
+                if (tagIdx !== -1 && row[tagIdx] && String(row[tagIdx]).trim() !== '') {
+                    teamTag = String(row[tagIdx]).trim();
+                } else {
+                    const tagMatch = teamName.match(/^[A-Z0-9]{2,4}\b/);
+                    teamTag = tagMatch ? tagMatch[0] : teamName.slice(0, 4).toUpperCase();
+                }
                 
                 // Extract and clean Team Logo URL
                 let teamLogo = '';
@@ -1023,32 +1037,26 @@ class fileLoader {
                     }
                 }
 
-                let teamSeed = seedIdx !== -1 && row[seedIdx] ? row[seedIdx].trim() : '';
+                let teamSeed = seedIdx !== -1 && row[seedIdx] ? String(row[seedIdx]).trim() : '';
 
                 let players = [];
-                if (p1Idx !== -1 && row[p1Idx]) {
-                    const p = this.cleanPlayerName(row[p1Idx]);
-                    if (p) players.push(p);
-                }
-                if (p2Idx !== -1 && row[p2Idx]) {
-                    const p = this.cleanPlayerName(row[p2Idx]);
-                    if (p) players.push(p);
-                }
-                if (p3Idx !== -1 && row[p3Idx]) {
-                    const p = this.cleanPlayerName(row[p3Idx]);
-                    if (p) players.push(p);
-                }
-                if (p4Idx !== -1 && row[p4Idx]) {
-                    const p = this.cleanPlayerName(row[p4Idx]);
-                    if (p) players.push(p);
-                }
-                if (p5Idx !== -1 && row[p5Idx]) {
-                    const p = this.cleanPlayerName(row[p5Idx]);
-                    if (p) players.push(p);
-                }
-
-                if (players.length === 0 && rosterIdx !== -1 && row[rosterIdx]) {
-                    players = row[rosterIdx].split(/[,;\n/]/).map(p => this.cleanPlayerName(p)).filter(Boolean);
+                if (playerCols.length > 0) {
+                    playerCols.forEach(idx => {
+                        if (row[idx]) {
+                            const p = this.cleanPlayerName(row[idx]);
+                            if (p && !players.includes(p)) players.push(p);
+                        }
+                    });
+                } else {
+                    [p1Idx, p2Idx, p3Idx, p4Idx, p5Idx].forEach(idx => {
+                        if (idx !== -1 && row[idx]) {
+                            const p = this.cleanPlayerName(row[idx]);
+                            if (p && !players.includes(p)) players.push(p);
+                        }
+                    });
+                    if (players.length === 0 && rosterIdx !== -1 && row[rosterIdx]) {
+                        players = row[rosterIdx].split(/[,;\n/]/).map(p => this.cleanPlayerName(p)).filter(Boolean);
+                    }
                 }
 
                 parsedTeams.push({
