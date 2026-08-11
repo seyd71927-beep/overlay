@@ -22,6 +22,7 @@ app.set('io', io);
 // Static file hosting
 app.use(express.static(path.join(__dirname, './overlays')));
 app.use(express.static(path.join(__dirname, './panel/res')));
+app.use(express.static(path.join(__dirname, './public')));
 app.use('/logo', express.static(path.join(__dirname, './logo')));
 app.use('/logos', express.static(path.join(__dirname, './logo')));
 app.use('/visual_assets/teams', express.static(path.join(__dirname, './logo')));
