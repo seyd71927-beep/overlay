@@ -13,14 +13,14 @@
             "weapon": "vandal",
             "c_util": true,
             "q_util": true,
-            "e_util": false,
+            "e_util": true,
             "x_util": false,
             "credits": 4200,
             "has_spike": true,
             "is_dead": false,
             "is_registered": true,
             "puuid": "p1",
-            "name": "Basha"
+            "name": "TenZ"
         }
     },
     "player_1": {
@@ -44,63 +44,64 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p2",
-            "name": "Phantom"
+            "name": "ShahZaM"
         }
     },
     "player_2": {
         "token": "BO3iZbRuutAC",
-        "is_registered": false,
+        "is_registered": true,
         "last_updated": 1786438291217,
         "data": {
             "username": "NXR dapr",
             "agent": "cypher",
-            "health": 0,
-            "shield": 0,
+            "health": 100,
+            "shield": 50,
             "ult_points_needed": 6,
-            "ult_points_gained": 2,
+            "ult_points_gained": 3,
             "weapon": "vandal",
             "c_util": true,
             "q_util": true,
             "e_util": true,
             "x_util": false,
-            "credits": 1900,
+            "credits": 2900,
             "has_spike": false,
-            "is_dead": true,
+            "is_dead": false,
             "is_registered": true,
             "puuid": "p3",
-            "name": "ViperX"
+            "name": "dapr"
         }
     },
     "player_3": {
         "token": "tssEEXUyVlOw",
-        "is_registered": false,
+        "is_registered": true,
         "last_updated": 1786438291217,
         "data": {
-            "username": "Player 4",
-            "agent": "Viper",
-            "health": 0,
-            "shield": 0,
-            "ult_points_needed": 7,
+            "username": "NXR SicK",
+            "agent": "phoenix",
+            "health": 100,
+            "shield": 50,
+            "ult_points_needed": 6,
             "ult_points_gained": 5,
             "weapon": "vandal",
-            "c_util": false,
-            "q_util": false,
-            "e_util": false,
+            "c_util": true,
+            "q_util": true,
+            "e_util": true,
             "x_util": false,
             "credits": 4700,
             "has_spike": false,
-            "is_dead": true,
+            "is_dead": false,
             "is_registered": true,
-            "name": "Shadow"
+            "puuid": "p4",
+            "name": "SicK"
         }
     },
     "player_4": {
         "token": "E5py5gH0eYty",
-        "is_registered": false,
+        "is_registered": true,
         "last_updated": 1786438291217,
         "data": {
-            "username": "Player 5",
-            "agent": "Omen",
+            "username": "NXR zombs",
+            "agent": "omen",
             "health": 59,
             "shield": 50,
             "ult_points_needed": 7,
@@ -114,7 +115,8 @@
             "has_spike": false,
             "is_dead": false,
             "is_registered": true,
-            "name": "Apex"
+            "puuid": "p5",
+            "name": "zombs"
         }
     },
     "player_5": {
@@ -131,14 +133,14 @@
             "weapon": "phantom",
             "c_util": true,
             "q_util": true,
-            "e_util": false,
+            "e_util": true,
             "x_util": false,
             "credits": 4500,
             "has_spike": false,
             "is_dead": false,
             "is_registered": true,
-            "puuid": "p4",
-            "name": "Bijin"
+            "puuid": "p6",
+            "name": "Boaster"
         }
     },
     "player_6": {
@@ -154,20 +156,20 @@
             "ult_points_gained": 7,
             "weapon": "vandal",
             "c_util": true,
-            "q_util": false,
+            "q_util": true,
             "e_util": true,
             "x_util": false,
             "credits": 3900,
             "has_spike": false,
             "is_dead": false,
             "is_registered": true,
-            "puuid": "p5",
-            "name": "DarkKnight"
+            "puuid": "p7",
+            "name": "Derke"
         }
     },
     "player_7": {
         "token": "pMcI01u83OGZ",
-        "is_registered": false,
+        "is_registered": true,
         "last_updated": 1786438291217,
         "data": {
             "username": "IDLI Chronicle",
@@ -185,54 +187,56 @@
             "has_spike": false,
             "is_dead": false,
             "is_registered": true,
-            "puuid": "p6",
-            "name": "Nova"
+            "puuid": "p8",
+            "name": "Chronicle"
         }
     },
     "player_8": {
         "token": "hAkerHVS8F3E",
-        "is_registered": false,
+        "is_registered": true,
         "last_updated": 1786438291217,
         "data": {
-            "username": "Player 9",
-            "agent": "Sage",
-            "health": 0,
-            "shield": 0,
-            "ult_points_needed": 7,
-            "ult_points_gained": 1,
+            "username": "IDLI Alfajer",
+            "agent": "killjoy",
+            "health": 100,
+            "shield": 50,
+            "ult_points_needed": 8,
+            "ult_points_gained": 5,
             "weapon": "vandal",
             "c_util": true,
             "q_util": true,
             "e_util": true,
             "x_util": false,
-            "credits": 1200,
+            "credits": 3200,
             "has_spike": false,
-            "is_dead": true,
+            "is_dead": false,
             "is_registered": true,
-            "name": "Cipher"
+            "puuid": "p9",
+            "name": "Alfajer"
         }
     },
     "player_9": {
         "token": "Y3im7MUP9pzj",
-        "is_registered": false,
+        "is_registered": true,
         "last_updated": 1786438291217,
         "data": {
-            "username": "Player 10",
-            "agent": "Cypher",
-            "health": 0,
-            "shield": 0,
-            "ult_points_needed": 7,
+            "username": "IDLI Leo",
+            "agent": "fade",
+            "health": 100,
+            "shield": 50,
+            "ult_points_needed": 8,
             "ult_points_gained": 7,
             "weapon": "vandal",
             "c_util": true,
-            "q_util": false,
+            "q_util": true,
             "e_util": true,
-            "x_util": true,
+            "x_util": false,
             "credits": 5800,
             "has_spike": false,
-            "is_dead": true,
+            "is_dead": false,
             "is_registered": true,
-            "name": "Raptor"
+            "puuid": "p10",
+            "name": "Leo"
         }
     }
 }

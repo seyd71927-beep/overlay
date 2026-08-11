@@ -44,8 +44,8 @@
         "won_games": 0
     },
     "switch_sides": false,
-    "team_1_count": 2,
-    "team_2_count": 2,
+    "team_1_count": 5,
+    "team_2_count": 5,
     "team_1_roster": [
         {
             "puuid": "p1",

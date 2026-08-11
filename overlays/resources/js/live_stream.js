@@ -193,43 +193,48 @@ class LiveStreamOperator {
         this.updateRosterBadges();
 
         let playersObj = {};
-        for (let i = 0; i < 5; i++) {
-            if (pData.team_1 && pData.team_1[`player_${i}`]) {
-                playersObj[`player_${i}`] = {
-                    is_registered: pData.team_1[`player_${i}`].is_registered !== false,
-                    data: pData.team_1[`player_${i}`]
-                };
-            } else if (pData[`player_${i + 1}`]) {
-                playersObj[`player_${i}`] = {
-                    is_registered: true,
-                    data: pData[`player_${i + 1}`]
-                };
-            }
-        }
-        for (let i = 0; i < 5; i++) {
-            if (pData.team_2 && pData.team_2[`player_${i}`]) {
-                playersObj[`player_${i + 5}`] = {
-                    is_registered: pData.team_2[`player_${i}`].is_registered !== false,
-                    data: pData.team_2[`player_${i}`]
-                };
-            } else if (pData[`player_${i + 6}`]) {
-                playersObj[`player_${i + 5}`] = {
-                    is_registered: true,
-                    data: pData[`player_${i + 6}`]
-                };
-            }
-        }
 
-        // If direct list provided
+        // 1. Direct team lists (from getFormattedPlayerStats)
         if (Array.isArray(pData.team_1_list)) {
             pData.team_1_list.forEach((p, idx) => {
-                playersObj[`player_${idx}`] = { is_registered: true, data: p };
+                const unwrapped = (p && p.data) ? { ...p.data } : { ...p };
+                playersObj[`player_${idx}`] = { is_registered: true, data: unwrapped };
             });
         }
         if (Array.isArray(pData.team_2_list)) {
             pData.team_2_list.forEach((p, idx) => {
-                playersObj[`player_${idx + 5}`] = { is_registered: true, data: p };
+                const unwrapped = (p && p.data) ? { ...p.data } : { ...p };
+                playersObj[`player_${idx + 5}`] = { is_registered: true, data: unwrapped };
             });
+        }
+
+        // 2. Team 1 & Team 2 objects
+        if (pData.team_1 && typeof pData.team_1 === 'object') {
+            for (let i = 0; i < 5; i++) {
+                const p = pData.team_1[`player_${i}`];
+                if (p) {
+                    const unwrapped = p.data ? { ...p.data } : { ...p };
+                    playersObj[`player_${i}`] = { is_registered: true, data: unwrapped };
+                }
+            }
+        }
+        if (pData.team_2 && typeof pData.team_2 === 'object') {
+            for (let i = 0; i < 5; i++) {
+                const p = pData.team_2[`player_${i}`] || pData.team_2[`player_${i + 5}`];
+                if (p) {
+                    const unwrapped = p.data ? { ...p.data } : { ...p };
+                    playersObj[`player_${i + 5}`] = { is_registered: true, data: unwrapped };
+                }
+            }
+        }
+
+        // 3. Raw players object format (player_0 .. player_9)
+        for (let i = 0; i < 10; i++) {
+            const rawP = pData[`player_${i}`];
+            if (rawP && !playersObj[`player_${i}`]) {
+                const unwrapped = (rawP && rawP.data) ? { ...rawP.data } : { ...rawP };
+                playersObj[`player_${i}`] = { is_registered: true, data: unwrapped };
+            }
         }
 
         this.playersData = playersObj;

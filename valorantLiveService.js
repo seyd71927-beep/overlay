@@ -518,7 +518,9 @@ class ValorantLiveService {
                     }
 
                     if (this.io) {
-                        this.io.emit('playerUpdate', this.dataBus.config.players);
+                        const formattedStats = this.dataBus.getFormattedPlayerStats();
+                        this.io.emit('playerUpdate', formattedStats);
+                        this.io.emit('playerStatsUpdate', formattedStats);
                     }
                 }
             } else if (data && (data.status === 401 || (data.errors && data.errors[0]?.message?.toLowerCase().includes('unauthorized')))) {

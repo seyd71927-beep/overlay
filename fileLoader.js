@@ -278,10 +278,10 @@ class fileLoader {
 
     getFormattedPlayerStats() {
         const switchTeams = (this.config.gameState && this.config.gameState.switch_sides) || false;
-        const t1Count = (this.config.gameState && typeof this.config.gameState.team_1_count === 'number') 
+        const t1Count = (this.config.gameState && typeof this.config.gameState.team_1_count === 'number' && this.config.gameState.team_1_count > 0) 
             ? this.config.gameState.team_1_count 
             : 5;
-        const t2Count = (this.config.gameState && typeof this.config.gameState.team_2_count === 'number') 
+        const t2Count = (this.config.gameState && typeof this.config.gameState.team_2_count === 'number' && this.config.gameState.team_2_count > 0) 
             ? this.config.gameState.team_2_count 
             : 5;
 
@@ -296,10 +296,38 @@ class fileLoader {
             team_2_list: []
         };
 
+        const defaultAgents1 = ['jett', 'sova', 'cypher', 'phoenix', 'omen'];
+        const defaultAgents2 = ['omen', 'raze', 'viper', 'killjoy', 'fade'];
+
         for (let i = 0; i < t1Count; i++) {
             const key = `player_${i}`;
-            const p = this.config.players[key] || { data: { username: `Player ${i + 1}`, agent: 'jett', health: 100, shield: 50 }, is_registered: true };
-            const pData = { ...p.data, is_registered: p.is_registered };
+            const p = this.config.players[key] || {};
+            const pDataRaw = p.data || p;
+            const pData = {
+                username: pDataRaw.username || `Player ${i + 1}`,
+                agent: (pDataRaw.agent || defaultAgents1[i % defaultAgents1.length]).toLowerCase(),
+                health: typeof pDataRaw.health !== 'undefined' ? Number(pDataRaw.health) : 100,
+                shield: typeof pDataRaw.shield !== 'undefined' ? Number(pDataRaw.shield) : 50,
+                weapon: (pDataRaw.weapon || 'vandal').toLowerCase(),
+                credits: typeof pDataRaw.credits !== 'undefined' ? Number(pDataRaw.credits) : 3900,
+                ult_points_gained: typeof pDataRaw.ult_points_gained !== 'undefined' ? Number(pDataRaw.ult_points_gained) : 4,
+                ult_points_needed: typeof pDataRaw.ult_points_needed !== 'undefined' ? Number(pDataRaw.ult_points_needed) : 7,
+                c_util: pDataRaw.c_util !== false,
+                q_util: pDataRaw.q_util !== false,
+                e_util: pDataRaw.e_util !== false,
+                x_util: !!pDataRaw.x_util,
+                has_spike: !!pDataRaw.has_spike,
+                is_dead: !!pDataRaw.is_dead || (typeof pDataRaw.health !== 'undefined' && Number(pDataRaw.health) <= 0),
+                is_registered: true,
+                puuid: pDataRaw.puuid || `p${i + 1}`,
+                name: pDataRaw.name || pDataRaw.username || `Player ${i + 1}`,
+                tag: pDataRaw.tag || '',
+                kills: typeof pDataRaw.kills !== 'undefined' ? Number(pDataRaw.kills) : undefined,
+                deaths: typeof pDataRaw.deaths !== 'undefined' ? Number(pDataRaw.deaths) : undefined,
+                assists: typeof pDataRaw.assists !== 'undefined' ? Number(pDataRaw.assists) : undefined,
+                kda: pDataRaw.kda || (typeof pDataRaw.kills !== 'undefined' ? `${pDataRaw.kills || 0}/${pDataRaw.deaths || 0}/${pDataRaw.assists || 0}` : undefined),
+                is_spectated: !!pDataRaw.is_spectated
+            };
             responseObj.team_1[key] = pData;
             responseObj.team_1_list.push(pData);
         }
@@ -307,8 +335,33 @@ class fileLoader {
         for (let i = 0; i < t2Count; i++) {
             const key = `player_${i + 5}`;
             const subKey = `player_${i}`;
-            const p = this.config.players[key] || { data: { username: `Player ${i + 6}`, agent: 'omen', health: 100, shield: 50 }, is_registered: true };
-            const pData = { ...p.data, is_registered: p.is_registered };
+            const p = this.config.players[key] || {};
+            const pDataRaw = p.data || p;
+            const pData = {
+                username: pDataRaw.username || `Player ${i + 6}`,
+                agent: (pDataRaw.agent || defaultAgents2[i % defaultAgents2.length]).toLowerCase(),
+                health: typeof pDataRaw.health !== 'undefined' ? Number(pDataRaw.health) : 100,
+                shield: typeof pDataRaw.shield !== 'undefined' ? Number(pDataRaw.shield) : 50,
+                weapon: (pDataRaw.weapon || 'vandal').toLowerCase(),
+                credits: typeof pDataRaw.credits !== 'undefined' ? Number(pDataRaw.credits) : 3900,
+                ult_points_gained: typeof pDataRaw.ult_points_gained !== 'undefined' ? Number(pDataRaw.ult_points_gained) : 4,
+                ult_points_needed: typeof pDataRaw.ult_points_needed !== 'undefined' ? Number(pDataRaw.ult_points_needed) : 7,
+                c_util: pDataRaw.c_util !== false,
+                q_util: pDataRaw.q_util !== false,
+                e_util: pDataRaw.e_util !== false,
+                x_util: !!pDataRaw.x_util,
+                has_spike: !!pDataRaw.has_spike,
+                is_dead: !!pDataRaw.is_dead || (typeof pDataRaw.health !== 'undefined' && Number(pDataRaw.health) <= 0),
+                is_registered: true,
+                puuid: pDataRaw.puuid || `p${i + 6}`,
+                name: pDataRaw.name || pDataRaw.username || `Player ${i + 6}`,
+                tag: pDataRaw.tag || '',
+                kills: typeof pDataRaw.kills !== 'undefined' ? Number(pDataRaw.kills) : undefined,
+                deaths: typeof pDataRaw.deaths !== 'undefined' ? Number(pDataRaw.deaths) : undefined,
+                assists: typeof pDataRaw.assists !== 'undefined' ? Number(pDataRaw.assists) : undefined,
+                kda: pDataRaw.kda || (typeof pDataRaw.kills !== 'undefined' ? `${pDataRaw.kills || 0}/${pDataRaw.deaths || 0}/${pDataRaw.assists || 0}` : undefined),
+                is_spectated: !!pDataRaw.is_spectated
+            };
             responseObj.team_2[subKey] = pData;
             responseObj.team_2_list.push(pData);
         }
@@ -571,21 +624,16 @@ class fileLoader {
         this.saveStateToFile('gameState.json', this.config.gameState);
     }
 
-    // Auto kick inactive external clients
+    // Auto check inactive external clients
     checkForInactivePlayers() {
         let currentDate = Date.now();
         for (const key in this.config.players) {
             if (
                 key.startsWith('player_') &&
-                this.config.players[key].is_registered &&
-                Math.abs(currentDate - this.config.players[key].last_updated) >= 30000
+                this.config.players[key].is_external_client &&
+                Math.abs(currentDate - (this.config.players[key].last_updated || 0)) >= 60000
             ) {
-                // Don't auto kick if no token set
-                if (this.config.players[key].token) {
-                    this.config.players[key].last_updated = currentDate;
-                    this.config.players[key].is_registered = false;
-                    console.log(`User with token: ${this.config.players[key].token} auto kicked due to inactivity`);
-                }
+                this.config.players[key].is_external_client = false;
             }
         }
     }

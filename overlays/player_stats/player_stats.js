@@ -37,9 +37,17 @@ const AGENT_ABILITY_DATA = {
 
 async function fetch_player_status_information() {
     try {
-        const res = await fetch('../get_player_stats');
+        let res;
+        try {
+            res = await fetch('/get_player_stats');
+        } catch (e) {
+            res = null;
+        }
+        if (!res || !res.ok) {
+            res = await fetch('../get_player_stats');
+        }
         const json = await res.json();
-        if (json.status) {
+        if (json && json.status) {
             renderPlayerHUD(json);
         }
     } catch (e) {
@@ -57,53 +65,55 @@ function renderPlayerHUD(json) {
     // Extract dynamic Team 1 players
     let team1Players = [];
     if (Array.isArray(json.team_1_list) && json.team_1_list.length > 0) {
-        team1Players = json.team_1_list.filter(p => p && p.is_registered !== false);
+        team1Players = json.team_1_list.filter(p => !!p);
     } else if (json.team_1 && typeof json.team_1 === 'object') {
         const keys = Object.keys(json.team_1);
         for (const k of keys) {
             const p = json.team_1[k];
-            if (p && p.is_registered !== false) {
-                team1Players.push(p);
-            }
+            if (p) team1Players.push(p);
         }
     }
 
     // Extract dynamic Team 2 players
     let team2Players = [];
     if (Array.isArray(json.team_2_list) && json.team_2_list.length > 0) {
-        team2Players = json.team_2_list.filter(p => p && p.is_registered !== false);
+        team2Players = json.team_2_list.filter(p => !!p);
     } else if (json.team_2 && typeof json.team_2 === 'object') {
         const keys = Object.keys(json.team_2);
         for (const k of keys) {
             const p = json.team_2[k];
-            if (p && p.is_registered !== false) {
-                team2Players.push(p);
-            }
+            if (p) team2Players.push(p);
         }
     }
 
-    // If both empty and not registered, use default 5-player roster for initial OBS preview
-    if (team1Players.length === 0 && team2Players.length === 0 && !json.team_1_count) {
+    // Default 5-player fallback if either team is empty
+    if (team1Players.length === 0) {
         team1Players = [
-            { username: 'Player 1', agent: 'jett', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 5, ult_points_needed: 7, credits: 4500, is_dead: false },
-            { username: 'Player 2', agent: 'reyna', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 6, ult_points_needed: 7, credits: 3900, is_dead: false },
-            { username: 'Player 3', agent: 'sova', health: 80, shield: 25, weapon: 'phantom', ult_points_gained: 3, ult_points_needed: 7, credits: 2400, is_dead: false }
+            { username: 'Player 1', agent: 'jett', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 5, ult_points_needed: 7, credits: 4200, is_dead: false, has_spike: true },
+            { username: 'Player 2', agent: 'sova', health: 85, shield: 25, weapon: 'phantom', ult_points_gained: 4, ult_points_needed: 7, credits: 3100, is_dead: false },
+            { username: 'Player 3', agent: 'cypher', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 3, ult_points_needed: 6, credits: 2900, is_dead: false },
+            { username: 'Player 4', agent: 'phoenix', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 5, ult_points_needed: 6, credits: 4700, is_dead: false },
+            { username: 'Player 5', agent: 'omen', health: 59, shield: 50, weapon: 'operator', ult_points_gained: 1, ult_points_needed: 7, credits: 4900, is_dead: false }
         ];
+    }
+    if (team2Players.length === 0) {
         team2Players = [
-            { username: 'Player 4', agent: 'omen', health: 100, shield: 50, weapon: 'phantom', ult_points_gained: 4, ult_points_needed: 7, credits: 4200, is_dead: false },
-            { username: 'Player 5', agent: 'viper', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 7, ult_points_needed: 7, credits: 3800, is_dead: false },
-            { username: 'Player 6', agent: 'killjoy', health: 0, shield: 0, weapon: 'vandal', ult_points_gained: 2, ult_points_needed: 7, credits: 1900, is_dead: true }
+            { username: 'Player 6', agent: 'omen', health: 100, shield: 50, weapon: 'phantom', ult_points_gained: 6, ult_points_needed: 7, credits: 4500, is_dead: false },
+            { username: 'Player 7', agent: 'raze', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 7, ult_points_needed: 8, credits: 3900, is_dead: false },
+            { username: 'Player 8', agent: 'viper', health: 40, shield: 0, weapon: 'spectre', ult_points_gained: 3, ult_points_needed: 8, credits: 2400, is_dead: false },
+            { username: 'Player 9', agent: 'killjoy', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 5, ult_points_needed: 8, credits: 3200, is_dead: false },
+            { username: 'Player 10', agent: 'fade', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 7, ult_points_needed: 8, credits: 5800, is_dead: false }
         ];
     }
 
-    // Render Team 1 (Left HUD) - EXACT count of players in custom match
+    // Render Team 1 (Left HUD)
     let leftHTML = `<div class="team-column ${!switchTeams ? 'team-red' : 'team-green'}">`;
     for (let i = 0; i < team1Players.length; i++) {
         leftHTML += buildVCTPlayerCard(team1Players[i], false);
     }
     leftHTML += `</div>`;
 
-    // Render Team 2 (Right HUD) - EXACT count of players in custom match
+    // Render Team 2 (Right HUD)
     let rightHTML = `<div class="team-column ${!switchTeams ? 'team-green' : 'team-red'}">`;
     for (let i = 0; i < team2Players.length; i++) {
         rightHTML += buildVCTPlayerCard(team2Players[i], true);
@@ -199,7 +209,7 @@ function buildVCTPlayerCard(p, isRightTeam) {
     const hp = isDead ? 0 : Math.max(0, Math.min(100, (p.health ?? 100)));
     const shield = isDead ? 0 : Math.max(0, (p.shield ?? 0));
     const credits = p.credits ?? 800;
-    const username = p.username || 'PLAYER';
+    const username = p.name || p.username || 'PLAYER';
     const hasSpike = !!p.has_spike;
     const isSpectated = !!p.is_spectated;
 
@@ -366,13 +376,24 @@ function buildVCTPlayerCard(p, isRightTeam) {
 // Socket.io Realtime Sync
 if (typeof io !== 'undefined') {
     const socket = io();
-    socket.on('playerUpdate', () => {
-        fetch_player_status_information();
+    socket.on('playerUpdate', (data) => {
+        if (data && data.team_1_list) renderPlayerHUD(data);
+        else fetch_player_status_information();
     });
-    socket.on('playerStatsUpdate', () => {
-        fetch_player_status_information();
+    socket.on('playerStatsUpdate', (data) => {
+        if (data && data.team_1_list) renderPlayerHUD(data);
+        else fetch_player_status_information();
     });
     socket.on('stateUpdate', () => {
+        fetch_player_status_information();
+    });
+    socket.on('configUpdate', () => {
+        fetch_player_status_information();
+    });
+    socket.on('bridgeTelemetry', () => {
+        fetch_player_status_information();
+    });
+    socket.on('bridgeStatusUpdate', () => {
         fetch_player_status_information();
     });
 }
