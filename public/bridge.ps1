@@ -109,45 +109,70 @@ $mapMap = @{
 }
 
 function Get-RiotClientCredentials {
-    # 1. Multi-Drive & Multi-User Lockfile Discovery
-    $driveLetters = @("C", "D", "E", "F")
-    $lockCandidates = @(
-        "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile",
-        "$env:USERPROFILE\AppData\Local\Riot Games\Riot Client\Config\lockfile",
-        "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
-    )
+    # 1. Direct environment and user profile paths
+    $pathsToCheck = @()
 
-    foreach ($d in $driveLetters) {
-        $lockCandidates += "$($d):\Users\*\AppData\Local\Riot Games\Riot Client\Config\lockfile"
+    $localApp = [Environment]::GetFolderPath('LocalApplicationData')
+    if ($localApp) {
+        $pathsToCheck += (Join-Path $localApp 'Riot Games\Riot Client\Config\lockfile')
+    }
+    if ($env:LOCALAPPDATA) {
+        $pathsToCheck += "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile"
+    }
+    if ($env:USERPROFILE) {
+        $pathsToCheck += "$env:USERPROFILE\AppData\Local\Riot Games\Riot Client\Config\lockfile"
+    }
+    if ($env:PROGRAMDATA) {
+        $pathsToCheck += "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
     }
 
-    foreach ($pattern in $lockCandidates) {
-        try {
-            $files = Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue
-            foreach ($f in $files) {
-                if (Test-Path $f.FullName) {
-                    $fileStream = [System.IO.File]::Open($f.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
-                    $sr = New-Object System.IO.StreamReader($fileStream)
-                    $content = $sr.ReadToEnd().Trim()
-                    $sr.Close()
-                    $fileStream.Close()
-
-                    $parts = $content -split ':'
-                    if ($parts.Length -ge 5) {
-                        return @{
-                            Port = $parts[2]
-                            Password = $parts[3]
-                            Source = "Lockfile"
-                        }
-                    }
+    # Search all user accounts on drives C, D, E, F
+    foreach ($drive in @("C", "D", "E", "F")) {
+        $usersDir = "$drive`:\Users"
+        if (Test-Path $usersDir) {
+            $userFolders = Get-ChildItem -Path $usersDir -Directory -ErrorAction SilentlyContinue
+            if ($userFolders) {
+                foreach ($u in $userFolders) {
+                    $candidate = Join-Path $u.FullName 'AppData\Local\Riot Games\Riot Client\Config\lockfile'
+                    $pathsToCheck += $candidate
                 }
             }
+        }
+    }
+
+    foreach ($path in $pathsToCheck) {
+        if (Test-Path $path) {
+            try {
+                $fileStream = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                $sr = New-Object System.IO.StreamReader($fileStream)
+                $content = $sr.ReadToEnd().Trim()
+                $sr.Close()
+                $fileStream.Close()
+
+                $parts = $content -split ':'
+                if ($parts.Length -ge 5) {
+                    return @{
+                        Port = $parts[2]
+                        Password = $parts[3]
+                        Source = "Lockfile ($path)"
+                    }
+                }
+            } catch {}
+        }
+    }
+
+    # 2. Direct Process Inspection Fallback (WMI / CIM)
+    $procQuery = "SELECT Name, CommandLine FROM Win32_Process WHERE Name LIKE '%Riot%' OR Name LIKE '%VALORANT%'"
+    $procs = @()
+    try {
+        $procs = Get-CimInstance -Query $procQuery -ErrorAction SilentlyContinue
+    } catch {
+        try {
+            $procs = Get-WmiObject -Query $procQuery -ErrorAction SilentlyContinue
         } catch {}
     }
 
-    # 2. Direct Process Inspection Fallback (Works across elevated/different user sessions)
-    try {
-        $procs = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*Riot*" -or $_.Name -like "*VALORANT*" }
+    if ($procs) {
         foreach ($proc in $procs) {
             $cmd = $proc.CommandLine
             if ($cmd) {
@@ -170,7 +195,7 @@ function Get-RiotClientCredentials {
                 }
             }
         }
-    } catch {}
+    }
 
     return $null
 }
