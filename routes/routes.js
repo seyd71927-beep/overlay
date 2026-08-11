@@ -890,6 +890,8 @@ router.get('/api/tournament/proxy_image', async (req, res) => {
         const { buffer, contentType } = await dataBus.fetchBinaryBuffer(imageUrl);
         res.set('Content-Type', contentType || 'image/png');
         res.set('Cache-Control', 'public, max-age=86400');
+        return res.send(buffer);
+    } catch (err) {
         return res.status(404).send('Image fetch failed');
     }
 });
