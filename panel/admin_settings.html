@@ -104,6 +104,32 @@
                         </div>
                     </div>
 
+                    <!-- Streamer PC Auto-Bridge Connection Card -->
+                    <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 242, 254, 0.35); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                            <div>
+                                <span style="font-size: 0.95rem; font-weight: 700; color: #fff;">
+                                    <i class="fa-solid fa-bolt" style="color: #00f2fe;"></i> Streamer PC Automated In-Game Bridge
+                                </span>
+                                <span style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+                                    Your friend runs this on their PC while streaming. Telemetry (Rounds, Scores, Maps, Player Health, Weapons) syncs to your dashboard automatically!
+                                </span>
+                            </div>
+                            <span id="bridge-live-indicator" class="status-badge" style="background: rgba(255,255,255,0.06); color: var(--text-muted); border-color: rgba(255,255,255,0.15); font-size: 0.78rem;">
+                                ⚪ WAITING FOR STREAMER PC
+                            </span>
+                        </div>
+
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <a href="/bridge.bat" download="zenx_streamer_bridge.bat" class="btn btn-success" style="padding: 8px 16px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-download"></i> 1. Download Streamer Bridge (.bat)
+                            </a>
+                            <button class="btn btn-accent" style="padding: 8px 16px; font-size: 0.82rem;" onclick="copyBridgeCmd()">
+                                <i class="fa-solid fa-terminal"></i> 2. Copy Streamer 1-Line Command
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Quick Copy Link Bar -->
                     <div style="background: rgba(0,0,0,0.45); border: 1px solid var(--panel-border); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
@@ -118,9 +144,6 @@
                         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                             <button class="btn btn-primary" style="padding: 7px 14px; font-size: 0.8rem;" onclick="copyAdminUrl()">
                                 <i class="fa-solid fa-mobile-screen"></i> Copy Admin Control Link
-                            </button>
-                            <button class="btn btn-accent" style="padding: 7px 14px; font-size: 0.8rem;" onclick="copyBridgeCmd()">
-                                <i class="fa-solid fa-terminal"></i> Copy Streamer Bridge Command
                             </button>
                             <button class="btn" style="padding: 7px 14px; font-size: 0.8rem; background: rgba(255,255,255,0.08);" onclick="copyObsScoreboardUrl()">
                                 <i class="fa-solid fa-video"></i> Copy Scoreboard OBS Link

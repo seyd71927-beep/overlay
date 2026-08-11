@@ -920,6 +920,183 @@ router.post('/api/tournament/upload_sheet_file', memUpload.single('sheetFile'), 
     }
 });
 
+// --- STREAMER IN-GAME LIVE BRIDGE TELEMETRY SYNC ---
+let lastBridgeTelemetry = {
+    online: false,
+    lastPing: null,
+    phase: 'DISCONNECTED',
+    map: 'ascent',
+    round_number: 0,
+    team_1_score: 0,
+    team_2_score: 0,
+    spike_down: false,
+    playersCount: 0
+};
+
+router.post('/api/bridge/sync_match', express.json({ limit: '10mb' }), (req, res) => {
+    const payload = req.body || {};
+
+    lastBridgeTelemetry = {
+        online: true,
+        lastPing: Date.now(),
+        phase: payload.phase || 'INGAME',
+        map: payload.map || dataBus.config.gameState?.map || 'ascent',
+        round_number: payload.round_number !== undefined ? payload.round_number : (dataBus.config.gameState?.round_number || 0),
+        team_1_score: payload.team_1_score !== undefined ? payload.team_1_score : (dataBus.config.gameState?.team_1_score || 0),
+        team_2_score: payload.team_2_score !== undefined ? payload.team_2_score : (dataBus.config.gameState?.team_2_score || 0),
+        spike_down: payload.spike_down || false,
+        playersCount: (payload.team_1_players ? payload.team_1_players.length : 0) + (payload.team_2_players ? payload.team_2_players.length : 0)
+    };
+
+    let stateChanged = false;
+    if (!dataBus.config.gameState) dataBus.config.gameState = {};
+
+    if (payload.map && dataBus.config.gameState.map !== payload.map) {
+        dataBus.config.gameState.map = payload.map;
+        stateChanged = true;
+    }
+    if (payload.round_number !== undefined && dataBus.config.gameState.round_number !== payload.round_number) {
+        dataBus.config.gameState.round_number = payload.round_number;
+        stateChanged = true;
+    }
+    if (payload.team_1_score !== undefined && dataBus.config.gameState.team_1_score !== payload.team_1_score) {
+        dataBus.config.gameState.team_1_score = payload.team_1_score;
+        stateChanged = true;
+    }
+    if (payload.team_2_score !== undefined && dataBus.config.gameState.team_2_score !== payload.team_2_score) {
+        dataBus.config.gameState.team_2_score = payload.team_2_score;
+        stateChanged = true;
+    }
+    if (payload.spike_down !== undefined && dataBus.config.gameState.spike_down !== payload.spike_down) {
+        dataBus.config.gameState.spike_down = payload.spike_down;
+        stateChanged = true;
+    }
+    if (payload.switch_sides !== undefined && dataBus.config.gameState.switch_sides !== payload.switch_sides) {
+        dataBus.config.gameState.switch_sides = payload.switch_sides;
+        stateChanged = true;
+    }
+
+    // Auto-match Tournament Teams if present
+    const tournamentTeams = dataBus.getTournamentData()?.teams || [];
+    if (payload.team_1 && payload.team_1.abbreviation) {
+        if (!dataBus.config.gameState.team_1) dataBus.config.gameState.team_1 = {};
+        const t1Tag = String(payload.team_1.abbreviation).toUpperCase();
+        const tourneyTeam = tournamentTeams.find(t => (t.tag && t.tag.toUpperCase() === t1Tag) || (t.name && t.name.toUpperCase().includes(t1Tag)));
+        if (tourneyTeam) {
+            dataBus.config.gameState.team_1.name = tourneyTeam.name;
+            dataBus.config.gameState.team_1.abbreviation = tourneyTeam.tag;
+            dataBus.config.gameState.team_1.team_info = tourneyTeam.seed || 'TEAM 1';
+            if (tourneyTeam.logo) dataBus.config.gameState.team_1.icon_link = tourneyTeam.logo;
+        } else {
+            dataBus.config.gameState.team_1.name = payload.team_1.name || payload.team_1.abbreviation;
+            dataBus.config.gameState.team_1.abbreviation = payload.team_1.abbreviation;
+        }
+        stateChanged = true;
+    }
+
+    if (payload.team_2 && payload.team_2.abbreviation) {
+        if (!dataBus.config.gameState.team_2) dataBus.config.gameState.team_2 = {};
+        const t2Tag = String(payload.team_2.abbreviation).toUpperCase();
+        const tourneyTeam = tournamentTeams.find(t => (t.tag && t.tag.toUpperCase() === t2Tag) || (t.name && t.name.toUpperCase().includes(t2Tag)));
+        if (tourneyTeam) {
+            dataBus.config.gameState.team_2.name = tourneyTeam.name;
+            dataBus.config.gameState.team_2.abbreviation = tourneyTeam.tag;
+            dataBus.config.gameState.team_2.team_info = tourneyTeam.seed || 'TEAM 2';
+            if (tourneyTeam.logo) dataBus.config.gameState.team_2.icon_link = tourneyTeam.logo;
+        } else {
+            dataBus.config.gameState.team_2.name = payload.team_2.name || payload.team_2.abbreviation;
+            dataBus.config.gameState.team_2.abbreviation = payload.team_2.abbreviation;
+        }
+        stateChanged = true;
+    }
+
+    // Auto-update Live Player Stats
+    if (Array.isArray(payload.team_1_players) || Array.isArray(payload.team_2_players)) {
+        if (!dataBus.config.playerStats) dataBus.config.playerStats = {};
+        
+        if (Array.isArray(payload.team_1_players)) {
+            payload.team_1_players.forEach((p, idx) => {
+                const key = `player_${idx + 1}`;
+                dataBus.config.playerStats[key] = {
+                    username: p.username || `Player ${idx + 1}`,
+                    tag: p.tag || '',
+                    agent: (p.agent || 'jett').toLowerCase(),
+                    health: p.health ?? 100,
+                    shield: p.shield ?? 50,
+                    weapon: p.weapon || 'vandal',
+                    credits: p.credits ?? 800,
+                    ult_points_gained: p.ult_points_gained ?? 0,
+                    ult_points_needed: p.ult_points_needed ?? 7,
+                    kills: p.kills ?? 0,
+                    deaths: p.deaths ?? 0,
+                    assists: p.assists ?? 0,
+                    is_dead: p.is_dead ?? false
+                };
+            });
+        }
+
+        if (Array.isArray(payload.team_2_players)) {
+            payload.team_2_players.forEach((p, idx) => {
+                const key = `player_${idx + 6}`;
+                dataBus.config.playerStats[key] = {
+                    username: p.username || `Player ${idx + 6}`,
+                    tag: p.tag || '',
+                    agent: (p.agent || 'jett').toLowerCase(),
+                    health: p.health ?? 100,
+                    shield: p.shield ?? 50,
+                    weapon: p.weapon || 'vandal',
+                    credits: p.credits ?? 800,
+                    ult_points_gained: p.ult_points_gained ?? 0,
+                    ult_points_needed: p.ult_points_needed ?? 7,
+                    kills: p.kills ?? 0,
+                    deaths: p.deaths ?? 0,
+                    assists: p.assists ?? 0,
+                    is_dead: p.is_dead ?? false
+                };
+            });
+        }
+
+        dataBus.saveStateToFile('playerStats.json', dataBus.config.playerStats);
+        emitEvent(req, 'playerStatsUpdate', dataBus.config.playerStats);
+    }
+
+    if (stateChanged) {
+        dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+        emitEvent(req, 'stateUpdate', dataBus.config.gameState);
+    }
+
+    emitEvent(req, 'bridgeTelemetry', lastBridgeTelemetry);
+    return res.status(200).json({ status: true, message: 'Live match telemetry synchronized successfully' });
+});
+
+router.get('/api/bridge/status', (req, res) => {
+    const isOnline = lastBridgeTelemetry.lastPing && (Date.now() - lastBridgeTelemetry.lastPing < 10000);
+    return res.status(200).json({
+        ...lastBridgeTelemetry,
+        online: !!isOnline,
+        secondsSincePing: lastBridgeTelemetry.lastPing ? Math.round((Date.now() - lastBridgeTelemetry.lastPing) / 1000) : null
+    });
+});
+
+router.get('/bridge.bat', (req, res) => {
+    const host = `${req.protocol}://${req.get('host')}`;
+    const batContent = `@echo off
+title ZENX TOURNAMENT LIVE BRIDGE
+color 0b
+echo =======================================================
+echo    ZENX TOURNAMENT OVERLAY - IN-GAME AUTO-BRIDGE
+echo =======================================================
+echo.
+echo Connecting to Overlay Server: ${host}
+echo.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm ${host}/bridge.ps1 | iex"
+pause
+`;
+    res.setHeader('Content-Type', 'application/x-bat');
+    res.setHeader('Content-Disposition', 'attachment; filename="zenx_streamer_bridge.bat"');
+    res.send(batContent);
+});
+
 router.get('/print_state', (req, res) => {
     return res.status(200).send(dataBus.config);
 });

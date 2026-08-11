@@ -257,12 +257,12 @@ function copyAdminUrl() {
 
 function copyBridgeCmd() {
     const origin = window.location.origin;
-    const cmd = `node live_valorant_bridge.js ${origin}`;
+    const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -Command "irm ${origin}/bridge.ps1 | iex"`;
     navigator.clipboard.writeText(cmd);
     if (typeof successAlertLowerBottom === 'function') {
-        successAlertLowerBottom('Copied Streamer Bridge Command to Clipboard!');
+        successAlertLowerBottom('Copied Streamer 1-Line PowerShell Command!');
     } else {
-        alert('Copied command:\n' + cmd);
+        alert('Copied command for Streamer PC:\n\n' + cmd);
     }
 }
 
@@ -280,6 +280,29 @@ function openMobileAdmin() {
     window.open(`${window.location.origin}/admin?page=stream`, '_blank');
 }
 
+async function pollBridgeStatus() {
+    try {
+        const res = await fetch('../api/bridge/status');
+        if (res.status === 200) {
+            const data = await res.json();
+            const badge = document.getElementById('bridge-live-indicator');
+            if (badge) {
+                if (data.online) {
+                    badge.innerHTML = `<i class="fa-solid fa-circle" style="color: #00e676; font-size: 0.65rem;"></i> STREAMER CONNECTED: ${data.map.toUpperCase()} (${data.team_1_score} - ${data.team_2_score})`;
+                    badge.style.background = 'rgba(0, 230, 118, 0.15)';
+                    badge.style.color = '#00e676';
+                    badge.style.borderColor = 'rgba(0, 230, 118, 0.35)';
+                } else {
+                    badge.innerHTML = `⚪ WAITING FOR STREAMER PC`;
+                    badge.style.background = 'rgba(255, 255, 255, 0.06)';
+                    badge.style.color = 'var(--text-muted)';
+                    badge.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                }
+            }
+        }
+    } catch (e) {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const settingsMgr = new AdminSettingsManager();
     settingsMgr.init();
@@ -295,4 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const adminUrl = `${origin}/admin`;
         qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(adminUrl)}`;
     }
+
+    pollBridgeStatus();
+    setInterval(pollBridgeStatus, 3000);
 });
