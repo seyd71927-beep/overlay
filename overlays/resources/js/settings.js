@@ -245,6 +245,16 @@ class AdminSettingsManager {
     }
 }
 
+function copyAdminUrl() {
+    const adminUrl = `${window.location.origin}/admin`;
+    navigator.clipboard.writeText(adminUrl);
+    if (typeof successAlertLowerBottom === 'function') {
+        successAlertLowerBottom('Copied Worldwide Admin URL to Clipboard!');
+    } else {
+        alert('Copied Admin URL:\n' + adminUrl);
+    }
+}
+
 function copyBridgeCmd() {
     const origin = window.location.origin;
     const cmd = `node live_valorant_bridge.js ${origin}`;
@@ -256,12 +266,33 @@ function copyBridgeCmd() {
     }
 }
 
+function copyObsScoreboardUrl() {
+    const obsUrl = `${window.location.origin}/game_score`;
+    navigator.clipboard.writeText(obsUrl);
+    if (typeof successAlertLowerBottom === 'function') {
+        successAlertLowerBottom('Copied Scoreboard OBS Browser Source Link!');
+    } else {
+        alert('Copied OBS URL:\n' + obsUrl);
+    }
+}
+
+function openMobileAdmin() {
+    window.open(`${window.location.origin}/admin?page=stream`, '_blank');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const settingsMgr = new AdminSettingsManager();
     settingsMgr.init();
 
+    const origin = window.location.origin;
     const originEl = document.getElementById('current-server-origin');
     if (originEl) {
-        originEl.textContent = window.location.origin;
+        originEl.textContent = origin;
+    }
+
+    const qrImg = document.getElementById('mobile-qr-code');
+    if (qrImg) {
+        const adminUrl = `${origin}/admin`;
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(adminUrl)}`;
     }
 });
