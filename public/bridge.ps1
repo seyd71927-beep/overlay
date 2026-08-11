@@ -18,29 +18,36 @@ if ($TargetServer -ne "") {
     $OverlayServer = $TargetServer
 }
 
-# Ensure TLS 1.2 is enabled
+# Ensure modern TLS protocols
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]'Tls,Tls11,Tls12'
 
-# Trust 127.0.0.1 self-signed Riot API certificate
-try {
-    [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-} catch {}
+# Clear any broken PowerShell scriptblock callbacks
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = $null
 
+# Trust 127.0.0.1 self-signed Riot API certificate using thread-safe compiled C# delegates
 try {
-    if (-not ([System.Management.Automation.PSTypeName]'TrustAllCertsPolicy').Type) {
+    if (-not ([System.Management.Automation.PSTypeName]'ZenxSslBypass').Type) {
         Add-Type -TypeDefinition @"
             using System.Net;
+            using System.Net.Security;
             using System.Security.Cryptography.X509Certificates;
-            public class TrustAllCertsPolicy : ICertificatePolicy {
-                public bool CheckValidationResult(
-                    ServicePoint srvPoint, X509Certificate certificate,
-                    WebRequest request, int problem) {
+            public class ZenxSslBypass {
+                public static bool ValidateAll(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) {
+                    return true;
+                }
+                public static void Enable() {
+                    ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(ValidateAll);
+                }
+            }
+            public class ZenxTrustAllPolicy : ICertificatePolicy {
+                public bool CheckValidationResult(ServicePoint srvPoint, X509Certificate certificate, WebRequest request, int problem) {
                     return true;
                 }
             }
 "@ -ErrorAction SilentlyContinue
-        [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
     }
+    [ZenxSslBypass]::Enable()
+    [System.Net.ServicePointManager]::CertificatePolicy = New-Object ZenxTrustAllPolicy
 } catch {}
 
 Write-Host "[Bridge] Target Overlay Server: $OverlayServer" -ForegroundColor Cyan
@@ -226,11 +233,11 @@ while ($true) {
         $creds = Get-RiotClientCredentials
 
         if (-not $creds) {
-            $procCount = (Get-Process -Name "VALORANT-Win64-Shipping", "RiotClientServices", "VALORANT" -ErrorAction SilentlyContinue).Count
+            $procCount = (Get-Process -Name "VALORANT-Win64-Shipping", "RiotClientServices", "VALORANT", "Riot Client" -ErrorAction SilentlyContinue).Count
             if ($procCount -gt 0) {
-                Show-Status "[VALORANT Active] Found $procCount game processes. Initializing game session..." "Cyan"
+                Show-Status "[VALORANT Active] Game/Riot process found. Waiting for login..." "Cyan"
             } else {
-                Show-Status "[Waiting] Riot Client / VALORANT is not detected. Please ensure VALORANT is running on this PC..." "Yellow"
+                Show-Status "[Waiting] Riot Client / VALORANT is not detected. Please start Riot Client or VALORANT..." "Yellow"
             }
             Start-Sleep -Seconds 2
             continue
@@ -244,9 +251,29 @@ while ($true) {
             "Content-Type" = "application/json"
         }
 
-        # 1. Get Session & Presences
+        # 1. Query Local Riot Client Chat Presences
         $sessionUrl = "https://127.0.0.1:$port/chat/v4/presences"
-        $presences = Invoke-RestMethod -Uri $sessionUrl -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
+        $presences = $null
+        $isLoggedOut = $false
+
+        try {
+            $presences = Invoke-RestMethod -Uri $sessionUrl -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction Stop
+        } catch {
+            if ($_.Exception.Response -and ($_.Exception.Response.StatusCode.value__ -eq 404 -or $_.Exception.Response.StatusCode.value__ -eq 401 -or $_.Exception.Response.StatusCode.value__ -eq 503)) {
+                $isLoggedOut = $true
+            }
+        }
+
+        if ($isLoggedOut -or (-not $presences -or -not $presences.presences)) {
+            $valProc = Get-Process -Name "VALORANT-Win64-Shipping", "VALORANT" -ErrorAction SilentlyContinue
+            if ($valProc) {
+                Show-Status "[VALORANT Launching] Game is starting up. Loading player session..." "Yellow"
+            } else {
+                Show-Status "[Riot Client Open] Please SIGN IN to your Riot Account and launch VALORANT to begin sync..." "Yellow"
+            }
+            Start-Sleep -Seconds 2
+            continue
+        }
 
         $loopState = "MENUS"
         $detectedMap = "ascent"
@@ -256,37 +283,47 @@ while ($true) {
         $team1Players = @()
         $team2Players = @()
         $localPuuid = $null
+        $foundValorantPresence = $false
 
-        # Parse Presences (Works for both Spectator and In-Game Players)
+        # Parse Presences (Works for Spectator, In-Game Players, and Observers)
         if ($presences -and $presences.presences) {
             foreach ($p in $presences.presences) {
-                if ($p.product -eq "valorant" -and $p.private) {
-                    try {
-                        $rawPriv = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($p.private))
-                        $priv = $rawPriv | ConvertFrom-Json
-                        if ($priv.sessionLoopState -eq "INGAME") {
-                            $loopState = "INGAME"
-                            $t1Score = if ($priv.partyOwnerMatchScore) { [int]$priv.partyOwnerMatchScore } else { 0 }
-                            $t2Score = if ($priv.partyOwnerMatchScoreEnemy) { [int]$priv.partyOwnerMatchScoreEnemy } else { 0 }
-                            $roundNum = $t1Score + $t2Score + 1
+                if ($p.product -eq "valorant") {
+                    $foundValorantPresence = $true
+                    if ($p.private) {
+                        try {
+                            $rawPriv = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($p.private))
+                            $priv = $rawPriv | ConvertFrom-Json
+                            if ($priv.sessionLoopState -eq "INGAME") {
+                                $loopState = "INGAME"
+                                $t1Score = if ($priv.partyOwnerMatchScore) { [int]$priv.partyOwnerMatchScore } else { 0 }
+                                $t2Score = if ($priv.partyOwnerMatchScoreEnemy) { [int]$priv.partyOwnerMatchScoreEnemy } else { 0 }
+                                $roundNum = $t1Score + $t2Score + 1
 
-                            $rawMap = if ($priv.matchMap) { $priv.matchMap.ToString().ToLower() } else { "" }
-                            foreach ($key in $mapMap.Keys) {
-                                if ($rawMap.Contains($key)) {
-                                    $detectedMap = $mapMap[$key]
-                                    break
+                                $rawMap = if ($priv.matchMap) { $priv.matchMap.ToString().ToLower() } else { "" }
+                                foreach ($key in $mapMap.Keys) {
+                                    if ($rawMap.Contains($key)) {
+                                        $detectedMap = $mapMap[$key]
+                                        break
+                                    }
                                 }
+                                break
+                            } elseif ($priv.sessionLoopState -eq "PREGAME") {
+                                $loopState = "PREGAME"
                             }
-                            break
-                        } elseif ($priv.sessionLoopState -eq "PREGAME") {
-                            $loopState = "PREGAME"
-                        }
-                    } catch {}
+                        } catch {}
+                    }
                 }
                 if ($p.puuid -and -not $localPuuid) {
                     $localPuuid = $p.puuid
                 }
             }
+        }
+
+        if (-not $foundValorantPresence) {
+            Show-Status "[Riot Connected] Signed in! Please launch VALORANT on this PC..." "Cyan"
+            Start-Sleep -Seconds 2
+            continue
         }
 
         # Check Core-Game Roster (If In-Game)
@@ -337,7 +374,9 @@ while ($true) {
         $jsonPayload = $payload | ConvertTo-Json -Depth 5 -Compress
         $syncUrl = "$OverlayServer/api/bridge/sync_match"
 
-        $res = Invoke-RestMethod -Uri $syncUrl -Method POST -Body $jsonPayload -ContentType "application/json" -TimeoutSec 4 -ErrorAction SilentlyContinue
+        try {
+            $res = Invoke-RestMethod -Uri $syncUrl -Method POST -Body $jsonPayload -ContentType "application/json" -TimeoutSec 4 -ErrorAction SilentlyContinue
+        } catch {}
 
         if ($loopState -eq "INGAME") {
             Show-Status "[LIVE SYNC ACTIVE] Map: $($detectedMap.ToUpper()) | Round $roundNum ($t1Score-$t2Score) | Streaming to $OverlayServer" "Green"
@@ -348,9 +387,8 @@ while ($true) {
         }
 
     } catch {
-        # Silent continue on network glitch
+        # Catch unexpected error and continue
     }
 
     Start-Sleep -Seconds 1
 }
-
