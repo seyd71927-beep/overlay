@@ -1,63 +1,249 @@
 {
-    "spreadsheetUrl": "",
+    "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit?usp=sharing",
     "autoSync": false,
     "syncInterval": 60,
-    "lastSync": null,
+    "lastSync": 1786438636241,
     "tournamentName": "ZENX VALORANT INVITATIONAL 2026",
     "teams": [
         {
-            "id": "team_zenx",
-            "name": "ZENX ESPORTS",
-            "tag": "ZENX",
-            "logo": "../visual_assets/ZENX_RED.png",
-            "seed": "#1 SEED",
-            "group": "Group A",
-            "players": ["Basha", "Phantom", "ViperX", "Shadow", "Apex"]
+            "id": "team_1_1786438636241",
+            "name": "Alexandra",
+            "tag": "ALEX",
+            "logo": "",
+            "seed": "",
+            "players": []
         },
         {
-            "id": "team_nxr",
-            "name": "NEXAURA",
-            "tag": "NXR",
-            "logo": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/NXR_PNG_-_bijin_das_g5iepg.png",
-            "seed": "#2 SEED",
-            "group": "Group A",
-            "players": ["Bijin", "DarkKnight", "Nova", "Cipher", "Raptor"]
+            "id": "team_2_1786438636241",
+            "name": "Andrew",
+            "tag": "ANDR",
+            "logo": "",
+            "seed": "",
+            "players": []
         },
         {
-            "id": "team_idli",
-            "name": "IDLISAMBAR",
-            "tag": "IDLI",
-            "logo": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/IDLISAMBAR_nezidc.png",
-            "seed": "#3 SEED",
-            "group": "Group B",
-            "players": ["SambarKing", "ChutneyPro", "DosaGod", "VadaHit", "FilterCoffee"]
+            "id": "team_3_1786438636241",
+            "name": "Anna",
+            "tag": "ANNA",
+            "logo": "",
+            "seed": "",
+            "players": []
         },
         {
-            "id": "team_fnc",
-            "name": "FNATIC",
-            "tag": "FNC",
-            "logo": "https://cdn.sanity.io/images/5gii1snx/production/c32c2cb848fd3338ff23a590ec5c0e052b080f27-1000x1000.png",
-            "seed": "EMEA #1",
-            "group": "Group B",
-            "players": ["Boaster", "Derke", "Alfajer", "Chronicle", "Leo"]
+            "id": "team_4_1786438636241",
+            "name": "Becky",
+            "tag": "BECK",
+            "logo": "",
+            "seed": "",
+            "players": []
         },
         {
-            "id": "team_sen",
-            "name": "SENTINELS",
-            "tag": "SEN",
-            "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Sentinels_logo.svg/1200px-Sentinels_logo.svg.png",
-            "seed": "AMER #1",
-            "group": "Group A",
-            "players": ["TenZ", "zekken", "Sacy", "johnqt", "Zellsis"]
+            "id": "team_5_1786438636241",
+            "name": "Benjamin",
+            "tag": "BENJ",
+            "logo": "",
+            "seed": "",
+            "players": []
         },
         {
-            "id": "team_prx",
-            "name": "PAPER REX",
-            "tag": "PRX",
-            "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Paper_Rex_logo.png/600px-Paper_Rex_logo.png",
-            "seed": "PACIFIC #1",
-            "group": "Group B",
-            "players": ["f0rsakeN", "mindfreak", "d4v41", "something", "Jinggg"]
+            "id": "team_6_1786438636241",
+            "name": "Carl",
+            "tag": "CARL",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_7_1786438636241",
+            "name": "Carrie",
+            "tag": "CARR",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_8_1786438636241",
+            "name": "Dorothy",
+            "tag": "DORO",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_9_1786438636241",
+            "name": "Dylan",
+            "tag": "DYLA",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_10_1786438636241",
+            "name": "Edward",
+            "tag": "EDWA",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_11_1786438636241",
+            "name": "Ellen",
+            "tag": "ELLE",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_12_1786438636241",
+            "name": "Fiona",
+            "tag": "FION",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_13_1786438636241",
+            "name": "John",
+            "tag": "JOHN",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_14_1786438636241",
+            "name": "Jonathan",
+            "tag": "JONA",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_15_1786438636241",
+            "name": "Joseph",
+            "tag": "JOSE",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_16_1786438636241",
+            "name": "Josephine",
+            "tag": "JOSE",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_17_1786438636241",
+            "name": "Karen",
+            "tag": "KARE",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_18_1786438636241",
+            "name": "Kevin",
+            "tag": "KEVI",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_19_1786438636241",
+            "name": "Lisa",
+            "tag": "LISA",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_20_1786438636241",
+            "name": "Mary",
+            "tag": "MARY",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_21_1786438636241",
+            "name": "Maureen",
+            "tag": "MAUR",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_22_1786438636241",
+            "name": "Nick",
+            "tag": "NICK",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_23_1786438636241",
+            "name": "Olivia",
+            "tag": "OLIV",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_24_1786438636241",
+            "name": "Pamela",
+            "tag": "PAME",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_25_1786438636241",
+            "name": "Patrick",
+            "tag": "PATR",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_26_1786438636241",
+            "name": "Robert",
+            "tag": "ROBE",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_27_1786438636241",
+            "name": "Sean",
+            "tag": "SEAN",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_28_1786438636241",
+            "name": "Stacy",
+            "tag": "STAC",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_29_1786438636241",
+            "name": "Thomas",
+            "tag": "THOM",
+            "logo": "",
+            "seed": "",
+            "players": []
+        },
+        {
+            "id": "team_30_1786438636241",
+            "name": "Will",
+            "tag": "WILL",
+            "logo": "",
+            "seed": "",
+            "players": []
         }
     ],
     "matches": [

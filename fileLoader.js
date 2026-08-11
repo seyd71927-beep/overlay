@@ -726,7 +726,7 @@ class fileLoader {
         }
 
         let input = rawInputUrl.trim();
-        let exportUrl = input;
+        let candidateUrls = [];
 
         // Detect Google Sheet ID and GID
         const sheetIdMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
@@ -734,16 +734,47 @@ class fileLoader {
 
         if (sheetIdMatch) {
             const docId = sheetIdMatch[1];
-            const gid = gidMatch ? gidMatch[1] : '0';
-            exportUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+            const gid = gidMatch ? gidMatch[1] : '';
+
+            // 1. Google Visualization API (Most reliable for public sheets)
+            if (gid) {
+                candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv&gid=${gid}`);
+            }
+            candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv`);
+
+            // 2. Standard Google Export endpoint fallbacks
+            if (gid) {
+                candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`);
+            }
+            candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`);
         } else if (input.includes('/pubhtml')) {
-            exportUrl = input.replace('/pubhtml', '/pub?output=csv');
+            candidateUrls.push(input.replace('/pubhtml', '/pub?output=csv'));
+        } else {
+            candidateUrls.push(input);
         }
 
-        // Fetch CSV data
-        const csvContent = await this.fetchUrlWithRedirects(exportUrl);
+        let csvContent = null;
+        let lastError = null;
+
+        for (const targetUrl of candidateUrls) {
+            try {
+                const fetched = await this.fetchUrlWithRedirects(targetUrl);
+                if (fetched && fetched.trim().length > 0) {
+                    // Check if Google returned an HTML login page instead of CSV
+                    if (fetched.includes('<!DOCTYPE html') || fetched.includes('<html') || fetched.includes('accounts.google.com')) {
+                        throw new Error('Google Sheet is set to Private. Please open your Google Sheet, click "Share" (top-right), and change "General access" to "Anyone with the link can view" (Viewer)!');
+                    }
+                    csvContent = fetched;
+                    break;
+                }
+            } catch (err) {
+                lastError = err;
+                if (err.message.includes('Private')) throw err;
+            }
+        }
+
         if (!csvContent || csvContent.trim().length === 0) {
-            throw new Error('Google Sheet returned empty data. Ensure sharing is set to "Anyone with the link can view".');
+            throw new Error(lastError ? lastError.message : 'Could not fetch Google Sheet. Please make sure the sheet is shared as "Anyone with the link can view".');
         }
 
         const rows = this.parseCsvRows(csvContent);
