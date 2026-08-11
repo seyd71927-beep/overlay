@@ -23,7 +23,8 @@ app.set('io', io);
 app.use(express.static(path.join(__dirname, './overlays')));
 app.use(express.static(path.join(__dirname, './panel/res')));
 
-// Middleware
+// Proxy Trust & Middleware
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
@@ -31,7 +32,11 @@ app.use(session({
     secret: '355a855f629fc70c82e241ec15369c073b641c6096cda76c6c643b7028f68151',
     resave: false,
     saveUninitialized: true,
-    cookie: { maxAge: 24 * 60 * 60000 }
+    cookie: { 
+        secure: 'auto',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60000 
+    }
 }));
 
 // Socket.io real-time connection logic
