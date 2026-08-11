@@ -621,7 +621,9 @@ router.post('/api/tournament/set_active_team', upload.none(), (req, res) => {
 
     if (slot === 'team_1') {
         dataBus.config.gameState.team_1.abbreviation = teamObj ? (teamObj.tag || teamObj.name) : teamTag.toUpperCase();
-        if (teamObj && teamObj.logo) dataBus.config.gameState.team_1.icon_link = teamObj.logo;
+        if (teamObj && teamObj.logo) {
+            dataBus.config.gameState.team_1.icon_link = dataBus.cleanLogoUrl ? dataBus.cleanLogoUrl(teamObj.logo) : teamObj.logo;
+        }
 
         if (teamObj && Array.isArray(teamObj.players)) {
             for (let i = 0; i < Math.min(5, teamObj.players.length); i++) {
@@ -633,7 +635,9 @@ router.post('/api/tournament/set_active_team', upload.none(), (req, res) => {
         }
     } else if (slot === 'team_2') {
         dataBus.config.gameState.team_2.abbreviation = teamObj ? (teamObj.tag || teamObj.name) : teamTag.toUpperCase();
-        if (teamObj && teamObj.logo) dataBus.config.gameState.team_2.icon_link = teamObj.logo;
+        if (teamObj && teamObj.logo) {
+            dataBus.config.gameState.team_2.icon_link = dataBus.cleanLogoUrl ? dataBus.cleanLogoUrl(teamObj.logo) : teamObj.logo;
+        }
 
         if (teamObj && Array.isArray(teamObj.players)) {
             for (let i = 0; i < Math.min(5, teamObj.players.length); i++) {
@@ -679,11 +683,13 @@ router.post('/api/tournament/save_team', upload.none(), (req, res) => {
         }
     }
 
+    const teamLogo = (logo && dataBus.cleanLogoUrl) ? dataBus.cleanLogoUrl(logo) : (logo || '').trim();
+
     const teamData = {
         id: id || `team_${Date.now()}`,
         name: name.trim(),
         tag: tag.trim().toUpperCase(),
-        logo: logo ? logo.trim() : '',
+        logo: teamLogo,
         seed: seed ? seed.trim() : '',
         players: parsedPlayers
     };

@@ -719,6 +719,43 @@ class fileLoader {
         return rows;
     }
 
+    // Clean and normalize logo URLs (supporting formulas, Google Drive links, Dropbox, etc.)
+    cleanLogoUrl(rawUrl) {
+        if (!rawUrl || typeof rawUrl !== 'string') return '';
+        let str = rawUrl.trim();
+
+        // 1. Extract URL if inside =IMAGE(...) or =HYPERLINK(...) formula
+        if (str.toUpperCase().includes('IMAGE') || str.toUpperCase().includes('HYPERLINK')) {
+            const urlMatch = str.match(/https?:\/\/[^\s"',)]+/i);
+            if (urlMatch) {
+                str = urlMatch[0].trim();
+            }
+        }
+
+        // 2. Extract standard http/https URL if wrapped in other text or quotes
+        const directUrlMatch = str.match(/(https?:\/\/[^\s"',)]+)/i);
+        if (directUrlMatch) {
+            str = directUrlMatch[1].trim();
+        }
+
+        // 3. Remove wrapping quotes and trailing characters
+        str = str.replace(/^["']+|["',)]+$/g, '').trim();
+
+        // 4. Convert Google Drive file view links to direct image embedding links
+        const driveMatch = str.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)/);
+        if (driveMatch) {
+            const fileId = driveMatch[1];
+            return `https://lh3.googleusercontent.com/d/${fileId}`;
+        }
+
+        // 5. Convert Dropbox links to direct image
+        if (str.includes('dropbox.com')) {
+            str = str.replace('?dl=0', '?raw=1').replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+        }
+
+        return str;
+    }
+
     // Google Spreadsheet Auto-Fetcher and Parser
     async fetchAndParseGoogleSheet(rawInputUrl) {
         if (!rawInputUrl || typeof rawInputUrl !== 'string' || rawInputUrl.trim() === '') {
@@ -797,7 +834,7 @@ class fileLoader {
         // Parse Teams
         const teamNameIdx = findCol('teamname', 'team', 'name', 'org');
         const tagIdx = findCol('tag', 'abbr', 'abbreviation', 'code', 'short');
-        const logoIdx = findCol('logo', 'icon', 'image', 'avatar', 'pic');
+        const logoIdx = findCol('logo', 'teamlogo', 'logourl', 'icon', 'teamicon', 'image', 'teamimage', 'avatar', 'pic', 'picture', 'photo', 'badge', 'emblem', 'banner', 'crest', 'symbol', 'img');
         const seedIdx = findCol('seed', 'rank', 'group', 'division', 'pool');
         const p1Idx = findCol('player1', 'p1', 'roster1');
         const p2Idx = findCol('player2', 'p2', 'roster2');
@@ -823,7 +860,26 @@ class fileLoader {
             if (teamNameIdx !== -1 && row[teamNameIdx] && row[teamNameIdx].trim() !== '') {
                 const teamName = row[teamNameIdx].trim();
                 let teamTag = tagIdx !== -1 && row[tagIdx] ? row[tagIdx].trim() : teamName.slice(0, 4).toUpperCase();
-                let teamLogo = logoIdx !== -1 && row[logoIdx] ? row[logoIdx].trim() : '';
+                
+                // Extract and clean Team Logo URL
+                let teamLogo = '';
+                if (logoIdx !== -1 && row[logoIdx]) {
+                    teamLogo = this.cleanLogoUrl(row[logoIdx]);
+                }
+
+                // If no logo found from logo column, scan other cells for an image URL
+                if (!teamLogo) {
+                    for (let c = 0; c < row.length; c++) {
+                        if (c !== teamNameIdx && c !== tagIdx && c !== seedIdx && row[c]) {
+                            const val = row[c].trim();
+                            if (val.startsWith('http') || val.includes('drive.google.com') || val.includes('discordapp.com') || val.includes('=IMAGE(') || /\.(png|jpg|jpeg|webp|svg)/i.test(val)) {
+                                teamLogo = this.cleanLogoUrl(val);
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 let teamSeed = seedIdx !== -1 && row[seedIdx] ? row[seedIdx].trim() : '';
 
                 let players = [];
@@ -923,7 +979,7 @@ class fileLoader {
         // Update Game State Team 1
         if (team1Obj) {
             this.config.gameState.team_1.abbreviation = team1Obj.tag || team1Obj.name;
-            if (team1Obj.logo) this.config.gameState.team_1.icon_link = team1Obj.logo;
+            if (team1Obj.logo) this.config.gameState.team_1.icon_link = this.cleanLogoUrl(team1Obj.logo);
         } else if (t1Tag) {
             this.config.gameState.team_1.abbreviation = t1Tag;
         }
@@ -931,7 +987,7 @@ class fileLoader {
         // Update Game State Team 2
         if (team2Obj) {
             this.config.gameState.team_2.abbreviation = team2Obj.tag || team2Obj.name;
-            if (team2Obj.logo) this.config.gameState.team_2.icon_link = team2Obj.logo;
+            if (team2Obj.logo) this.config.gameState.team_2.icon_link = this.cleanLogoUrl(team2Obj.logo);
         } else if (t2Tag) {
             this.config.gameState.team_2.abbreviation = t2Tag;
         }
