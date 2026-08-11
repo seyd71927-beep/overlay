@@ -775,7 +775,13 @@ class fileLoader {
         if (!rawUrl || typeof rawUrl !== 'string') return '';
         let str = rawUrl.trim();
 
-        // 1. Extract URL if inside =IMAGE(...) or =HYPERLINK(...) formula
+        // 1. If multiple links or comma-separated, take the first valid link
+        if (str.includes(',') || str.includes('\n')) {
+            const parts = str.split(/[\n,]/).map(p => p.trim()).filter(Boolean);
+            if (parts.length > 0) str = parts[0];
+        }
+
+        // 2. Extract URL if inside =IMAGE(...) or =HYPERLINK(...) formula
         if (str.toUpperCase().includes('IMAGE') || str.toUpperCase().includes('HYPERLINK')) {
             const urlMatch = str.match(/https?:\/\/[^\s"',)]+/i);
             if (urlMatch) {
@@ -783,23 +789,23 @@ class fileLoader {
             }
         }
 
-        // 2. Extract standard http/https URL if wrapped in other text or quotes
+        // 3. Extract standard http/https URL if wrapped in other text or quotes
         const directUrlMatch = str.match(/(https?:\/\/[^\s"',)]+)/i);
         if (directUrlMatch) {
             str = directUrlMatch[1].trim();
         }
 
-        // 3. Remove wrapping quotes and trailing characters
+        // 4. Remove wrapping quotes and trailing characters
         str = str.replace(/^["']+|["',)]+$/g, '').trim();
 
-        // 4. Convert Google Drive file view links to direct image embedding links
-        const driveMatch = str.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)/);
+        // 5. Convert Google Drive file view / open links to direct high-res thumbnail CDN links
+        const driveMatch = str.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=|uc\?export=[^&]+&id=)([a-zA-Z0-9_-]+)/);
         if (driveMatch) {
             const fileId = driveMatch[1];
-            return `https://lh3.googleusercontent.com/d/${fileId}`;
+            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w500`;
         }
 
-        // 5. Convert Dropbox links to direct image
+        // 6. Convert Dropbox links to direct image
         if (str.includes('dropbox.com')) {
             str = str.replace('?dl=0', '?raw=1').replace('www.dropbox.com', 'dl.dropboxusercontent.com');
         }
@@ -891,7 +897,24 @@ class fileLoader {
             throw new Error('Spreadsheet must contain at least 1 header row and 1 data row');
         }
 
-        const headers = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        // Detect the true header row (in case row 0 is a title or empty)
+        let headerRowIdx = 0;
+        let maxHeaderScore = -1;
+        const keyTerms = ['team', 'name', 'tag', 'logo', 'icon', 'image', 'seed', 'player', 'roster', 'match', 'stage', 'format', 'upload', 'file', 'link', 'photo', 'avatar'];
+
+        for (let r = 0; r < Math.min(10, rows.length); r++) {
+            const rowCells = rows[r].map(h => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
+            let score = 0;
+            rowCells.forEach(cell => {
+                if (keyTerms.some(k => cell.includes(k))) score++;
+            });
+            if (score > maxHeaderScore) {
+                maxHeaderScore = score;
+                headerRowIdx = r;
+            }
+        }
+
+        const headers = rows[headerRowIdx].map(h => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
         const findCol = (...keys) => {
             return headers.findIndex(h => keys.some(k => h.includes(k)));
         };
@@ -906,14 +929,14 @@ class fileLoader {
         // Parse Teams
         const teamNameIdx = findCol('teamname', 'team', 'name', 'org');
         const tagIdx = findCol('tag', 'abbr', 'abbreviation', 'code', 'short');
-        const logoIdx = findCol('logo', 'teamlogo', 'logourl', 'icon', 'teamicon', 'image', 'teamimage', 'avatar', 'pic', 'picture', 'photo', 'badge', 'emblem', 'banner', 'crest', 'symbol', 'img');
-        const seedIdx = findCol('seed', 'rank', 'group', 'division', 'pool');
+        const logoIdx = findCol('logo', 'teamlogo', 'logourl', 'icon', 'teamicon', 'image', 'teamimage', 'avatar', 'pic', 'picture', 'photo', 'badge', 'emblem', 'banner', 'crest', 'symbol', 'img', 'upload', 'file', 'attachment', 'drive', 'link');
+        const seedIdx = findCol('seed', 'rank', 'group', 'division', 'pool', 'tier');
         const p1Idx = findCol('player1', 'p1', 'roster1');
         const p2Idx = findCol('player2', 'p2', 'roster2');
         const p3Idx = findCol('player3', 'p3', 'roster3');
         const p4Idx = findCol('player4', 'p4', 'roster4');
         const p5Idx = findCol('player5', 'p5', 'roster5');
-        const rosterIdx = findCol('roster', 'players', 'lineup');
+        const rosterIdx = findCol('roster', 'players', 'lineup', 'member');
 
         // Parse Matches
         const matchIdIdx = findCol('matchid', 'match', 'game', 'id');
@@ -925,28 +948,28 @@ class fileLoader {
         const statusIdx = findCol('status', 'state', 'live');
         const scoreIdx = findCol('score', 'result');
 
-        for (let r = 1; r < rows.length; r++) {
+        for (let r = headerRowIdx + 1; r < rows.length; r++) {
             const row = rows[r];
 
             // 1. Extract Team if row contains team data
-            if (teamNameIdx !== -1 && row[teamNameIdx] && row[teamNameIdx].trim() !== '') {
-                const teamName = row[teamNameIdx].trim();
-                let teamTag = tagIdx !== -1 && row[tagIdx] ? row[tagIdx].trim() : teamName.slice(0, 4).toUpperCase();
+            if (teamNameIdx !== -1 && row[teamNameIdx] && String(row[teamNameIdx]).trim() !== '') {
+                const teamName = String(row[teamNameIdx]).trim();
+                let teamTag = tagIdx !== -1 && row[tagIdx] ? String(row[tagIdx]).trim() : teamName.slice(0, 4).toUpperCase();
                 
                 // Extract and clean Team Logo URL
                 let teamLogo = '';
                 if (logoIdx !== -1 && row[logoIdx]) {
-                    teamLogo = this.cleanLogoUrl(row[logoIdx]);
+                    teamLogo = this.cleanLogoUrl(String(row[logoIdx]));
                 }
 
-                // If no logo found from logo column, scan other cells for an image URL
+                // If no logo found from logo column, scan other cells for an image or drive URL
                 if (!teamLogo) {
                     for (let c = 0; c < row.length; c++) {
                         if (c !== teamNameIdx && c !== tagIdx && c !== seedIdx && row[c]) {
-                            const val = row[c].trim();
-                            if (val.startsWith('http') || val.includes('drive.google.com') || val.includes('discordapp.com') || val.includes('=IMAGE(') || /\.(png|jpg|jpeg|webp|svg)/i.test(val)) {
+                            const val = String(row[c]).trim();
+                            if (val.startsWith('http') || val.includes('drive.google.com') || val.includes('googleusercontent.com') || val.includes('discordapp.com') || val.includes('=IMAGE(') || /\.(png|jpg|jpeg|webp|svg)/i.test(val)) {
                                 teamLogo = this.cleanLogoUrl(val);
-                                break;
+                                if (teamLogo) break;
                             }
                         }
                     }
