@@ -855,7 +855,7 @@ class fileLoader {
     }
 
     // Helper to fetch binary image buffer with redirects
-    fetchBinaryBuffer(targetUrl, maxRedirects = 5) {
+    fetchBinaryBuffer(targetUrl, maxRedirects = 10) {
         return new Promise((resolve, reject) => {
             if (maxRedirects <= 0) return reject(new Error('Too many redirects'));
 
@@ -882,12 +882,16 @@ class fileLoader {
                         return reject(new Error(`Server returned HTTP status ${res.statusCode}`));
                     }
 
+                    const contentType = res.headers['content-type'] || '';
+                    if (contentType.includes('text/html') || contentType.includes('text/plain')) {
+                        return reject(new Error('Returned HTML/text instead of an image (file may be private or restricted)'));
+                    }
+
                     const chunks = [];
                     res.on('data', chunk => chunks.push(chunk));
                     res.on('end', () => {
                         const buffer = Buffer.concat(chunks);
-                        const contentType = res.headers['content-type'] || 'image/png';
-                        resolve({ buffer, contentType });
+                        resolve({ buffer, contentType: contentType || 'image/png' });
                     });
                 });
 
@@ -1033,7 +1037,7 @@ class fileLoader {
         str = str.replace(/^["']+|["',)]+$/g, '').trim();
 
         // 5. Convert Google Drive file view / open links to direct high-res thumbnail CDN links
-        const driveMatch = str.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?id=|uc\?export=[^&]+&id=)([a-zA-Z0-9_-]+)/);
+        const driveMatch = str.match(/(?:drive\.google\.com\/(?:file\/u\/\d+\/d\/|file\/d\/|open\?id=|uc\?id=|uc\?export=[^&]+&id=|thumbnail\?id=)|lh3\.googleusercontent\.com\/d\/)([a-zA-Z0-9_-]+)/);
         if (driveMatch) {
             const fileId = driveMatch[1];
             return `https://drive.google.com/thumbnail?id=${fileId}&sz=w500`;
