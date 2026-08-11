@@ -32,7 +32,7 @@ class TournamentManager {
                         this.renderAll();
                     }
                 });
-            } catch (e) {}
+            } catch (e) { }
         }
     }
 
@@ -370,8 +370,8 @@ class TournamentManager {
         let teams = this.tournamentData.teams || [];
         if (searchQuery.trim() !== '') {
             const q = searchQuery.toLowerCase().trim();
-            teams = teams.filter(t => 
-                (t.name && t.name.toLowerCase().includes(q)) || 
+            teams = teams.filter(t =>
+                (t.name && t.name.toLowerCase().includes(q)) ||
                 (t.tag && t.tag.toLowerCase().includes(q)) ||
                 (t.seed && t.seed.toLowerCase().includes(q))
             );
@@ -389,46 +389,37 @@ class TournamentManager {
         let html = '';
         teams.forEach(t => {
             const logoUrl = t.logo || '../visual_assets/ZENX_RED.png';
-            const players = Array.isArray(t.players) ? t.players : [];
-            const playersBadges = players.map(p => `<span class="player-tag-pill">${p}</span>`).join('');
 
             html += `
             <div class="team-card">
-                <div class="team-card-header">
+                <div class="team-card-header" style="margin-bottom: 12px;">
                     <img src="${logoUrl}" alt="${t.tag}" class="team-card-logo" onerror="if (!this.dataset.triedProxy && '${t.logo}' && '${t.logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t.logo}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
-                    <div style="flex-grow: 1;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="team-card-tag">${t.tag}</span>
-                            <span class="seed-badge">${t.seed || 'TEAM'}</span>
+                    <div style="flex-grow: 1; min-width: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                            <span class="team-card-tag" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.tag}</span>
+                            <span class="seed-badge" style="white-space: nowrap;">${t.seed || 'TEAM'}</span>
                         </div>
-                        <span class="team-card-name">${t.name}</span>
-                    </div>
-                </div>
-
-                <div class="team-roster-box">
-                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">ROSTER (${players.length}/5):</span>
-                    <div class="players-tags-container">
-                        ${playersBadges || '<span style="color: var(--text-muted); font-size: 0.75rem;">No roster added</span>'}
+                        <span class="team-card-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">${t.name}</span>
                     </div>
                 </div>
 
                 <div class="team-card-footer">
-                    <div style="display: flex; gap: 4px; flex-grow: 1;">
-                        <button class="btn btn-success" style="padding: 5px 8px; font-size: 0.72rem; flex: 1;" onclick="window.tourneyMgr.setActiveTeamSlot('${t.tag}', 'team_1')">
+                    <div style="display: flex; gap: 6px; flex-grow: 1;">
+                        <button class="btn btn-success" style="padding: 6px 8px; font-size: 0.75rem; flex: 1;" onclick="window.tourneyMgr.setActiveTeamSlot('${t.tag}', 'team_1')">
                             👈 Set Team 1
                         </button>
-                        <button class="btn btn-danger" style="padding: 5px 8px; font-size: 0.72rem; flex: 1;" onclick="window.tourneyMgr.setActiveTeamSlot('${t.tag}', 'team_2')">
+                        <button class="btn btn-danger" style="padding: 6px 8px; font-size: 0.75rem; flex: 1;" onclick="window.tourneyMgr.setActiveTeamSlot('${t.tag}', 'team_2')">
                             👉 Set Team 2
                         </button>
                     </div>
                     <div style="display: flex; gap: 4px;">
-                        <button class="btn" style="padding: 5px 8px; font-size: 0.72rem; background: rgba(0, 242, 254, 0.12); color: #00f2fe;" title="Upload Logo file for this team" onclick="window.tourneyMgr.quickUploadLogo('${t.tag}')">
+                        <button class="btn" style="padding: 6px 8px; font-size: 0.75rem; background: rgba(0, 242, 254, 0.12); color: #00f2fe;" title="Upload Logo file for this team" onclick="window.tourneyMgr.quickUploadLogo('${t.tag}')">
                             <i class="fa-solid fa-camera"></i>
                         </button>
-                        <button class="btn" style="padding: 5px 8px; font-size: 0.72rem; background: rgba(255,255,255,0.06);" onclick="window.tourneyMgr.editTeam('${t.id}')">
+                        <button class="btn" style="padding: 6px 8px; font-size: 0.75rem; background: rgba(255,255,255,0.06);" onclick="window.tourneyMgr.editTeam('${t.id}')">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button class="btn btn-danger" style="padding: 5px 8px; font-size: 0.72rem;" onclick="window.tourneyMgr.deleteTeam('${t.id}')">
+                        <button class="btn btn-danger" style="padding: 6px 8px; font-size: 0.75rem;" onclick="window.tourneyMgr.deleteTeam('${t.id}')">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -479,8 +470,8 @@ class TournamentManager {
     findTeamByTag(tag) {
         if (!tag) return null;
         const upper = tag.toUpperCase().trim();
-        return (this.tournamentData.teams || []).find(t => 
-            (t.tag && t.tag.toUpperCase() === upper) || 
+        return (this.tournamentData.teams || []).find(t =>
+            (t.tag && t.tag.toUpperCase() === upper) ||
             (t.name && t.name.toUpperCase() === upper)
         );
     }
@@ -624,7 +615,7 @@ class TournamentManager {
                     successAlertLowerBottom('Match Deleted!');
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     openTeamModal(teamData = null) {
@@ -636,7 +627,7 @@ class TournamentManager {
         document.getElementById('modal-team-tag').value = teamData?.tag || '';
         document.getElementById('modal-team-logo').value = teamData?.logo || '';
         document.getElementById('modal-team-seed').value = teamData?.seed || '#1 SEED';
-        
+
         const players = Array.isArray(teamData?.players) ? teamData.players.join(', ') : '';
         document.getElementById('modal-team-players').value = players;
 
@@ -705,7 +696,7 @@ class TournamentManager {
                     successAlertLowerBottom('Team Deleted!');
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 
     openSheetGuideModal() {
@@ -730,7 +721,7 @@ class TournamentManager {
                     successAlertLowerBottom('Loaded Sample Tournament Demo Data!');
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
     }
 }
 

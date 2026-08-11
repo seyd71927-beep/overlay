@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -92,8 +93,15 @@
         }
 
         @keyframes pulse-live {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
         }
 
         .match-vs-container {
@@ -283,7 +291,8 @@
             transition: all 0.2s ease;
         }
 
-        .filter-pill.active, .filter-pill:hover {
+        .filter-pill.active,
+        .filter-pill:hover {
             background: var(--accent-primary);
             color: #fff;
             border-color: var(--accent-primary);
@@ -316,6 +325,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="admin-header">
@@ -324,7 +334,8 @@
             <h3>ZENX TOURNAMENT OVERLAY HOST</h3>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="status-badge" style="background: rgba(0, 242, 254, 0.12); color: #00f2fe; border-color: rgba(0, 242, 254, 0.3);">
+            <div class="status-badge"
+                style="background: rgba(0, 242, 254, 0.12); color: #00f2fe; border-color: rgba(0, 242, 254, 0.3);">
                 <i class="fa-solid fa-trophy"></i> TOURNAMENT HUB
             </div>
             <div class="status-badge" id="last-sync-badge">READY TO SYNC</div>
@@ -336,7 +347,8 @@
     <div class="tabs-container">
         <div class="tabs">
             <a class="tab" href="?page=prestream"><i class="fa-solid fa-sliders"></i> Pre-Stream Setup</a>
-            <a class="tab selected" href="?page=tournament"><i class="fa-solid fa-trophy"></i> Tournament Mode & Sheets</a>
+            <a class="tab selected" href="?page=tournament"><i class="fa-solid fa-trophy"></i> Tournament Mode &
+                Sheets</a>
             <a class="tab" href="?page=stream"><i class="fa-solid fa-play"></i> Live Match Operator</a>
             <a class="tab" href="?page=settings"><i class="fa-solid fa-gear"></i> Settings & Tokens</a>
         </div>
@@ -345,47 +357,60 @@
     <div class="panel-wrapper">
         <div class="panel">
             <div class="grid-container" style="width: 100%;">
-                
+
                 <!-- Google Spreadsheet Auto-Fetch & Synchronization Card -->
-                <div class="card" style="grid-column: span 12; border-color: rgba(0, 242, 254, 0.4); background: linear-gradient(180deg, rgba(14, 28, 38, 0.95), rgba(10, 20, 30, 0.95));">
+                <div class="card"
+                    style="grid-column: span 12; border-color: rgba(0, 242, 254, 0.4); background: linear-gradient(180deg, rgba(14, 28, 38, 0.95), rgba(10, 20, 30, 0.95));">
                     <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">
-                                <i class="fa-solid fa-table-cells" style="color: var(--accent-secondary);"></i> Google Spreadsheet Auto-Fetch & Live Synchronizer
+                                <i class="fa-solid fa-table-cells" style="color: var(--accent-secondary);"></i> Google
+                                Spreadsheet Auto-Fetch & Live Synchronizer
                             </span>
                         </div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
-                            <button id="upload-csv-btn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">
+                            <button id="upload-csv-btn" class="btn"
+                                style="padding: 4px 10px; font-size: 0.75rem; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">
                                 <i class="fa-solid fa-file-arrow-up"></i> Upload CSV File Directly
                             </button>
-                            <button id="sheet-guide-btn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
+                            <button id="sheet-guide-btn" class="btn"
+                                style="padding: 4px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
                                 <i class="fa-solid fa-circle-question"></i> Sheet Template Guide
                             </button>
-                            <button id="load-sample-btn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
+                            <button id="load-sample-btn" class="btn"
+                                style="padding: 4px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
                                 <i class="fa-solid fa-folder-open"></i> Load Sample Demo Data
                             </button>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
                         <div style="grid-column: span 2;">
-                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                            <label
+                                style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
                                 GOOGLE SPREADSHEET URL (TEAMS & MATCH SCHEDULE):
                             </label>
                             <div style="display: flex; gap: 8px;">
-                                <input id="sheet-url-input" type="text" class="input-field" placeholder="Paste link: https://docs.google.com/spreadsheets/d/1BxiMVs.../edit#gid=0" style="flex-grow: 1; font-size: 0.85rem;">
-                                <button id="sync-sheet-btn" class="btn btn-accent" style="padding: 8px 18px; white-space: nowrap; font-weight: 700;">
+                                <input id="sheet-url-input" type="text" class="input-field"
+                                    placeholder="Paste link: https://docs.google.com/spreadsheets/d/1BxiMVs.../edit#gid=0"
+                                    style="flex-grow: 1; font-size: 0.85rem;">
+                                <button id="sync-sheet-btn" class="btn btn-accent"
+                                    style="padding: 8px 18px; white-space: nowrap; font-weight: 700;">
                                     <i class="fa-solid fa-cloud-arrow-down"></i> Sync with Google Sheet
                                 </button>
                             </div>
-                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
-                                *Supports standard Google Sheets links, published CSV links, and individual tab GIDs. Ensure Link Sharing is set to <b>"Anyone with the link can view"</b>.
+                            <span
+                                style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
+                                *Supports standard Google Sheets links, published CSV links, and individual tab GIDs.
+                                Ensure Link Sharing is set to <b>"Anyone with the link can view"</b>.
                             </span>
                         </div>
 
                         <div>
-                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                            <label
+                                style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
                                 AUTO-SYNC FREQUENCY:
                             </label>
                             <div style="display: flex; gap: 8px;">
@@ -403,12 +428,17 @@
                         </div>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--panel-border); flex-wrap: wrap; gap: 8px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--panel-border); flex-wrap: wrap; gap: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1;">
-                            <label style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">Tournament Title:</label>
-                            <input id="tournament-name-input" type="text" class="input-field" value="ZENX VALORANT INVITATIONAL 2026" style="padding: 4px 10px; font-size: 0.82rem; max-width: 320px;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">Tournament
+                                Title:</label>
+                            <input id="tournament-name-input" type="text" class="input-field"
+                                value="ZENX VALORANT INVITATIONAL 2026"
+                                style="padding: 4px 10px; font-size: 0.82rem; max-width: 320px;">
                         </div>
-                        <button id="save-sheet-config-btn" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.8rem;">
+                        <button id="save-sheet-config-btn" class="btn btn-primary"
+                            style="padding: 6px 14px; font-size: 0.8rem;">
                             <i class="fa-solid fa-floppy-disk"></i> Save Tournament Configuration
                         </button>
                     </div>
@@ -419,10 +449,12 @@
                     <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.15rem; font-weight: 700;">
-                                <i class="fa-solid fa-calendar-days" style="color: var(--accent-primary);"></i> Tournament Match Schedule & Live Loader
+                                <i class="fa-solid fa-calendar-days" style="color: var(--accent-primary);"></i>
+                                Tournament Match Schedule & Live Loader
                             </span>
                         </div>
-                        <button id="add-match-btn" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.8rem;">
+                        <button id="add-match-btn" class="btn btn-primary"
+                            style="padding: 6px 14px; font-size: 0.8rem;">
                             <i class="fa-solid fa-plus"></i> Add Match Manually
                         </button>
                     </div>
@@ -436,7 +468,8 @@
                     </div>
 
                     <!-- Matches Grid -->
-                    <div id="matches-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px;">
+                    <div id="matches-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px;">
                         <!-- Dynamically populated by tournament.js -->
                     </div>
                 </div>
@@ -446,19 +479,24 @@
                     <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.15rem; font-weight: 700;">
-                                <i class="fa-solid fa-users" style="color: #00e676;"></i> Tournament Teams Directory & Rosters
+                                <i class="fa-solid fa-users" style="color: #00e676;"></i> Tournament Teams Directory &
+                                Rosters
                             </span>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <input id="team-search-input" type="text" class="input-field" placeholder="Search team or seed..." style="padding: 5px 10px; font-size: 0.8rem; width: 180px;">
-                            <button id="add-team-btn" class="btn btn-success" style="padding: 6px 14px; font-size: 0.8rem;">
+                            <input id="team-search-input" type="text" class="input-field"
+                                placeholder="Search team or seed..."
+                                style="padding: 5px 10px; font-size: 0.8rem; width: 180px;">
+                            <button id="add-team-btn" class="btn btn-success"
+                                style="padding: 6px 14px; font-size: 0.8rem;">
                                 <i class="fa-solid fa-plus"></i> Add Team Manually
                             </button>
                         </div>
                     </div>
 
                     <!-- Teams Grid -->
-                    <div id="teams-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                    <div id="teams-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
                         <!-- Dynamically populated by tournament.js -->
                     </div>
                 </div>
@@ -477,24 +515,33 @@
 
             <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
                 <div>
-                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Match Stage / Title</label>
-                    <input id="modal-match-stage" type="text" class="input-field" placeholder="e.g. UPPER BRACKET SEMI-FINALS">
+                    <label
+                        style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Match
+                        Stage / Title</label>
+                    <input id="modal-match-stage" type="text" class="input-field"
+                        placeholder="e.g. UPPER BRACKET SEMI-FINALS">
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--green-team); display: block; margin-bottom: 4px;">Team 1 (Left)</label>
+                        <label
+                            style="font-size: 0.8rem; color: var(--green-team); display: block; margin-bottom: 4px;">Team
+                            1 (Left)</label>
                         <select id="modal-match-t1" class="input-field"></select>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--red-team); display: block; margin-bottom: 4px;">Team 2 (Right)</label>
+                        <label
+                            style="font-size: 0.8rem; color: var(--red-team); display: block; margin-bottom: 4px;">Team
+                            2 (Right)</label>
                         <select id="modal-match-t2" class="input-field"></select>
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Series Format</label>
+                        <label
+                            style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Series
+                            Format</label>
                         <select id="modal-match-format" class="input-field">
                             <option value="BO1">Best of 1 (BO1)</option>
                             <option value="BO3" selected>Best of 3 (BO3)</option>
@@ -502,7 +549,9 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Match Status</label>
+                        <label
+                            style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Match
+                            Status</label>
                         <select id="modal-match-status" class="input-field">
                             <option value="UPCOMING" selected>Upcoming</option>
                             <option value="LIVE">Live Match</option>
@@ -513,19 +562,26 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Scheduled Time</label>
-                        <input id="modal-match-time" type="text" class="input-field" placeholder="e.g. 18:00 IST / 15:30 AST">
+                        <label
+                            style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Scheduled
+                            Time</label>
+                        <input id="modal-match-time" type="text" class="input-field"
+                            placeholder="e.g. 18:00 IST / 15:30 AST">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Score / Result</label>
+                        <label
+                            style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Score
+                            / Result</label>
                         <input id="modal-match-score" type="text" class="input-field" placeholder="e.g. 1 - 0">
                     </div>
                 </div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn" style="background: rgba(255,255,255,0.08);" onclick="window.tourneyMgr.closeMatchModal()">Cancel</button>
-                <button type="button" id="save-match-modal-btn" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Match</button>
+                <button type="button" class="btn" style="background: rgba(255,255,255,0.08);"
+                    onclick="window.tourneyMgr.closeMatchModal()">Cancel</button>
+                <button type="button" id="save-match-modal-btn" class="btn btn-primary"><i
+                        class="fa-solid fa-floppy-disk"></i> Save Match</button>
             </div>
         </div>
     </div>
@@ -541,42 +597,59 @@
             <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Team Full Name</label>
+                        <label
+                            style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Team
+                            Full Name</label>
                         <input id="modal-team-name" type="text" class="input-field" placeholder="e.g. ZENX ESPORTS">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Tag (3-4 chars)</label>
+                        <label
+                            style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Tag
+                            (3-4 chars)</label>
                         <input id="modal-team-tag" type="text" class="input-field" placeholder="e.g. ZENX">
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Logo URL / Image Link</label>
-                        <input id="modal-team-logo" type="text" class="input-field" placeholder="https://... (or ../visual_assets/ZENX_RED.png)">
+                        <label
+                            style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Logo
+                            URL / Image Link</label>
+                        <input id="modal-team-logo" type="text" class="input-field"
+                            placeholder="https://... (or ../visual_assets/ZENX_RED.png)">
                         <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center;">
-                            <input type="file" id="modal-team-file-input" accept="image/*" class="input-field" style="padding: 4px 6px; font-size: 0.72rem;">
-                            <button type="button" id="modal-upload-logo-btn" class="btn btn-accent" style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
+                            <input type="file" id="modal-team-file-input" accept="image/*" class="input-field"
+                                style="padding: 4px 6px; font-size: 0.72rem;">
+                            <button type="button" id="modal-upload-logo-btn" class="btn btn-accent"
+                                style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
                                 <i class="fa-solid fa-upload"></i> Upload
                             </button>
                         </div>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seed / Group</label>
+                        <label
+                            style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seed
+                            / Group</label>
                         <input id="modal-team-seed" type="text" class="input-field" placeholder="#1 SEED">
                     </div>
                 </div>
 
                 <div>
-                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Player Roster (Comma-separated)</label>
-                    <input id="modal-team-players" type="text" class="input-field" placeholder="e.g. Basha, Phantom, ViperX, Shadow, Apex">
-                    <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px;">Enter up to 5 player usernames.</span>
+                    <label
+                        style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Player
+                        Roster (Comma-separated)</label>
+                    <input id="modal-team-players" type="text" class="input-field"
+                        placeholder="e.g. Basha, Phantom, ViperX, Shadow, Apex">
+                    <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px;">Enter up
+                        to 5 player usernames.</span>
                 </div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" class="btn" style="background: rgba(255,255,255,0.08);" onclick="window.tourneyMgr.closeTeamModal()">Cancel</button>
-                <button type="button" id="save-team-modal-btn" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Save Team</button>
+                <button type="button" class="btn" style="background: rgba(255,255,255,0.08);"
+                    onclick="window.tourneyMgr.closeTeamModal()">Cancel</button>
+                <button type="button" id="save-team-modal-btn" class="btn btn-success"><i
+                        class="fa-solid fa-floppy-disk"></i> Save Team</button>
             </div>
         </div>
     </div>
@@ -584,32 +657,42 @@
     <!-- Sheet Template Guide Modal -->
     <div id="sheet-guide-modal" class="custom-modal">
         <div class="modal-content" style="max-width: 640px;">
-            <h3 style="color: var(--accent-secondary); margin-bottom: 12px; font-family: var(--font-display); font-size: 1.3rem;">
+            <h3
+                style="color: var(--accent-secondary); margin-bottom: 12px; font-family: var(--font-display); font-size: 1.3rem;">
                 <i class="fa-solid fa-file-excel"></i> Google Spreadsheet Column Format Guide
             </h3>
             <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
-                Your Google Sheet can contain columns for <b>Teams</b>, <b>Match Schedule</b>, or both! Here is the recommended column header format:
+                Your Google Sheet can contain columns for <b>Teams</b>, <b>Match Schedule</b>, or both! Here is the
+                recommended column header format:
             </p>
 
-            <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
-                <h5 style="color: #00e676; font-size: 0.85rem; margin-bottom: 6px;"><i class="fa-solid fa-users"></i> Teams Columns:</h5>
-                <code style="font-family: monospace; font-size: 0.78rem; color: #00f2fe; display: block; line-height: 1.5;">
+            <div
+                style="background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+                <h5 style="color: #00e676; font-size: 0.85rem; margin-bottom: 6px;"><i class="fa-solid fa-users"></i>
+                    Teams Columns:</h5>
+                <code
+                    style="font-family: monospace; font-size: 0.78rem; color: #00f2fe; display: block; line-height: 1.5;">
                     Team Name | Tag | Logo URL | Seed | Player 1 | Player 2 | Player 3 | Player 4 | Player 5
                 </code>
             </div>
 
-            <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
-                <h5 style="color: var(--accent-primary); font-size: 0.85rem; margin-bottom: 6px;"><i class="fa-solid fa-calendar"></i> Match Schedule Columns:</h5>
-                <code style="font-family: monospace; font-size: 0.78rem; color: #00f2fe; display: block; line-height: 1.5;">
+            <div
+                style="background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+                <h5 style="color: var(--accent-primary); font-size: 0.85rem; margin-bottom: 6px;"><i
+                        class="fa-solid fa-calendar"></i> Match Schedule Columns:</h5>
+                <code
+                    style="font-family: monospace; font-size: 0.78rem; color: #00f2fe; display: block; line-height: 1.5;">
                     Stage | Team 1 | Team 2 | Format | Scheduled Time | Status | Score
                 </code>
             </div>
 
             <div style="display: flex; justify-content: flex-end;">
-                <button type="button" class="btn btn-primary" onclick="window.tourneyMgr.closeSheetGuideModal()">Got It</button>
+                <button type="button" class="btn btn-primary" onclick="window.tourneyMgr.closeSheetGuideModal()">Got
+                    It</button>
             </div>
         </div>
     </div>
 
 </body>
+
 </html>
