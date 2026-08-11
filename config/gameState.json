@@ -1,5 +1,5 @@
 {
-    "tournament_stage": "ZENX SHOWDOWN DAY-3 MATCH 1",
+    "tournament_stage": "UPPER BRACKET SEMI-FINALS (BO3)",
     "round_number": 7,
     "round_over": false,
     "spike_down": false,
@@ -11,19 +11,35 @@
             "winner": "",
             "team_1_score": 0,
             "team_2_score": 0,
+            "map_pick": "team_1",
+            "map": "breeze"
+        },
+        "map_2": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "team_2",
+            "map": "haven"
+        },
+        "map_3": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
             "map_pick": "",
-            "map": "ascent"
+            "map": "sunset"
         }
     },
     "team_1": {
-        "abbreviation": "NXR",
-        "icon_link": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/NXR_PNG_-_bijin_das_g5iepg.png",
+        "abbreviation": "ZENX",
+        "icon_link": "../visual_assets/ZENX_RED.png",
         "team_info": "",
         "won_games": 0
     },
     "team_2": {
-        "abbreviation": "IDLI",
-        "icon_link": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/IDLISAMBAR_nezidc.png",
+        "abbreviation": "NXR",
+        "icon_link": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/NXR_PNG_-_bijin_das_g5iepg.png",
         "team_info": "",
         "won_games": 0
     },

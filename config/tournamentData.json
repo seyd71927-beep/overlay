@@ -1,0 +1,95 @@
+{
+    "spreadsheetUrl": "",
+    "autoSync": false,
+    "syncInterval": 60,
+    "lastSync": null,
+    "tournamentName": "ZENX VALORANT INVITATIONAL 2026",
+    "teams": [
+        {
+            "id": "team_zenx",
+            "name": "ZENX ESPORTS",
+            "tag": "ZENX",
+            "logo": "../visual_assets/ZENX_RED.png",
+            "seed": "#1 SEED",
+            "group": "Group A",
+            "players": ["Basha", "Phantom", "ViperX", "Shadow", "Apex"]
+        },
+        {
+            "id": "team_nxr",
+            "name": "NEXAURA",
+            "tag": "NXR",
+            "logo": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/NXR_PNG_-_bijin_das_g5iepg.png",
+            "seed": "#2 SEED",
+            "group": "Group A",
+            "players": ["Bijin", "DarkKnight", "Nova", "Cipher", "Raptor"]
+        },
+        {
+            "id": "team_idli",
+            "name": "IDLISAMBAR",
+            "tag": "IDLI",
+            "logo": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/IDLISAMBAR_nezidc.png",
+            "seed": "#3 SEED",
+            "group": "Group B",
+            "players": ["SambarKing", "ChutneyPro", "DosaGod", "VadaHit", "FilterCoffee"]
+        },
+        {
+            "id": "team_fnc",
+            "name": "FNATIC",
+            "tag": "FNC",
+            "logo": "https://cdn.sanity.io/images/5gii1snx/production/c32c2cb848fd3338ff23a590ec5c0e052b080f27-1000x1000.png",
+            "seed": "EMEA #1",
+            "group": "Group B",
+            "players": ["Boaster", "Derke", "Alfajer", "Chronicle", "Leo"]
+        },
+        {
+            "id": "team_sen",
+            "name": "SENTINELS",
+            "tag": "SEN",
+            "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Sentinels_logo.svg/1200px-Sentinels_logo.svg.png",
+            "seed": "AMER #1",
+            "group": "Group A",
+            "players": ["TenZ", "zekken", "Sacy", "johnqt", "Zellsis"]
+        },
+        {
+            "id": "team_prx",
+            "name": "PAPER REX",
+            "tag": "PRX",
+            "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Paper_Rex_logo.png/600px-Paper_Rex_logo.png",
+            "seed": "PACIFIC #1",
+            "group": "Group B",
+            "players": ["f0rsakeN", "mindfreak", "d4v41", "something", "Jinggg"]
+        }
+    ],
+    "matches": [
+        {
+            "id": "match_1",
+            "stage": "UPPER BRACKET SEMI-FINALS",
+            "team_1_tag": "ZENX",
+            "team_2_tag": "NXR",
+            "format": "BO3",
+            "scheduled_time": "18:00 IST / 15:30 AST",
+            "status": "LIVE",
+            "score": "1 - 0"
+        },
+        {
+            "id": "match_2",
+            "stage": "UPPER BRACKET SEMI-FINALS",
+            "team_1_tag": "IDLI",
+            "team_2_tag": "FNC",
+            "format": "BO3",
+            "scheduled_time": "20:30 IST / 18:00 AST",
+            "status": "UPCOMING",
+            "score": "0 - 0"
+        },
+        {
+            "id": "match_3",
+            "stage": "GRAND FINALS | BEST OF 5",
+            "team_1_tag": "ZENX",
+            "team_2_tag": "SEN",
+            "format": "BO5",
+            "scheduled_time": "22:00 IST / 19:30 AST",
+            "status": "UPCOMING",
+            "score": "0 - 0"
+        }
+    ]
+}

@@ -2,7 +2,7 @@
     "player_0": {
         "token": "yAv2hT4URx4U",
         "is_registered": true,
-        "last_updated": 1786431394159,
+        "last_updated": 1786438291217,
         "data": {
             "username": "NXR TenZ",
             "agent": "jett",
@@ -19,13 +19,14 @@
             "has_spike": true,
             "is_dead": false,
             "is_registered": true,
-            "puuid": "p1"
+            "puuid": "p1",
+            "name": "Basha"
         }
     },
     "player_1": {
         "token": "BU5QwbxxTUxJ",
         "is_registered": true,
-        "last_updated": 1786431394159,
+        "last_updated": 1786438291217,
         "data": {
             "username": "NXR ShahZaM",
             "agent": "sova",
@@ -42,13 +43,14 @@
             "has_spike": false,
             "is_dead": false,
             "is_registered": true,
-            "puuid": "p2"
+            "puuid": "p2",
+            "name": "Phantom"
         }
     },
     "player_2": {
         "token": "BO3iZbRuutAC",
         "is_registered": false,
-        "last_updated": 1786431394150,
+        "last_updated": 1786438291217,
         "data": {
             "username": "NXR dapr",
             "agent": "cypher",
@@ -65,13 +67,14 @@
             "has_spike": false,
             "is_dead": true,
             "is_registered": true,
-            "puuid": "p3"
+            "puuid": "p3",
+            "name": "ViperX"
         }
     },
     "player_3": {
         "token": "tssEEXUyVlOw",
         "is_registered": false,
-        "last_updated": 1786431393888,
+        "last_updated": 1786438291217,
         "data": {
             "username": "Player 4",
             "agent": "Viper",
@@ -87,13 +90,14 @@
             "credits": 4700,
             "has_spike": false,
             "is_dead": true,
-            "is_registered": true
+            "is_registered": true,
+            "name": "Shadow"
         }
     },
     "player_4": {
         "token": "E5py5gH0eYty",
         "is_registered": false,
-        "last_updated": 1786431393888,
+        "last_updated": 1786438291217,
         "data": {
             "username": "Player 5",
             "agent": "Omen",
@@ -109,13 +113,14 @@
             "credits": 4900,
             "has_spike": false,
             "is_dead": false,
-            "is_registered": true
+            "is_registered": true,
+            "name": "Apex"
         }
     },
     "player_5": {
         "token": "Jm8p0vPGOadu",
         "is_registered": true,
-        "last_updated": 1786431394159,
+        "last_updated": 1786438291217,
         "data": {
             "username": "IDLI Boaster",
             "agent": "omen",
@@ -132,13 +137,14 @@
             "has_spike": false,
             "is_dead": false,
             "is_registered": true,
-            "puuid": "p4"
+            "puuid": "p4",
+            "name": "Bijin"
         }
     },
     "player_6": {
         "token": "U8o5cmidKepp",
         "is_registered": true,
-        "last_updated": 1786431394159,
+        "last_updated": 1786438291217,
         "data": {
             "username": "IDLI Derke",
             "agent": "raze",
@@ -155,13 +161,14 @@
             "has_spike": false,
             "is_dead": false,
             "is_registered": true,
-            "puuid": "p5"
+            "puuid": "p5",
+            "name": "DarkKnight"
         }
     },
     "player_7": {
         "token": "pMcI01u83OGZ",
         "is_registered": false,
-        "last_updated": 1786431394150,
+        "last_updated": 1786438291217,
         "data": {
             "username": "IDLI Chronicle",
             "agent": "viper",
@@ -178,13 +185,14 @@
             "has_spike": false,
             "is_dead": false,
             "is_registered": true,
-            "puuid": "p6"
+            "puuid": "p6",
+            "name": "Nova"
         }
     },
     "player_8": {
         "token": "hAkerHVS8F3E",
         "is_registered": false,
-        "last_updated": 1786431393888,
+        "last_updated": 1786438291217,
         "data": {
             "username": "Player 9",
             "agent": "Sage",
@@ -200,13 +208,14 @@
             "credits": 1200,
             "has_spike": false,
             "is_dead": true,
-            "is_registered": true
+            "is_registered": true,
+            "name": "Cipher"
         }
     },
     "player_9": {
         "token": "Y3im7MUP9pzj",
         "is_registered": false,
-        "last_updated": 1786431393888,
+        "last_updated": 1786438291217,
         "data": {
             "username": "Player 10",
             "agent": "Cypher",
@@ -222,7 +231,8 @@
             "credits": 5800,
             "has_spike": false,
             "is_dead": true,
-            "is_registered": true
+            "is_registered": true,
+            "name": "Raptor"
         }
     }
 }

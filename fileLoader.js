@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const https = require('https');
+const http = require('http');
 
 class fileLoader {
     constructor() {
@@ -14,6 +16,7 @@ class fileLoader {
             gameState: null,
             mapPicks: null,
             timer: null,
+            tournament: null,
             casters: {
                 caster_1: { name: "Ailyrr", handle: "@ailyrr", role: "Caster" },
                 caster_2: { name: "Vanguard", handle: "@vanguard_val", role: "Analyst" },
@@ -55,6 +58,23 @@ class fileLoader {
             // Read Timer
             const timerData = fs.readFileSync(path.join(this.configDir, 'timer.json'), 'utf8');
             this.config.timer = JSON.parse(timerData);
+
+            // Read Tournament Data
+            try {
+                const tournamentData = fs.readFileSync(path.join(this.configDir, 'tournamentData.json'), 'utf8');
+                this.config.tournament = JSON.parse(tournamentData);
+            } catch (e) {
+                this.config.tournament = {
+                    spreadsheetUrl: '',
+                    autoSync: false,
+                    syncInterval: 60,
+                    lastSync: null,
+                    tournamentName: 'ZENX VALORANT TOURNAMENT',
+                    teams: [],
+                    matches: []
+                };
+                this.saveStateToFile('tournamentData.json', this.config.tournament);
+            }
 
             // Read Admin Password & App Config
             const appConfigData = fs.readFileSync(path.join(this.configDir, 'appConfig.json'), 'utf8');
@@ -568,6 +588,418 @@ class fileLoader {
                 }
             }
         }
+    }
+
+    // =========================================
+    //       TOURNAMENT MODE & SPREADSHEET
+    // =========================================
+
+    getTournamentData() {
+        if (!this.config.tournament) {
+            this.config.tournament = {
+                spreadsheetUrl: '',
+                autoSync: false,
+                syncInterval: 60,
+                lastSync: null,
+                tournamentName: 'ZENX VALORANT TOURNAMENT',
+                teams: [],
+                matches: []
+            };
+        }
+        return this.config.tournament;
+    }
+
+    saveTournamentData(data) {
+        if (data) {
+            this.config.tournament = {
+                ...this.getTournamentData(),
+                ...data
+            };
+        }
+        this.saveStateToFile('tournamentData.json', this.config.tournament);
+        return this.config.tournament;
+    }
+
+    // Follows HTTP/HTTPS redirects to download Google Sheets CSV
+    fetchUrlWithRedirects(targetUrl, maxRedirects = 5) {
+        return new Promise((resolve, reject) => {
+            if (maxRedirects <= 0) {
+                return reject(new Error('Too many HTTP redirects'));
+            }
+
+            try {
+                const parsedUrl = new URL(targetUrl);
+                const protocol = parsedUrl.protocol === 'https:' ? https : http;
+
+                const req = protocol.get(targetUrl, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'text/csv,text/plain,application/json,*/*'
+                    },
+                    timeout: 10000
+                }, (res) => {
+                    // Handle HTTP 3xx Redirects
+                    if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                        let redirectUrl = res.headers.location;
+                        if (!redirectUrl.startsWith('http')) {
+                            redirectUrl = new URL(redirectUrl, targetUrl).href;
+                        }
+                        return resolve(this.fetchUrlWithRedirects(redirectUrl, maxRedirects - 1));
+                    }
+
+                    if (res.statusCode !== 200) {
+                        return reject(new Error(`Server returned HTTP status ${res.statusCode}`));
+                    }
+
+                    let body = '';
+                    res.setEncoding('utf8');
+                    res.on('data', chunk => body += chunk);
+                    res.on('end', () => resolve(body));
+                });
+
+                req.on('error', err => reject(err));
+                req.on('timeout', () => {
+                    req.destroy();
+                    reject(new Error('Connection timed out while fetching sheet'));
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    // Robust CSV parser supporting quotes, commas, and multiline values
+    parseCsvRows(csvText) {
+        const rows = [];
+        let currentRow = [];
+        let currentField = '';
+        let inQuotes = false;
+
+        const text = csvText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const nextChar = text[i + 1];
+
+            if (inQuotes) {
+                if (char === '"' && nextChar === '"') {
+                    currentField += '"';
+                    i++;
+                } else if (char === '"') {
+                    inQuotes = false;
+                } else {
+                    currentField += char;
+                }
+            } else {
+                if (char === '"') {
+                    inQuotes = true;
+                } else if (char === ',') {
+                    currentRow.push(currentField.trim());
+                    currentField = '';
+                } else if (char === '\n') {
+                    currentRow.push(currentField.trim());
+                    if (currentRow.some(val => val.length > 0)) {
+                        rows.push(currentRow);
+                    }
+                    currentRow = [];
+                    currentField = '';
+                } else {
+                    currentField += char;
+                }
+            }
+        }
+
+        if (currentField.length > 0 || currentRow.length > 0) {
+            currentRow.push(currentField.trim());
+            if (currentRow.some(val => val.length > 0)) {
+                rows.push(currentRow);
+            }
+        }
+
+        return rows;
+    }
+
+    // Google Spreadsheet Auto-Fetcher and Parser
+    async fetchAndParseGoogleSheet(rawInputUrl) {
+        if (!rawInputUrl || typeof rawInputUrl !== 'string' || rawInputUrl.trim() === '') {
+            throw new Error('Please provide a valid Google Spreadsheet URL or CSV link');
+        }
+
+        let input = rawInputUrl.trim();
+        let exportUrl = input;
+
+        // Detect Google Sheet ID and GID
+        const sheetIdMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        const gidMatch = input.match(/[#&?]gid=([0-9]+)/);
+
+        if (sheetIdMatch) {
+            const docId = sheetIdMatch[1];
+            const gid = gidMatch ? gidMatch[1] : '0';
+            exportUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+        } else if (input.includes('/pubhtml')) {
+            exportUrl = input.replace('/pubhtml', '/pub?output=csv');
+        }
+
+        // Fetch CSV data
+        const csvContent = await this.fetchUrlWithRedirects(exportUrl);
+        if (!csvContent || csvContent.trim().length === 0) {
+            throw new Error('Google Sheet returned empty data. Ensure sharing is set to "Anyone with the link can view".');
+        }
+
+        const rows = this.parseCsvRows(csvContent);
+        if (rows.length < 2) {
+            throw new Error('Spreadsheet must contain at least 1 header row and 1 data row');
+        }
+
+        const headers = rows[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const findCol = (...keys) => {
+            return headers.findIndex(h => keys.some(k => h.includes(k)));
+        };
+
+        // Determine if Sheet is Teams, Schedule, or Hybrid
+        const hasTeamCol = findCol('team', 'name', 'org', 'tag', 'abbr') !== -1;
+        const hasMatchCol = findCol('match', 'stage', 'team1', 'team2', 'vs', 'format', 'bo') !== -1;
+
+        let parsedTeams = [];
+        let parsedMatches = [];
+
+        // Parse Teams
+        const teamNameIdx = findCol('teamname', 'team', 'name', 'org');
+        const tagIdx = findCol('tag', 'abbr', 'abbreviation', 'code', 'short');
+        const logoIdx = findCol('logo', 'icon', 'image', 'avatar', 'pic');
+        const seedIdx = findCol('seed', 'rank', 'group', 'division', 'pool');
+        const p1Idx = findCol('player1', 'p1', 'roster1');
+        const p2Idx = findCol('player2', 'p2', 'roster2');
+        const p3Idx = findCol('player3', 'p3', 'roster3');
+        const p4Idx = findCol('player4', 'p4', 'roster4');
+        const p5Idx = findCol('player5', 'p5', 'roster5');
+        const rosterIdx = findCol('roster', 'players', 'lineup');
+
+        // Parse Matches
+        const matchIdIdx = findCol('matchid', 'match', 'game', 'id');
+        const stageIdx = findCol('stage', 'round', 'tournamentstage', 'bracket', 'title');
+        const t1Idx = findCol('team1', 'teama', 't1', 'home');
+        const t2Idx = findCol('team2', 'teamb', 't2', 'away');
+        const formatIdx = findCol('format', 'series', 'bo', 'bestof');
+        const timeIdx = findCol('time', 'date', 'scheduled', 'schedule', 'start');
+        const statusIdx = findCol('status', 'state', 'live');
+        const scoreIdx = findCol('score', 'result');
+
+        for (let r = 1; r < rows.length; r++) {
+            const row = rows[r];
+
+            // 1. Extract Team if row contains team data
+            if (teamNameIdx !== -1 && row[teamNameIdx] && row[teamNameIdx].trim() !== '') {
+                const teamName = row[teamNameIdx].trim();
+                let teamTag = tagIdx !== -1 && row[tagIdx] ? row[tagIdx].trim() : teamName.slice(0, 4).toUpperCase();
+                let teamLogo = logoIdx !== -1 && row[logoIdx] ? row[logoIdx].trim() : '';
+                let teamSeed = seedIdx !== -1 && row[seedIdx] ? row[seedIdx].trim() : '';
+
+                let players = [];
+                if (p1Idx !== -1 && row[p1Idx]) players.push(row[p1Idx].trim());
+                if (p2Idx !== -1 && row[p2Idx]) players.push(row[p2Idx].trim());
+                if (p3Idx !== -1 && row[p3Idx]) players.push(row[p3Idx].trim());
+                if (p4Idx !== -1 && row[p4Idx]) players.push(row[p4Idx].trim());
+                if (p5Idx !== -1 && row[p5Idx]) players.push(row[p5Idx].trim());
+
+                if (players.length === 0 && rosterIdx !== -1 && row[rosterIdx]) {
+                    players = row[rosterIdx].split(/[,;/]/).map(p => p.trim()).filter(Boolean);
+                }
+
+                parsedTeams.push({
+                    id: `team_${parsedTeams.length + 1}_${Date.now()}`,
+                    name: teamName,
+                    tag: teamTag.toUpperCase(),
+                    logo: teamLogo,
+                    seed: teamSeed,
+                    players: players
+                });
+            }
+
+            // 2. Extract Match if row contains match schedule data
+            if (t1Idx !== -1 && t2Idx !== -1 && row[t1Idx] && row[t2Idx]) {
+                const mStage = stageIdx !== -1 && row[stageIdx] ? row[stageIdx].trim() : `Match ${parsedMatches.length + 1}`;
+                const t1 = row[t1Idx].trim();
+                const t2 = row[t2Idx].trim();
+                const mFormat = formatIdx !== -1 && row[formatIdx] ? row[formatIdx].trim().toUpperCase() : 'BO3';
+                const mTime = timeIdx !== -1 && row[timeIdx] ? row[timeIdx].trim() : 'TBD';
+                const mStatus = statusIdx !== -1 && row[statusIdx] ? row[statusIdx].trim().toUpperCase() : 'UPCOMING';
+                const mScore = scoreIdx !== -1 && row[scoreIdx] ? row[scoreIdx].trim() : '0 - 0';
+                const mId = matchIdIdx !== -1 && row[matchIdIdx] ? row[matchIdIdx].trim() : `match_${parsedMatches.length + 1}`;
+
+                parsedMatches.push({
+                    id: mId,
+                    stage: mStage,
+                    team_1_tag: t1,
+                    team_2_tag: t2,
+                    format: mFormat,
+                    scheduled_time: mTime,
+                    status: mStatus,
+                    score: mScore
+                });
+            }
+        }
+
+        // Save imported results
+        const currentData = this.getTournamentData();
+        if (parsedTeams.length > 0) currentData.teams = parsedTeams;
+        if (parsedMatches.length > 0) currentData.matches = parsedMatches;
+        currentData.spreadsheetUrl = input;
+        currentData.lastSync = Date.now();
+
+        this.saveTournamentData(currentData);
+
+        return {
+            status: true,
+            message: `Successfully synchronized from Google Sheet! Loaded ${parsedTeams.length} Teams and ${parsedMatches.length} Scheduled Matches.`,
+            teamsCount: parsedTeams.length,
+            matchesCount: parsedMatches.length,
+            tournamentData: currentData
+        };
+    }
+
+    // 1-Click Load Match into Active Game State & Overlay
+    loadTournamentMatch(matchIdOrIndex) {
+        const tournament = this.getTournamentData();
+        let match = null;
+
+        if (typeof matchIdOrIndex === 'object') {
+            match = matchIdOrIndex;
+        } else {
+            match = tournament.matches.find(m => m.id === matchIdOrIndex || String(m.id) === String(matchIdOrIndex))
+                 || tournament.matches[parseInt(matchIdOrIndex)];
+        }
+
+        if (!match) {
+            throw new Error(`Match '${matchIdOrIndex}' not found in tournament schedule`);
+        }
+
+        // Find Team 1 & Team 2 objects from tournament teams
+        const t1Tag = (match.team_1_tag || match.team_1 || '').toUpperCase();
+        const t2Tag = (match.team_2_tag || match.team_2 || '').toUpperCase();
+
+        const findTeam = (tag) => {
+            if (!tag) return null;
+            return tournament.teams.find(t => 
+                (t.tag && t.tag.toUpperCase() === tag) || 
+                (t.name && t.name.toUpperCase() === tag)
+            );
+        };
+
+        const team1Obj = findTeam(t1Tag);
+        const team2Obj = findTeam(t2Tag);
+
+        // Update Game State Team 1
+        if (team1Obj) {
+            this.config.gameState.team_1.abbreviation = team1Obj.tag || team1Obj.name;
+            if (team1Obj.logo) this.config.gameState.team_1.icon_link = team1Obj.logo;
+        } else if (t1Tag) {
+            this.config.gameState.team_1.abbreviation = t1Tag;
+        }
+
+        // Update Game State Team 2
+        if (team2Obj) {
+            this.config.gameState.team_2.abbreviation = team2Obj.tag || team2Obj.name;
+            if (team2Obj.logo) this.config.gameState.team_2.icon_link = team2Obj.logo;
+        } else if (t2Tag) {
+            this.config.gameState.team_2.abbreviation = t2Tag;
+        }
+
+        // Update Tournament Stage Header & Format
+        const matchFormat = (match.format || 'BO3').toUpperCase();
+        const stageName = match.stage || 'TOURNAMENT MATCH';
+        this.config.gameState.tournament_stage = `${stageName} (${matchFormat})`;
+
+        // Set series format
+        if (this.setSeriesFormat) {
+            this.setSeriesFormat(matchFormat.toLowerCase());
+        }
+
+        // If teams have rosters, populate player slots
+        if (team1Obj && Array.isArray(team1Obj.players) && team1Obj.players.length > 0) {
+            for (let i = 0; i < Math.min(5, team1Obj.players.length); i++) {
+                const key = `player_${i}`;
+                if (this.config.players[key] && this.config.players[key].data) {
+                    this.config.players[key].data.name = team1Obj.players[i];
+                }
+            }
+        }
+
+        if (team2Obj && Array.isArray(team2Obj.players) && team2Obj.players.length > 0) {
+            for (let i = 0; i < Math.min(5, team2Obj.players.length); i++) {
+                const key = `player_${i + 5}`;
+                if (this.config.players[key] && this.config.players[key].data) {
+                    this.config.players[key].data.name = team2Obj.players[i];
+                }
+            }
+        }
+
+        // Save states
+        this.saveStateToFile('gameState.json', this.config.gameState);
+        this.saveStateToFile('players.json', this.config.players);
+        if (this.config.mapPicks) {
+            this.config.mapPicks.teams = [
+                this.config.gameState.team_1.abbreviation,
+                this.config.gameState.team_2.abbreviation
+            ];
+            this.saveStateToFile('mapPicks.json', this.config.mapPicks);
+        }
+
+        return {
+            status: true,
+            message: `Loaded ${t1Tag} vs ${t2Tag} (${match.stage}) into live overlay!`,
+            gameState: this.getGameState(),
+            gameConfig: this.getGameConfiguration(),
+            players: this.config.players
+        };
+    }
+
+    addOrUpdateTournamentTeam(teamData) {
+        const tournament = this.getTournamentData();
+        if (!teamData.id) {
+            teamData.id = `team_${Date.now()}`;
+        }
+
+        const existingIdx = tournament.teams.findIndex(t => t.id === teamData.id || (t.tag && t.tag.toUpperCase() === teamData.tag?.toUpperCase()));
+        if (existingIdx !== -1) {
+            tournament.teams[existingIdx] = { ...tournament.teams[existingIdx], ...teamData };
+        } else {
+            tournament.teams.push(teamData);
+        }
+
+        this.saveTournamentData(tournament);
+        return tournament.teams;
+    }
+
+    deleteTournamentTeam(teamId) {
+        const tournament = this.getTournamentData();
+        tournament.teams = tournament.teams.filter(t => t.id !== teamId && t.tag !== teamId);
+        this.saveTournamentData(tournament);
+        return tournament.teams;
+    }
+
+    addOrUpdateTournamentMatch(matchData) {
+        const tournament = this.getTournamentData();
+        if (!matchData.id) {
+            matchData.id = `match_${Date.now()}`;
+        }
+
+        const existingIdx = tournament.matches.findIndex(m => m.id === matchData.id);
+        if (existingIdx !== -1) {
+            tournament.matches[existingIdx] = { ...tournament.matches[existingIdx], ...matchData };
+        } else {
+            tournament.matches.push(matchData);
+        }
+
+        this.saveTournamentData(tournament);
+        return tournament.matches;
+    }
+
+    deleteTournamentMatch(matchId) {
+        const tournament = this.getTournamentData();
+        tournament.matches = tournament.matches.filter(m => m.id !== matchId);
+        this.saveTournamentData(tournament);
+        return tournament.matches;
     }
 }
 

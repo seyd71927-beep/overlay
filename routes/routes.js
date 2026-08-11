@@ -265,6 +265,8 @@ router.get('/admin', (req, res) => {
         switch (target_page) {
             case 'prestream':
                 return res.status(200).sendFile(path.join(__dirname, '../panel/admin_pre_live.html'));
+            case 'tournament':
+                return res.status(200).sendFile(path.join(__dirname, '../panel/admin_tournament.html'));
             case 'stream':
                 return res.status(200).sendFile(path.join(__dirname, '../panel/admin_live.html'));
             case 'settings':
@@ -545,6 +547,192 @@ router.post('/set_auto_fetch_config', upload.none(), (req, res) => {
         return res.status(200).send({ status: true, config: updated });
     }
     return res.status(500).send({ status: false, message: 'Live service not initialized' });
+});
+
+// =========================================
+//       TOURNAMENT MODE API ENDPOINTS
+// =========================================
+
+router.get('/api/tournament/data', (req, res) => {
+    return res.status(200).json(dataBus.getTournamentData());
+});
+
+router.post('/api/tournament/save_config', upload.none(), (req, res) => {
+    const { spreadsheetUrl, autoSync, syncInterval, tournamentName } = req.body;
+    const current = dataBus.getTournamentData();
+    if (typeof spreadsheetUrl !== 'undefined') current.spreadsheetUrl = spreadsheetUrl.trim();
+    if (typeof autoSync !== 'undefined') current.autoSync = (autoSync === 'true' || autoSync === true);
+    if (typeof syncInterval !== 'undefined') current.syncInterval = parseInt(syncInterval) || 60;
+    if (typeof tournamentName !== 'undefined') current.tournamentName = tournamentName.trim();
+    
+    dataBus.saveTournamentData(current);
+    emitEvent(req, 'tournamentUpdate', current);
+    return res.status(200).json({ status: true, tournamentData: current });
+});
+
+router.post('/api/tournament/sync_sheet', upload.none(), async (req, res) => {
+    const { spreadsheetUrl } = req.body;
+    const current = dataBus.getTournamentData();
+    const targetUrl = spreadsheetUrl ? spreadsheetUrl.trim() : current.spreadsheetUrl;
+
+    if (!targetUrl) {
+        return res.status(400).json({ status: false, message: 'Please provide a Google Spreadsheet URL.' });
+    }
+
+    try {
+        const result = await dataBus.fetchAndParseGoogleSheet(targetUrl);
+        emitEvent(req, 'tournamentUpdate', dataBus.getTournamentData());
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error('[Google Sheet Sync Error]:', err.message);
+        return res.status(400).json({ status: false, message: 'Failed to sync Google Sheet: ' + err.message });
+    }
+});
+
+router.post('/api/tournament/load_match', upload.none(), (req, res) => {
+    const { matchId } = req.body;
+    if (!matchId) {
+        return res.status(400).json({ status: false, message: 'Missing match ID parameter' });
+    }
+
+    try {
+        const result = dataBus.loadTournamentMatch(matchId);
+        emitEvent(req, 'stateUpdate', result.gameState);
+        emitEvent(req, 'configUpdate', result.gameConfig);
+        emitEvent(req, 'playerUpdate', result.players);
+        emitEvent(req, 'tournamentUpdate', dataBus.getTournamentData());
+        return res.status(200).json(result);
+    } catch (err) {
+        return res.status(400).json({ status: false, message: err.message });
+    }
+});
+
+router.post('/api/tournament/set_active_team', upload.none(), (req, res) => {
+    const { teamTag, slot } = req.body; // slot = 'team_1' or 'team_2'
+    if (!teamTag || !slot) {
+        return res.status(400).json({ status: false, message: 'Missing team tag or slot (team_1/team_2)' });
+    }
+
+    const tournament = dataBus.getTournamentData();
+    const teamObj = tournament.teams.find(t => 
+        (t.tag && t.tag.toUpperCase() === teamTag.toUpperCase()) || 
+        (t.name && t.name.toUpperCase() === teamTag.toUpperCase())
+    );
+
+    if (slot === 'team_1') {
+        dataBus.config.gameState.team_1.abbreviation = teamObj ? (teamObj.tag || teamObj.name) : teamTag.toUpperCase();
+        if (teamObj && teamObj.logo) dataBus.config.gameState.team_1.icon_link = teamObj.logo;
+
+        if (teamObj && Array.isArray(teamObj.players)) {
+            for (let i = 0; i < Math.min(5, teamObj.players.length); i++) {
+                const key = `player_${i}`;
+                if (dataBus.config.players[key] && dataBus.config.players[key].data) {
+                    dataBus.config.players[key].data.name = teamObj.players[i];
+                }
+            }
+        }
+    } else if (slot === 'team_2') {
+        dataBus.config.gameState.team_2.abbreviation = teamObj ? (teamObj.tag || teamObj.name) : teamTag.toUpperCase();
+        if (teamObj && teamObj.logo) dataBus.config.gameState.team_2.icon_link = teamObj.logo;
+
+        if (teamObj && Array.isArray(teamObj.players)) {
+            for (let i = 0; i < Math.min(5, teamObj.players.length); i++) {
+                const key = `player_${i + 5}`;
+                if (dataBus.config.players[key] && dataBus.config.players[key].data) {
+                    dataBus.config.players[key].data.name = teamObj.players[i];
+                }
+            }
+        }
+    }
+
+    dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+    dataBus.saveStateToFile('players.json', dataBus.config.players);
+    if (dataBus.config.mapPicks) {
+        dataBus.config.mapPicks.teams = [
+            dataBus.config.gameState.team_1.abbreviation,
+            dataBus.config.gameState.team_2.abbreviation
+        ];
+        dataBus.saveStateToFile('mapPicks.json', dataBus.config.mapPicks);
+    }
+
+    emitEvent(req, 'stateUpdate', dataBus.getGameState());
+    emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+    emitEvent(req, 'playerUpdate', dataBus.config.players);
+
+    return res.status(200).json({ status: true, message: `Set ${teamTag} to ${slot === 'team_1' ? 'Team 1 (Left)' : 'Team 2 (Right)'}` });
+});
+
+router.post('/api/tournament/save_team', upload.none(), (req, res) => {
+    const { id, name, tag, logo, seed, players } = req.body;
+    if (!name || !tag) {
+        return res.status(400).json({ status: false, message: 'Team Name and Tag are required' });
+    }
+
+    let parsedPlayers = [];
+    if (Array.isArray(players)) {
+        parsedPlayers = players;
+    } else if (typeof players === 'string') {
+        try {
+            parsedPlayers = JSON.parse(players);
+        } catch (e) {
+            parsedPlayers = players.split(',').map(p => p.trim()).filter(Boolean);
+        }
+    }
+
+    const teamData = {
+        id: id || `team_${Date.now()}`,
+        name: name.trim(),
+        tag: tag.trim().toUpperCase(),
+        logo: logo ? logo.trim() : '',
+        seed: seed ? seed.trim() : '',
+        players: parsedPlayers
+    };
+
+    const updatedTeams = dataBus.addOrUpdateTournamentTeam(teamData);
+    emitEvent(req, 'tournamentUpdate', dataBus.getTournamentData());
+    return res.status(200).json({ status: true, teams: updatedTeams });
+});
+
+router.post('/api/tournament/delete_team', upload.none(), (req, res) => {
+    const { teamId } = req.body;
+    if (!teamId) {
+        return res.status(400).json({ status: false, message: 'Missing team ID' });
+    }
+    const updated = dataBus.deleteTournamentTeam(teamId);
+    emitEvent(req, 'tournamentUpdate', dataBus.getTournamentData());
+    return res.status(200).json({ status: true, teams: updated });
+});
+
+router.post('/api/tournament/save_match', upload.none(), (req, res) => {
+    const { id, stage, team_1_tag, team_2_tag, format, scheduled_time, status, score } = req.body;
+    if (!team_1_tag || !team_2_tag) {
+        return res.status(400).json({ status: false, message: 'Team 1 and Team 2 are required for a match' });
+    }
+
+    const matchData = {
+        id: id || `match_${Date.now()}`,
+        stage: stage ? stage.trim() : 'TOURNAMENT MATCH',
+        team_1_tag: team_1_tag.trim().toUpperCase(),
+        team_2_tag: team_2_tag.trim().toUpperCase(),
+        format: format ? format.trim().toUpperCase() : 'BO3',
+        scheduled_time: scheduled_time ? scheduled_time.trim() : 'TBD',
+        status: status ? status.trim().toUpperCase() : 'UPCOMING',
+        score: score ? score.trim() : '0 - 0'
+    };
+
+    const updatedMatches = dataBus.addOrUpdateTournamentMatch(matchData);
+    emitEvent(req, 'tournamentUpdate', dataBus.getTournamentData());
+    return res.status(200).json({ status: true, matches: updatedMatches });
+});
+
+router.post('/api/tournament/delete_match', upload.none(), (req, res) => {
+    const { matchId } = req.body;
+    if (!matchId) {
+        return res.status(400).json({ status: false, message: 'Missing match ID' });
+    }
+    const updated = dataBus.deleteTournamentMatch(matchId);
+    emitEvent(req, 'tournamentUpdate', dataBus.getTournamentData());
+    return res.status(200).json({ status: true, matches: updated });
 });
 
 router.get('/print_state', (req, res) => {

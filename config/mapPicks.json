@@ -1,27 +1,27 @@
 {
     "teams": [
-        "NEXAURA",
-        "IDLISAMBAR"
+        "ZENX",
+        "NXR"
     ],
     "picks": [
-        [
-            "ascent",
-            "ban"
-        ],
         [
             "bind",
             "ban"
         ],
         [
-            "haven",
-            "ban"
-        ],
-        [
-            "split",
+            "ascent",
             "ban"
         ],
         [
             "breeze",
+            "attack"
+        ],
+        [
+            "haven",
+            "defense"
+        ],
+        [
+            "split",
             "ban"
         ],
         [
@@ -33,5 +33,5 @@
             "attack"
         ]
     ],
-    "series_type": "bo1"
+    "series_type": "bo3"
 }
