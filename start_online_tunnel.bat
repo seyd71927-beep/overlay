@@ -1,11 +1,11 @@
 @echo off
-title HEL Valorant Cloudflare Online Tunnel (Unlimited Hours - Qatar to India)
-color 0b
+title ZENX TOURNAMENT OVERLAY - Cloudflare Online Tunnel
+color 0c
 echo ===================================================
-echo   VALORANT OVERLAY CLOUDFLARE TUNNEL (UNLIMITED)
+echo   ZENX TOURNAMENT OVERLAY CLOUDFLARE TUNNEL
 echo ===================================================
 echo.
-echo Connecting to Cloudflare global network (Qatar to India)...
+echo Connecting to Cloudflare global network (Worldwide / India)...
 echo.
 echo [!] Keep this window OPEN during your broadcast!
 echo [!] Look for the https://...trycloudflare.com link below and give it to your spectator!

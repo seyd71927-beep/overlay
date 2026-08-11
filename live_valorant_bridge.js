@@ -1,10 +1,10 @@
 /**
- * HelValorant Live In-Game Automated Bridge Client
+ * ZENX TOURNAMENT OVERLAY - Live In-Game Automated Bridge Client
  * 
  * Runs on the Streamer's PC (India or anywhere locally running VALORANT).
  * Connects directly to local Riot Client & In-Game VALORANT instance,
  * extracts live custom tournament telemetry (Scores, Map, Round, Dynamic Player Rosters, Agents, Status),
- * and continuously forwards all match states in real-time to your Railway Overlay Server!
+ * and continuously forwards all match states in real-time to your ZENX Overlay Server!
  * 
  * Usage:
  *   node live_valorant_bridge.js [OVERLAY_SERVER_URL]
@@ -96,7 +96,8 @@ const PRO_TEAM_REGISTRY = {
     "NAVI": { name: "NAVI", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/a/ac/Natus_Vincere_logo.svg/1200px-Natus_Vincere_logo.svg.png" },
     "T1": { name: "T1", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/T1_logo.svg/1200px-T1_logo.svg.png" },
     "NXR": { name: "NEXAURA", logo: "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/NXR_PNG_-_bijin_das_g5iepg.png" },
-    "IDLI": { name: "IDLISAMBAR", logo: "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/IDLISAMBAR_nezidc.png" }
+    "IDLI": { name: "IDLISAMBAR", logo: "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/IDLISAMBAR_nezidc.png" },
+    "ZENX": { name: "ZENX ESPORTS", logo: "../visual_assets/ZENX_RED.png" }
 };
 
 const CONFIG_FILE = path.join(__dirname, 'config', 'bridge_config.json');
@@ -534,9 +535,9 @@ async function pollLoop() {
 
 // Prompt for Railway URL if needed
 function startBridge() {
-    console.log('\x1b[35m%s\x1b[0m', '=======================================================');
-    console.log('\x1b[36m%s\x1b[0m', '   VALORANT LIVE IN-GAME AUTO-BRIDGE CLIENT v2.0       ');
-    console.log('\x1b[35m%s\x1b[0m', '=======================================================');
+    console.log('\x1b[31m%s\x1b[0m', '=======================================================');
+    console.log('\x1b[37m%s\x1b[0m', '   ZENX TOURNAMENT OVERLAY - IN-GAME AUTO-BRIDGE v2.0   ');
+    console.log('\x1b[31m%s\x1b[0m', '=======================================================');
 
     if (!process.argv[2] && !process.env.OVERLAY_HOST && !getSavedServerHost()) {
         const rl = readline.createInterface({

@@ -1,8 +1,8 @@
 @echo off
-title HEL Valorant Live Game Bridge Client (India Streamer)
-color 0b
+title ZENX Valorant Live Game Bridge Client
+color 0c
 echo ===================================================================
-echo     HEL VALORANT LIVE IN-GAME BRIDGE CLIENT (REMOTE SYNC)
+echo     ZENX VALORANT LIVE IN-GAME BRIDGE CLIENT (REMOTE SYNC)
 echo ===================================================================
 echo.
 echo [1] Make sure VALORANT is running on this PC.

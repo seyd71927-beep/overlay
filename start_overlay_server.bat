@@ -1,8 +1,8 @@
 @echo off
-title HEL Valorant Tournament Overlay Host
-color 0b
+title ZENX TOURNAMENT OVERLAY HOST
+color 0c
 echo ===================================================
-echo     HEL VALORANT TOURNAMENT OVERLAY HOST
+echo     ZENX TOURNAMENT OVERLAY HOST
 echo ===================================================
 echo.
 echo Starting Node.js Server...

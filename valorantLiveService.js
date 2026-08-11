@@ -32,8 +32,7 @@ const PRO_TEAM_REGISTRY = {
     "G2": { name: "G2 ESPORTS", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/1/12/G2_Esports_logo.svg/1200px-G2_Esports_logo.svg.png", seed: "AMER" },
     "NAVI": { name: "NAVI", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/a/ac/Natus_Vincere_logo.svg/1200px-Natus_Vincere_logo.svg.png", seed: "EMEA" },
     "T1": { name: "T1", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/T1_logo.svg/1200px-T1_logo.svg.png", seed: "PACIFIC" },
-    "BBL": { name: "BBL ESPORTS", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/BBL_Esports_logo.png/600px-BBL_Esports_logo.png", seed: "EMEA" },
-    "HLV": { name: "HEL VALORANT", logo: "../visual_assets/HelValorantOverlay_Icon.png", seed: "Tournament Host" }
+    "ZENX": { name: "ZENX ESPORTS", logo: "../visual_assets/ZENX_RED.png", seed: "Tournament Host" }
 };
 
 // Agent GUID to Name Mapping

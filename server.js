@@ -65,8 +65,8 @@ app.use('/', routes);
 
 // Start server
 server.listen(port, () => {
-    console.log('\x1b[35m%s\x1b[0m', '=== HelValorant Tournament Overlay Host v1.0.0 ===');
+    console.log('\x1b[35m%s\x1b[0m', '=== ZENX TOURNAMENT OVERLAY HOST v1.0.0 ===');
     console.log('\x1b[32m%s\x1b[0m', `Server running on http://localhost:${port}`);
-    console.log('Access Overlay Portal at http://localhost:' + port + '/');
-    console.log('Access Admin Control Dashboard at http://localhost:' + port + '/admin');
+    console.log('Access ZENX Overlay Portal at http://localhost:' + port + '/');
+    console.log('Access ZENX Admin Control Dashboard at http://localhost:' + port + '/admin');
 });
