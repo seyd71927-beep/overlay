@@ -174,7 +174,7 @@ while ($true) {
                     $loopState = "INGAME"
                     
                     # Extract Map
-                    $rawMapUrl = ($matchData.MapID || "").ToLower()
+                    $rawMapUrl = if ($matchData.MapID) { $matchData.MapID.ToString().ToLower() } else { "" }
                     foreach ($key in $mapMap.Keys) {
                         if ($rawMapUrl.Contains($key)) {
                             $detectedMap = $mapMap[$key]
