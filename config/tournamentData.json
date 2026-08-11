@@ -2,11 +2,11 @@
     "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1Ij5h7sD0iEXTX4PMNg8kSixQX6aF6IFDqQVyd4bbEYI/edit?usp=sharing",
     "autoSync": false,
     "syncInterval": 60,
-    "lastSync": 1786441729008,
+    "lastSync": 1786453320844,
     "tournamentName": "ZENX VALORANT INVITATIONAL 2026",
     "teams": [
         {
-            "id": "team_1_1786441729008",
+            "id": "team_1_1786453320844",
             "name": "S1N eSports",
             "tag": "S1N",
             "logo": "https://drive.google.com/thumbnail?id=1gJaMqGxn3tMFJ75lofrxA-2Xsr3NDdY-&sz=w500",
@@ -21,7 +21,7 @@
             ]
         },
         {
-            "id": "team_2_1786441729008",
+            "id": "team_2_1786453320844",
             "name": "Acceleration Esports",
             "tag": "ACCE",
             "logo": "https://drive.google.com/thumbnail?id=1yga077_G35M_NgA8ragAUoSRFeAnHMOJ&sz=w500",
@@ -37,7 +37,7 @@
             ]
         },
         {
-            "id": "team_3_1786441729008",
+            "id": "team_3_1786453320844",
             "name": "Eternals",
             "tag": "ETER",
             "logo": "",
@@ -53,7 +53,7 @@
             ]
         },
         {
-            "id": "team_4_1786441729008",
+            "id": "team_4_1786453320844",
             "name": "ZENX",
             "tag": "ZENX",
             "logo": "https://drive.google.com/thumbnail?id=1W92yvhQG438hQ70h06NyUAJ97pkOYrQR&sz=w500",
@@ -70,7 +70,7 @@
             ]
         },
         {
-            "id": "team_5_1786441729008",
+            "id": "team_5_1786453320844",
             "name": "EXB",
             "tag": "EXB",
             "logo": "https://drive.google.com/thumbnail?id=1ywBFty6dCraxB1fX2qhR4Sk6hWieSSrT&sz=w500",
@@ -86,7 +86,7 @@
             ]
         },
         {
-            "id": "team_6_1786441729008",
+            "id": "team_6_1786453320844",
             "name": "HSC",
             "tag": "HSC",
             "logo": "https://drive.google.com/thumbnail?id=1ZBuyzT7jDOiFhsE9hweYzqbo7OHe81fN&sz=w500",
@@ -103,7 +103,7 @@
             ]
         },
         {
-            "id": "team_7_1786441729008",
+            "id": "team_7_1786453320844",
             "name": "ORIGINALs",
             "tag": "ORIG",
             "logo": "https://drive.google.com/thumbnail?id=1rNovWRVC7VYLfZKfJJQq-BCOrJFQ1Oa2&sz=w500",
@@ -119,7 +119,7 @@
             ]
         },
         {
-            "id": "team_8_1786441729008",
+            "id": "team_8_1786453320844",
             "name": "NORTX",
             "tag": "NORT",
             "logo": "https://drive.google.com/thumbnail?id=1-gimfDXZGIKQUfw27kFIl4f31Z8YpXn3&sz=w500",
@@ -134,7 +134,7 @@
             ]
         },
         {
-            "id": "team_9_1786441729008",
+            "id": "team_9_1786453320844",
             "name": "TEAM SYNDICATE",
             "tag": "TEAM",
             "logo": "https://drive.google.com/thumbnail?id=1lX1Qvm22CVAgzw5Lo02Gczv1tsOzX0PL&sz=w500",
@@ -151,7 +151,7 @@
             ]
         },
         {
-            "id": "team_10_1786441729008",
+            "id": "team_10_1786453320844",
             "name": "Only frens",
             "tag": "ONLY",
             "logo": "https://drive.google.com/thumbnail?id=1jcO9krqRQAtNTOK8NkgZ28GVYGz5KO3t&sz=w500",
@@ -168,7 +168,7 @@
             ]
         },
         {
-            "id": "team_11_1786441729008",
+            "id": "team_11_1786453320844",
             "name": "Cpt",
             "tag": "CPT",
             "logo": "https://drive.google.com/thumbnail?id=1WHfZthBlu8FRA7sMMFDP4FQFyRYc7Khn&sz=w500",
@@ -185,7 +185,7 @@
             ]
         },
         {
-            "id": "team_12_1786441729008",
+            "id": "team_12_1786453320844",
             "name": "Wyvern",
             "tag": "WYVE",
             "logo": "",
@@ -199,7 +199,7 @@
             ]
         },
         {
-            "id": "team_13_1786441729008",
+            "id": "team_13_1786453320844",
             "name": "JMP Esports",
             "tag": "JMP",
             "logo": "https://drive.google.com/thumbnail?id=19EmCs-9bedsg9d4vY0xc4F4jwzKIzlyA&sz=w500",
@@ -216,7 +216,7 @@
             ]
         },
         {
-            "id": "team_14_1786441729008",
+            "id": "team_14_1786453320844",
             "name": "Quantum Elite",
             "tag": "QUAN",
             "logo": "https://drive.google.com/thumbnail?id=1TivMZbvQiE3V-srF8ni4k7HaSY9TJ4LW&sz=w500",
@@ -232,7 +232,7 @@
             ]
         },
         {
-            "id": "team_15_1786441729008",
+            "id": "team_15_1786453320844",
             "name": "XLANTIS",
             "tag": "XLAN",
             "logo": "https://drive.google.com/thumbnail?id=16AVAzn8tuFSP72QlC4Tn6p9RIM0oe2Zg&sz=w500",
@@ -248,7 +248,7 @@
             ]
         },
         {
-            "id": "team_16_1786441729008",
+            "id": "team_16_1786453320844",
             "name": "idlisambar",
             "tag": "IDLI",
             "logo": "https://drive.google.com/thumbnail?id=11KiBkcZrYpW-I7BOMgOXPv0bHuSU4EkQ&sz=w500",
@@ -263,7 +263,7 @@
             ]
         },
         {
-            "id": "team_17_1786441729008",
+            "id": "team_17_1786453320844",
             "name": "Pookie gamers",
             "tag": "POOK",
             "logo": "",
@@ -279,7 +279,7 @@
             ]
         },
         {
-            "id": "team_18_1786441729008",
+            "id": "team_18_1786453320844",
             "name": "Zycon",
             "tag": "ZYCO",
             "logo": "https://drive.google.com/thumbnail?id=19QDrJ1AsH8IVMo83qb8xqTpqLn9RqMzR&sz=w500",
@@ -296,7 +296,7 @@
             ]
         },
         {
-            "id": "team_19_1786441729008",
+            "id": "team_19_1786453320844",
             "name": "KIDILOSKI Ronin",
             "tag": "KIDI",
             "logo": "https://drive.google.com/thumbnail?id=1hJ6ki3tpnCwmBLjTOIkF0HbjpMAVC_Hy&sz=w500",
@@ -313,7 +313,7 @@
             ]
         },
         {
-            "id": "team_20_1786441729008",
+            "id": "team_20_1786453320844",
             "name": "NEXAURA",
             "tag": "NEXA",
             "logo": "https://drive.google.com/thumbnail?id=1tBtG5JWBZr_0hlqHSs8GfBWyHoocFvDN&sz=w500",

@@ -685,7 +685,14 @@ router.post('/set_auto_fetch_config', upload.none(), (req, res) => {
 // =========================================
 
 router.get('/api/tournament/data', (req, res) => {
-    return res.status(200).json(dataBus.getTournamentData());
+    const data = dataBus.syncLocalLogos ? dataBus.syncLocalLogos() : dataBus.getTournamentData();
+    return res.status(200).json(data);
+});
+
+router.get('/api/tournament/sync_local_logos', (req, res) => {
+    const data = dataBus.syncLocalLogos ? dataBus.syncLocalLogos() : dataBus.getTournamentData();
+    emitEvent(req, 'tournamentUpdate', data);
+    return res.status(200).json({ status: true, message: 'Local logos scanned & updated', tournamentData: data });
 });
 
 router.post('/api/tournament/save_config', upload.none(), (req, res) => {

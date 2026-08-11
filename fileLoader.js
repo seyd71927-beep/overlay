@@ -780,6 +780,81 @@ class fileLoader {
     //       TOURNAMENT MODE & SPREADSHEET
     // =========================================
 
+    // Automatically match team logo from local 'logo/' or 'overlays/visual_assets/teams/' folder
+    findLocalTeamLogo(teamName, teamTag) {
+        const dirs = [
+            path.join(__dirname, './logo'),
+            path.join(__dirname, './overlays/visual_assets/teams'),
+            path.join(__dirname, './overlays/visual_assets')
+        ];
+
+        const validExtensions = ['.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif'];
+        const normalize = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const cleanName = normalize(teamName);
+        const cleanTag = normalize(teamTag);
+
+        for (const dir of dirs) {
+            if (!fs.existsSync(dir)) continue;
+
+            try {
+                const files = fs.readdirSync(dir);
+                for (const file of files) {
+                    const ext = path.extname(file).toLowerCase();
+                    if (!validExtensions.includes(ext)) continue;
+
+                    const baseName = normalize(path.basename(file, ext));
+
+                    // Exact tag match (e.g. "S1N.png" for tag "S1N")
+                    if (cleanTag && baseName === cleanTag) {
+                        return `/logo/${file}`;
+                    }
+
+                    // Exact team name match (e.g. "S1N eSports.png" for "S1N eSports")
+                    if (cleanName && baseName === cleanName) {
+                        return `/logo/${file}`;
+                    }
+
+                    // Starts with tag (e.g. "S1N_Logo.png")
+                    if (cleanTag && cleanTag.length >= 2 && (baseName.startsWith(cleanTag) || cleanTag.startsWith(baseName))) {
+                        return `/logo/${file}`;
+                    }
+
+                    // Team name match partial
+                    if (cleanName && cleanName.length >= 3 && (baseName.includes(cleanName) || cleanName.includes(baseName))) {
+                        return `/logo/${file}`;
+                    }
+                }
+            } catch (err) {
+                // Ignore folder read errors
+            }
+        }
+        return null;
+    }
+
+    // Auto-detect and sync local team logos across all tournament teams
+    syncLocalLogos() {
+        const data = this.getTournamentData();
+        let updated = false;
+
+        if (Array.isArray(data.teams)) {
+            data.teams.forEach(team => {
+                const localLogo = this.findLocalTeamLogo(team.name, team.tag);
+                if (localLogo) {
+                    if (team.logo !== localLogo) {
+                        team.logo = localLogo;
+                        updated = true;
+                    }
+                }
+            });
+        }
+
+        if (updated) {
+            this.saveTournamentData(data);
+        }
+        return data;
+    }
+
     getTournamentData() {
         if (!this.config.tournament) {
             this.config.tournament = {
@@ -791,6 +866,15 @@ class fileLoader {
                 teams: [],
                 matches: []
             };
+        }
+        // Auto-resolve any local logos from /logo folder if available
+        if (Array.isArray(this.config.tournament.teams)) {
+            this.config.tournament.teams.forEach(team => {
+                const localLogo = this.findLocalTeamLogo(team.name, team.tag);
+                if (localLogo && (!team.logo || team.logo.startsWith('/logo/') || team.logo.includes('drive.google.com') || team.logo.trim() === '')) {
+                    team.logo = localLogo;
+                }
+            });
         }
         return this.config.tournament;
     }
@@ -1012,6 +1096,11 @@ class fileLoader {
     cleanLogoUrl(rawUrl) {
         if (!rawUrl || typeof rawUrl !== 'string') return '';
         let str = rawUrl.trim();
+
+        // 0. If local path or static asset, return immediately
+        if (str.startsWith('/logo/') || str.startsWith('../logo/') || str.startsWith('./logo/') || str.startsWith('logo/') || str.startsWith('/visual_assets/') || str.startsWith('../visual_assets/')) {
+            return str.startsWith('logo/') ? `/${str}` : str;
+        }
 
         // 1. If multiple links or comma-separated, take the first valid link
         if (str.includes(',') || str.includes('\n')) {
