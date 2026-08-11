@@ -369,6 +369,9 @@ if (typeof io !== 'undefined') {
     socket.on('playerUpdate', () => {
         fetch_player_status_information();
     });
+    socket.on('playerStatsUpdate', () => {
+        fetch_player_status_information();
+    });
     socket.on('stateUpdate', () => {
         fetch_player_status_information();
     });

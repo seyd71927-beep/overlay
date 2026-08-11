@@ -69,6 +69,10 @@ class LiveStreamOperator {
                 this.loadPlayersFromResponse(players);
             });
 
+            this.socket.on('playerStatsUpdate', (players) => {
+                this.loadPlayersFromResponse(players);
+            });
+
             this.socket.on('configUpdate', (config) => {
                 if (config.team_1) this.team1Data = config.team_1;
                 if (config.team_2) this.team2Data = config.team_2;
@@ -79,6 +83,10 @@ class LiveStreamOperator {
             });
 
             this.socket.on('bridgeStatusUpdate', (status) => {
+                this.updateBridgeBadge(status);
+            });
+
+            this.socket.on('bridgeTelemetry', (status) => {
                 this.updateBridgeBadge(status);
             });
         }
@@ -98,10 +106,11 @@ class LiveStreamOperator {
         const badge = document.getElementById('bridge-status-badge');
         if (!badge) return;
 
-        if (status && status.connected) {
+        if (status && (status.online || status.connected)) {
             const mapName = (status.map || 'MAP').toUpperCase();
-            const phase = status.phase || 'LIVE';
-            badge.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> INDIA BRIDGE: ONLINE (${mapName} | ${phase})`;
+            const t1 = status.team_1_score !== undefined ? status.team_1_score : 0;
+            const t2 = status.team_2_score !== undefined ? status.team_2_score : 0;
+            badge.innerHTML = `<i class="fa-solid fa-circle" style="color: #00e676; font-size: 0.65rem;"></i> INDIA BRIDGE: ONLINE (${mapName} | ${t1}-${t2})`;
             badge.style.background = 'rgba(0, 230, 118, 0.15)';
             badge.style.color = '#00e676';
             badge.style.borderColor = 'rgba(0, 230, 118, 0.4)';
@@ -190,6 +199,11 @@ class LiveStreamOperator {
                     is_registered: pData.team_1[`player_${i}`].is_registered !== false,
                     data: pData.team_1[`player_${i}`]
                 };
+            } else if (pData[`player_${i + 1}`]) {
+                playersObj[`player_${i}`] = {
+                    is_registered: true,
+                    data: pData[`player_${i + 1}`]
+                };
             }
         }
         for (let i = 0; i < 5; i++) {
@@ -197,6 +211,11 @@ class LiveStreamOperator {
                 playersObj[`player_${i + 5}`] = {
                     is_registered: pData.team_2[`player_${i}`].is_registered !== false,
                     data: pData.team_2[`player_${i}`]
+                };
+            } else if (pData[`player_${i + 6}`]) {
+                playersObj[`player_${i + 5}`] = {
+                    is_registered: true,
+                    data: pData[`player_${i + 6}`]
                 };
             }
         }

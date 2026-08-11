@@ -949,8 +949,11 @@ router.post('/api/bridge/sync_match', express.json({ limit: '10mb' }), (req, res
     };
 
     let stateChanged = false;
+    let configChanged = false;
     if (!dataBus.config.gameState) dataBus.config.gameState = {};
+    if (!dataBus.config.gameConfiguration) dataBus.config.gameConfiguration = {};
 
+    // 1. Update Game State
     if (payload.map && dataBus.config.gameState.map !== payload.map) {
         dataBus.config.gameState.map = payload.map;
         stateChanged = true;
@@ -976,7 +979,25 @@ router.post('/api/bridge/sync_match', express.json({ limit: '10mb' }), (req, res
         stateChanged = true;
     }
 
-    // Auto-match Tournament Teams if present
+    // 2. Auto-sync Active Map in Game Flow (for Map Veto / Upcoming Maps Overlay)
+    if (payload.map && dataBus.config.gameConfiguration.game_flow) {
+        const detectedMap = payload.map.toLowerCase();
+        let foundMap = false;
+        for (const mapKey in dataBus.config.gameConfiguration.game_flow) {
+            const m = dataBus.config.gameConfiguration.game_flow[mapKey];
+            if (m && m.map && m.map.toLowerCase() === detectedMap) {
+                if (m.state !== 'current') {
+                    m.state = 'current';
+                    configChanged = true;
+                }
+                if (payload.team_1_score !== undefined) m.team_1_score = payload.team_1_score;
+                if (payload.team_2_score !== undefined) m.team_2_score = payload.team_2_score;
+                foundMap = true;
+            }
+        }
+    }
+
+    // 3. Auto-match Tournament Teams if present
     const tournamentTeams = dataBus.getTournamentData()?.teams || [];
     if (payload.team_1 && payload.team_1.abbreviation) {
         if (!dataBus.config.gameState.team_1) dataBus.config.gameState.team_1 = {};
@@ -1010,7 +1031,24 @@ router.post('/api/bridge/sync_match', express.json({ limit: '10mb' }), (req, res
         stateChanged = true;
     }
 
-    // Auto-update Live Player Stats
+    // 4. Auto-update Match Schedule in Tournament Hub
+    const tourney = dataBus.getTournamentData();
+    const t1Abbr = dataBus.config.gameState.team_1?.abbreviation;
+    const t2Abbr = dataBus.config.gameState.team_2?.abbreviation;
+    if (tourney && tourney.matches && t1Abbr && t2Abbr) {
+        const liveMatch = tourney.matches.find(m => 
+            ((m.team_1_tag === t1Abbr && m.team_2_tag === t2Abbr) || 
+             (m.team_1_tag === t2Abbr && m.team_2_tag === t1Abbr))
+        );
+        if (liveMatch) {
+            liveMatch.status = 'LIVE';
+            liveMatch.score = `${dataBus.config.gameState.team_1_score || 0} - ${dataBus.config.gameState.team_2_score || 0}`;
+            dataBus.saveTournamentData(tourney);
+            emitEvent(req, 'tournamentUpdate', tourney);
+        }
+    }
+
+    // 5. Auto-update Live Player Stats
     if (Array.isArray(payload.team_1_players) || Array.isArray(payload.team_2_players)) {
         if (!dataBus.config.playerStats) dataBus.config.playerStats = {};
         
@@ -1058,6 +1096,13 @@ router.post('/api/bridge/sync_match', express.json({ limit: '10mb' }), (req, res
 
         dataBus.saveStateToFile('playerStats.json', dataBus.config.playerStats);
         emitEvent(req, 'playerStatsUpdate', dataBus.config.playerStats);
+        emitEvent(req, 'playerUpdate', dataBus.config.playerStats);
+    }
+
+    if (configChanged) {
+        dataBus.saveStateToFile('gameConfiguration.json', dataBus.config.gameConfiguration);
+        emitEvent(req, 'configUpdate', dataBus.config.gameConfiguration);
+        emitEvent(req, 'mapPicksUpdate', dataBus.config.gameConfiguration);
     }
 
     if (stateChanged) {
@@ -1066,7 +1111,8 @@ router.post('/api/bridge/sync_match', express.json({ limit: '10mb' }), (req, res
     }
 
     emitEvent(req, 'bridgeTelemetry', lastBridgeTelemetry);
-    return res.status(200).json({ status: true, message: 'Live match telemetry synchronized successfully' });
+    emitEvent(req, 'bridgeStatusUpdate', lastBridgeTelemetry);
+    return res.status(200).json({ status: true, message: 'Live match telemetry synchronized successfully across all overlays' });
 });
 
 router.get('/api/bridge/status', (req, res) => {
