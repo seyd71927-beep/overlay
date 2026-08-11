@@ -23,17 +23,39 @@ function emitEvent(req, eventName, payload) {
     }
 }
 
+// Global Bridge Status for remote monitoring
+let bridgeStatus = {
+    connected: false,
+    lastSync: null,
+    inGame: false,
+    phase: 'MENUS',
+    map: 'sunset',
+    round: 1,
+    team_1_score: 0,
+    team_2_score: 0,
+    playerCount: 0,
+    source: 'Remote India Bridge'
+};
+
 /*
 -----------------------------------------
            PUBLIC OVERLAY REST ENDPOINTS
 -----------------------------------------
 */
 
+router.get('/health', (req, res) => {
+    return res.status(200).json({ status: 'ok', time: Date.now(), bridgeConnected: bridgeStatus.connected });
+});
+
 router.get('/get_map_picks', (req, res) => {
     return res.status(200).send(dataBus.config.mapPicks);
 });
 
 router.get('/get_player_stats', (req, res) => {
+    if (typeof dataBus.getFormattedPlayerStats === 'function') {
+        return res.status(200).json(dataBus.getFormattedPlayerStats());
+    }
+
     let responseObject = {
         status: true,
         switch_teams: dataBus.config.gameState.switch_sides || false,
@@ -49,6 +71,94 @@ router.get('/get_player_stats', (req, res) => {
         responseObject.team_2[`player_${i - 5}`]['is_registered'] = dataBus.config.players[`player_${i}`].is_registered;
     }
     return res.status(200).send(responseObject);
+});
+
+// Bridge Sync Route: Receives live match data from India client bridge
+router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
+    try {
+        let payload = req.body;
+        if (payload.jsonPayload) {
+            payload = typeof payload.jsonPayload === 'string' ? JSON.parse(payload.jsonPayload) : payload.jsonPayload;
+        } else if (typeof payload === 'string') {
+            payload = JSON.parse(payload);
+        }
+
+        const now = Date.now();
+        bridgeStatus.connected = true;
+        bridgeStatus.lastSync = now;
+        bridgeStatus.phase = payload.phase || (payload.inGame ? 'INGAME' : 'MENUS');
+        bridgeStatus.inGame = (bridgeStatus.phase === 'INGAME');
+        bridgeStatus.map = payload.map || bridgeStatus.map;
+        bridgeStatus.round = payload.round_number || bridgeStatus.round;
+        bridgeStatus.team_1_score = typeof payload.team_1_score !== 'undefined' ? payload.team_1_score : bridgeStatus.team_1_score;
+        bridgeStatus.team_2_score = typeof payload.team_2_score !== 'undefined' ? payload.team_2_score : bridgeStatus.team_2_score;
+
+        // 1. Update Game State
+        if (typeof payload.round_number !== 'undefined') dataBus.config.gameState.round_number = parseInt(payload.round_number);
+        if (typeof payload.team_1_score !== 'undefined') dataBus.config.gameState.team_1_score = parseInt(payload.team_1_score);
+        if (typeof payload.team_2_score !== 'undefined') dataBus.config.gameState.team_2_score = parseInt(payload.team_2_score);
+        if (typeof payload.spike !== 'undefined') dataBus.config.gameState.spike_down = (payload.spike === 'down' || payload.spike === true);
+        if (typeof payload.switch_sides !== 'undefined') dataBus.config.gameState.switch_sides = (payload.switch_sides === true || payload.switch_sides === 'true');
+        
+        if (payload.map && dataBus.config.gameState.game_flow && dataBus.config.gameState.game_flow.map_1) {
+            dataBus.config.gameState.game_flow.map_1.map = payload.map.toLowerCase();
+        }
+
+        // 2. Update Dynamic Team Rosters if provided
+        const t1Players = Array.isArray(payload.team_1_players) ? payload.team_1_players : null;
+        const t2Players = Array.isArray(payload.team_2_players) ? payload.team_2_players : null;
+
+        if (t1Players && t2Players) {
+            bridgeStatus.playerCount = t1Players.length + t2Players.length;
+            dataBus.updateDynamicRoster(t1Players, t2Players);
+        }
+
+        // 3. Update Team Info if provided and not locked
+        const liveService = req.app.get('liveService');
+        const lockManual = liveService ? liveService.lockManualTeamInfo : false;
+
+        if (!lockManual) {
+            if (payload.team_1 && (payload.team_1.abbreviation || payload.team_1.name)) {
+                dataBus.config.gameState.team_1.abbreviation = payload.team_1.abbreviation || payload.team_1.name;
+                if (payload.team_1.icon_link) dataBus.config.gameState.team_1.icon_link = payload.team_1.icon_link;
+            }
+            if (payload.team_2 && (payload.team_2.abbreviation || payload.team_2.name)) {
+                dataBus.config.gameState.team_2.abbreviation = payload.team_2.abbreviation || payload.team_2.name;
+                if (payload.team_2.icon_link) dataBus.config.gameState.team_2.icon_link = payload.team_2.icon_link;
+            }
+        }
+
+        dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+
+        // Broadcast real-time updates to all connected browser overlays & Qatar panel
+        emitEvent(req, 'stateUpdate', dataBus.getGameState());
+        emitEvent(req, 'playerUpdate', dataBus.getFormattedPlayerStats());
+        emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+        emitEvent(req, 'bridgeStatusUpdate', bridgeStatus);
+
+        return res.status(200).json({ status: true, message: 'Live match sync successful', bridgeStatus });
+    } catch (err) {
+        console.error('[Bridge Sync Error]:', err.message);
+        return res.status(400).json({ status: false, message: 'Invalid payload: ' + err.message });
+    }
+});
+
+router.get('/api/bridge/status', (req, res) => {
+    // If no sync received in last 12 seconds, flag disconnected
+    if (bridgeStatus.lastSync && (Date.now() - bridgeStatus.lastSync > 12000)) {
+        bridgeStatus.connected = false;
+    }
+    return res.status(200).json(bridgeStatus);
+});
+
+router.post('/api/set_team_roster_size', upload.none(), (req, res) => {
+    const { team_1_count, team_2_count, roster_mode } = req.body;
+    const t1 = parseInt(team_1_count) || 5;
+    const t2 = parseInt(team_2_count) || 5;
+    const result = dataBus.setRosterConfig(t1, t2, roster_mode || 'manual');
+    emitEvent(req, 'playerUpdate', dataBus.getFormattedPlayerStats());
+    emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+    return res.status(200).json({ status: true, rosterConfig: result });
 });
 
 router.get('/get_timer_info', upload.none(), (req, res) => {

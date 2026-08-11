@@ -4,6 +4,7 @@
   "description": "> This is made by the community and is not affiliated with Riot Games and/or VALORANT.",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Cornell Baumann",

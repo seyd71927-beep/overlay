@@ -32,6 +32,41 @@
         <div class="panel">
             <div class="grid-container" style="width: 100%;">
                 
+                <!-- Remote Streamer Bridge (Cross-Country India <-> Qatar Connection) Card -->
+                <div class="card" style="grid-column: span 12; border-color: rgba(0, 230, 118, 0.4); background: linear-gradient(180deg, rgba(16, 32, 28, 0.95), rgba(12, 24, 22, 0.95));">
+                    <div class="card-header">
+                        <span><i class="fa-solid fa-tower-broadcast" style="color: #00e676;"></i> Cross-Country Remote Streamer Connection (India <-> Qatar)</span>
+                        <span id="bridge-connection-status-badge" class="status-badge" style="background: rgba(0,230,118,0.15); color: #00e676; border-color: rgba(0,230,118,0.4);">READY FOR STREAMER</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 12px;">
+                        <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                            <h5 style="color: #00e676; font-size: 0.85rem; margin-bottom: 6px;"><i class="fa-solid fa-circle-play"></i> 1. Streamer in India</h5>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 8px;">
+                                1. Launch VALORANT on PC.<br>
+                                2. Double-click <b>start_live_bridge.bat</b> (or run the command on the right).<br>
+                                3. The bridge automatically extracts custom tournament scores, map, and dynamic 3v3 / 2v2 / 5v5 player stats!
+                            </p>
+                        </div>
+
+                        <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                            <h5 style="color: var(--accent-secondary); font-size: 0.85rem; margin-bottom: 6px;"><i class="fa-solid fa-gamepad"></i> 2. Operator in Qatar</h5>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 8px;">
+                                You can control match scores, spike triggers, casters, and player stats in real-time from the <b>Live Match Operator</b> tab. All changes update instantly in your friend's OBS stream!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div style="font-family: monospace; font-size: 0.85rem; color: #00f2fe; word-break: break-all;" id="bridge-cmd-text">
+                            node live_valorant_bridge.js <span id="current-server-origin">https://...</span>
+                        </div>
+                        <button class="btn btn-accent" style="padding: 6px 14px; font-size: 0.8rem;" onclick="copyBridgeCmd()">
+                            <i class="fa-solid fa-copy"></i> Copy Streamer Command
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Automated In-Game Live Sync Card -->
                 <div class="card" style="grid-column: span 12; border-color: rgba(0, 242, 254, 0.4); background: linear-gradient(180deg, rgba(20, 24, 36, 0.95), rgba(16, 24, 36, 0.95));">
                     <div class="card-header">
@@ -50,7 +85,7 @@
                         <div>
                             <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Data Source Mode</label>
                             <select id="auto-fetch-mode" class="input-field">
-                                <option value="local">Local Valorant In-Game Client (Zero Config / Free)</option>
+                                <option value="local">Local Valorant In-Game Client / Bridge (Zero Config / Free)</option>
                                 <option value="cloud">Cloud Tracker API (Remote by Riot ID)</option>
                             </select>
                         </div>
@@ -65,7 +100,6 @@
                             <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">*Get a free API key at <a href="https://api.henrikdev.xyz/dashboard/" target="_blank" style="color: var(--accent-secondary); text-decoration: underline;">api.henrikdev.xyz/dashboard</a> or <a href="https://discord.gg/henrikdev" target="_blank" style="color: var(--accent-secondary); text-decoration: underline;">Discord (#get-a-key)</a></span>
                         </div>
                     </div>
-
 
                     <div style="background: rgba(0,0,0,0.35); border: 1px solid var(--panel-border); border-radius: var(--radius-md); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                         <div style="font-size: 0.9rem; color: #fff;">

@@ -245,7 +245,23 @@ class AdminSettingsManager {
     }
 }
 
+function copyBridgeCmd() {
+    const origin = window.location.origin;
+    const cmd = `node live_valorant_bridge.js ${origin}`;
+    navigator.clipboard.writeText(cmd);
+    if (typeof successAlertLowerBottom === 'function') {
+        successAlertLowerBottom('Copied Streamer Bridge Command to Clipboard!');
+    } else {
+        alert('Copied command:\n' + cmd);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const settingsMgr = new AdminSettingsManager();
     settingsMgr.init();
+
+    const originEl = document.getElementById('current-server-origin');
+    if (originEl) {
+        originEl.textContent = window.location.origin;
+    }
 });

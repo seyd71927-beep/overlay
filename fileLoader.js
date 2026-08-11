@@ -180,6 +180,122 @@ class fileLoader {
     }
 
     // --- Player Logic ---
+    setRosterConfig(team1Size, team2Size, rosterMode = 'auto') {
+        if (!this.config.gameState) this.config.gameState = {};
+        if (typeof team1Size === 'number') this.config.gameState.team_1_count = Math.max(1, Math.min(5, team1Size));
+        if (typeof team2Size === 'number') this.config.gameState.team_2_count = Math.max(1, Math.min(5, team2Size));
+        if (rosterMode) this.config.gameState.roster_mode = rosterMode;
+        this.saveStateToFile('gameState.json', this.config.gameState);
+        return {
+            team_1_count: this.config.gameState.team_1_count || 5,
+            team_2_count: this.config.gameState.team_2_count || 5,
+            roster_mode: this.config.gameState.roster_mode || 'auto'
+        };
+    }
+
+    updateDynamicRoster(team1Players = [], team2Players = []) {
+        const t1Count = team1Players.length;
+        const t2Count = team2Players.length;
+
+        if (!this.config.gameState) this.config.gameState = {};
+        this.config.gameState.team_1_count = t1Count;
+        this.config.gameState.team_2_count = t2Count;
+        this.config.gameState.team_1_roster = team1Players;
+        this.config.gameState.team_2_roster = team2Players;
+
+        // Update Team 1 (Slots 0 to 4)
+        for (let i = 0; i < 5; i++) {
+            const key = `player_${i}`;
+            if (!this.config.players[key]) {
+                this.config.players[key] = {
+                    token: this.generateRandomUserToken(),
+                    is_registered: false,
+                    last_updated: Date.now(),
+                    data: {}
+                };
+            }
+            if (i < t1Count) {
+                this.config.players[key].data = {
+                    ...this.config.players[key].data,
+                    ...team1Players[i],
+                    is_registered: true
+                };
+                this.config.players[key].is_registered = true;
+                this.config.players[key].last_updated = Date.now();
+            } else {
+                this.config.players[key].is_registered = false;
+            }
+        }
+
+        // Update Team 2 (Slots 5 to 9)
+        for (let i = 0; i < 5; i++) {
+            const key = `player_${i + 5}`;
+            if (!this.config.players[key]) {
+                this.config.players[key] = {
+                    token: this.generateRandomUserToken(),
+                    is_registered: false,
+                    last_updated: Date.now(),
+                    data: {}
+                };
+            }
+            if (i < t2Count) {
+                this.config.players[key].data = {
+                    ...this.config.players[key].data,
+                    ...team2Players[i],
+                    is_registered: true
+                };
+                this.config.players[key].is_registered = true;
+                this.config.players[key].last_updated = Date.now();
+            } else {
+                this.config.players[key].is_registered = false;
+            }
+        }
+
+        this.saveStateToFile('players.json', this.config.players);
+        this.saveStateToFile('gameState.json', this.config.gameState);
+        return this.getFormattedPlayerStats();
+    }
+
+    getFormattedPlayerStats() {
+        const switchTeams = (this.config.gameState && this.config.gameState.switch_sides) || false;
+        const t1Count = (this.config.gameState && typeof this.config.gameState.team_1_count === 'number') 
+            ? this.config.gameState.team_1_count 
+            : 5;
+        const t2Count = (this.config.gameState && typeof this.config.gameState.team_2_count === 'number') 
+            ? this.config.gameState.team_2_count 
+            : 5;
+
+        const responseObj = {
+            status: true,
+            switch_teams: switchTeams,
+            team_1_count: t1Count,
+            team_2_count: t2Count,
+            team_1: {},
+            team_2: {},
+            team_1_list: [],
+            team_2_list: []
+        };
+
+        for (let i = 0; i < t1Count; i++) {
+            const key = `player_${i}`;
+            const p = this.config.players[key] || { data: { username: `Player ${i + 1}`, agent: 'jett', health: 100, shield: 50 }, is_registered: true };
+            const pData = { ...p.data, is_registered: p.is_registered };
+            responseObj.team_1[key] = pData;
+            responseObj.team_1_list.push(pData);
+        }
+
+        for (let i = 0; i < t2Count; i++) {
+            const key = `player_${i + 5}`;
+            const subKey = `player_${i}`;
+            const p = this.config.players[key] || { data: { username: `Player ${i + 6}`, agent: 'omen', health: 100, shield: 50 }, is_registered: true };
+            const pData = { ...p.data, is_registered: p.is_registered };
+            responseObj.team_2[subKey] = pData;
+            responseObj.team_2_list.push(pData);
+        }
+
+        return responseObj;
+    }
+
     checkGameTokenValidity(gameToken) {
         for (const key in this.config.players) {
             if (key.startsWith("player_") && this.config.players[key].token == gameToken) {
@@ -220,17 +336,22 @@ class fileLoader {
 
     updatePlayerDirect(playerIndex, playerData) {
         const key = `player_${playerIndex}`;
-        if (this.config.players[key]) {
-            this.config.players[key].data = {
-                ...this.config.players[key].data,
-                ...playerData
+        if (!this.config.players[key]) {
+            this.config.players[key] = {
+                token: this.generateRandomUserToken(),
+                is_registered: true,
+                last_updated: Date.now(),
+                data: {}
             };
-            this.config.players[key].is_registered = true;
-            this.config.players[key].last_updated = Date.now();
-            this.saveStateToFile('players.json', this.config.players);
-            return true;
         }
-        return false;
+        this.config.players[key].data = {
+            ...this.config.players[key].data,
+            ...playerData
+        };
+        this.config.players[key].is_registered = true;
+        this.config.players[key].last_updated = Date.now();
+        this.saveStateToFile('players.json', this.config.players);
+        return true;
     }
 
     regeneratePlayerTokens() {
@@ -256,7 +377,10 @@ class fileLoader {
             round_number: this.config.gameState.round_number,
             spike_down: this.config.gameState.spike_down,
             switch_sides: this.config.gameState.switch_sides || false,
-            mapPicks: this.config.mapPicks
+            mapPicks: this.config.mapPicks,
+            team_1_count: this.config.gameState.team_1_count || 5,
+            team_2_count: this.config.gameState.team_2_count || 5,
+            roster_mode: this.config.gameState.roster_mode || 'auto'
         };
     }
 

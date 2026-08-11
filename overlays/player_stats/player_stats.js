@@ -54,51 +54,59 @@ function renderPlayerHUD(json) {
 
     const switchTeams = !!json.switch_teams;
 
-    // Team 1 (Left HUD)
+    // Extract dynamic Team 1 players
+    let team1Players = [];
+    if (Array.isArray(json.team_1_list) && json.team_1_list.length > 0) {
+        team1Players = json.team_1_list.filter(p => p && p.is_registered !== false);
+    } else if (json.team_1 && typeof json.team_1 === 'object') {
+        const keys = Object.keys(json.team_1);
+        for (const k of keys) {
+            const p = json.team_1[k];
+            if (p && p.is_registered !== false) {
+                team1Players.push(p);
+            }
+        }
+    }
+
+    // Extract dynamic Team 2 players
+    let team2Players = [];
+    if (Array.isArray(json.team_2_list) && json.team_2_list.length > 0) {
+        team2Players = json.team_2_list.filter(p => p && p.is_registered !== false);
+    } else if (json.team_2 && typeof json.team_2 === 'object') {
+        const keys = Object.keys(json.team_2);
+        for (const k of keys) {
+            const p = json.team_2[k];
+            if (p && p.is_registered !== false) {
+                team2Players.push(p);
+            }
+        }
+    }
+
+    // If both empty and not registered, use default 5-player roster for initial OBS preview
+    if (team1Players.length === 0 && team2Players.length === 0 && !json.team_1_count) {
+        team1Players = [
+            { username: 'Player 1', agent: 'jett', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 5, ult_points_needed: 7, credits: 4500, is_dead: false },
+            { username: 'Player 2', agent: 'reyna', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 6, ult_points_needed: 7, credits: 3900, is_dead: false },
+            { username: 'Player 3', agent: 'sova', health: 80, shield: 25, weapon: 'phantom', ult_points_gained: 3, ult_points_needed: 7, credits: 2400, is_dead: false }
+        ];
+        team2Players = [
+            { username: 'Player 4', agent: 'omen', health: 100, shield: 50, weapon: 'phantom', ult_points_gained: 4, ult_points_needed: 7, credits: 4200, is_dead: false },
+            { username: 'Player 5', agent: 'viper', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 7, ult_points_needed: 7, credits: 3800, is_dead: false },
+            { username: 'Player 6', agent: 'killjoy', health: 0, shield: 0, weapon: 'vandal', ult_points_gained: 2, ult_points_needed: 7, credits: 1900, is_dead: true }
+        ];
+    }
+
+    // Render Team 1 (Left HUD) - EXACT count of players in custom match
     let leftHTML = `<div class="team-column ${!switchTeams ? 'team-red' : 'team-green'}">`;
-    for (let i = 0; i < 5; i++) {
-        const p = (json.team_1 && json.team_1[`player_${i}`]) ? json.team_1[`player_${i}`] : {
-            is_registered: true,
-            username: ['bang', 'Cryocells', 'Timotino', 'eeiu', 'Boostio'][i],
-            agent: ['harbor', 'jett', 'raze', 'sova', 'killjoy'][i],
-            health: [100, 100, 0, 100, 100][i],
-            shield: [50, 50, 0, 50, 50][i],
-            weapon: ['phantom', 'vandal', 'vandal', 'vandal', 'vandal'][i],
-            ult_points_gained: [5, 7, 3, 6, 4][i],
-            ult_points_needed: 7,
-            credits: [4500, 3900, 4900, 4200, 5100][i],
-            c_util: true,
-            q_util: true,
-            e_util: true,
-            is_dead: (i === 2),
-            kda: ['12/5/4', '8/6/2', '7/4/2', '5/8/9', '9/7/3'][i],
-            is_spectated: (i === 0)
-        };
-        leftHTML += buildVCTPlayerCard(p, false);
+    for (let i = 0; i < team1Players.length; i++) {
+        leftHTML += buildVCTPlayerCard(team1Players[i], false);
     }
     leftHTML += `</div>`;
 
-    // Team 2 (Right HUD)
+    // Render Team 2 (Right HUD) - EXACT count of players in custom match
     let rightHTML = `<div class="team-column ${!switchTeams ? 'team-green' : 'team-red'}">`;
-    for (let i = 0; i < 5; i++) {
-        const p = (json.team_2 && json.team_2[`player_${i}`]) ? json.team_2[`player_${i}`] : {
-            is_registered: true,
-            username: ['TenZ', 'zekken', 'Sacy', 'johnqt', 'Zellsis'][i],
-            agent: ['omen', 'jett', 'fade', 'cypher', 'kayo'][i],
-            health: [100, 0, 100, 100, 90][i],
-            shield: [50, 0, 50, 25, 50][i],
-            weapon: ['vandal', 'classic', 'phantom', 'vandal', 'vandal'][i],
-            ult_points_gained: [6, 4, 7, 3, 5][i],
-            ult_points_needed: 7,
-            credits: [3200, 4500, 2800, 3900, 2400][i],
-            c_util: true,
-            q_util: true,
-            e_util: true,
-            is_dead: (i === 1),
-            kda: ['14/4/6', '9/5/3', '6/7/11', '8/6/5', '7/8/4'][i],
-            is_spectated: false
-        };
-        rightHTML += buildVCTPlayerCard(p, true);
+    for (let i = 0; i < team2Players.length; i++) {
+        rightHTML += buildVCTPlayerCard(team2Players[i], true);
     }
     rightHTML += `</div>`;
 

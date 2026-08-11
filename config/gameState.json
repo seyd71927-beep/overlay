@@ -1,10 +1,10 @@
 {
     "tournament_stage": "ZENX SHOWDOWN DAY-3 MATCH 1",
-    "round_number": 2,
+    "round_number": 7,
     "round_over": false,
     "spike_down": false,
-    "team_1_score": 1,
-    "team_2_score": 0,
+    "team_1_score": 4,
+    "team_2_score": 2,
     "game_flow": {
         "map_1": {
             "state": "current",
@@ -12,20 +12,74 @@
             "team_1_score": 0,
             "team_2_score": 0,
             "map_pick": "",
-            "map": "sunset"
+            "map": "ascent"
         }
     },
     "team_1": {
-        "abbreviation": "NEXAURA",
+        "abbreviation": "NXR",
         "icon_link": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/NXR_PNG_-_bijin_das_g5iepg.png",
         "team_info": "",
         "won_games": 0
     },
     "team_2": {
-        "abbreviation": "IDLISAMBAR",
+        "abbreviation": "IDLI",
         "icon_link": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/IDLISAMBAR_nezidc.png",
         "team_info": "",
         "won_games": 0
     },
-    "switch_sides": true
+    "switch_sides": false,
+    "team_1_count": 2,
+    "team_2_count": 2,
+    "team_1_roster": [
+        {
+            "puuid": "p1",
+            "username": "NXR TenZ",
+            "agent": "jett",
+            "health": 100,
+            "shield": 50,
+            "weapon": "vandal",
+            "credits": 4200,
+            "ult_points_gained": 5,
+            "ult_points_needed": 7,
+            "is_dead": false
+        },
+        {
+            "puuid": "p2",
+            "username": "NXR ShahZaM",
+            "agent": "sova",
+            "health": 85,
+            "shield": 25,
+            "weapon": "phantom",
+            "credits": 3100,
+            "ult_points_gained": 4,
+            "ult_points_needed": 7,
+            "is_dead": false
+        }
+    ],
+    "team_2_roster": [
+        {
+            "puuid": "p4",
+            "username": "IDLI Boaster",
+            "agent": "omen",
+            "health": 100,
+            "shield": 50,
+            "weapon": "phantom",
+            "credits": 4500,
+            "ult_points_gained": 6,
+            "ult_points_needed": 7,
+            "is_dead": false
+        },
+        {
+            "puuid": "p5",
+            "username": "IDLI Derke",
+            "agent": "raze",
+            "health": 100,
+            "shield": 50,
+            "weapon": "vandal",
+            "credits": 3900,
+            "ult_points_gained": 7,
+            "ult_points_needed": 8,
+            "is_dead": false
+        }
+    ]
 }

@@ -15,10 +15,17 @@
 <body>
 
     <div class="admin-header">
-        <img src="../visual_assets/HelValorantOverlay_Icon.png" alt="Logo">
-        <h3>Stream Management Panel</h3>
-        <div class="status-badge" id="socket-status-badge">CONNECTED (WEBSOCKET LIVE)</div>
-        <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="../visual_assets/HelValorantOverlay_Icon.png" alt="Logo">
+            <h3>Stream Management Panel</h3>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="status-badge" id="bridge-status-badge" style="background: rgba(0, 242, 254, 0.12); color: #00f2fe; border-color: rgba(0, 242, 254, 0.3);">
+                <i class="fa-solid fa-satellite-dish"></i> BRIDGE: SCANNING...
+            </div>
+            <div class="status-badge" id="socket-status-badge">CONNECTED (WEBSOCKET LIVE)</div>
+            <button id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
     </div>
 
     <div class="tabs-container">
@@ -182,13 +189,27 @@
                     </div>
                 </div>
 
-                <!-- 10 Player Live Stats Table Card -->
+                <!-- Custom Tournament Dynamic Player Stats Table Card -->
                 <div class="card" style="grid-column: span 12;">
-                    <div class="card-header">
-                        <span><i class="fa-solid fa-address-card"></i> 10-Player Live Stats & Simulation Controller</span>
-                        <button id="quick-sim-btn" class="btn btn-accent" style="font-size: 0.8rem; padding: 6px 12px;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Simulate Random Combat Stats
-                        </button>
+                    <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span><i class="fa-solid fa-users"></i> Live Custom Tournament Player Roster & Stats</span>
+                            <span id="active-roster-count-badge" class="status-badge" style="background: rgba(0, 230, 118, 0.15); color: #00e676;">ROSTER: 5v5</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted);">Team Size:</label>
+                            <select id="roster-size-select" class="input-field" style="padding: 4px 8px; font-size: 0.8rem; width: 140px;">
+                                <option value="auto">Auto-Detect Live</option>
+                                <option value="1">1 vs 1</option>
+                                <option value="2">2 vs 2</option>
+                                <option value="3">3 vs 3 (Custom)</option>
+                                <option value="4">4 vs 4</option>
+                                <option value="5" selected>5 vs 5 (Standard)</option>
+                            </select>
+                            <button id="quick-sim-btn" class="btn btn-accent" style="font-size: 0.8rem; padding: 6px 12px;">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Simulate Combat
+                            </button>
+                        </div>
                     </div>
 
                     <div class="player-table-container">

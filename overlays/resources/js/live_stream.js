@@ -6,11 +6,16 @@ class LiveStreamOperator {
             team_1_score: 0,
             team_2_score: 0,
             spike_down: false,
-            switch_sides: false
+            switch_sides: false,
+            team_1_count: 5,
+            team_2_count: 5,
+            roster_mode: 'auto'
         };
         this.team1Data = { abbreviation: 'T1' };
         this.team2Data = { abbreviation: 'T2' };
         this.playersData = {};
+        this.team1Count = 5;
+        this.team2Count = 5;
 
         this.agentsList = [
             'Jett', 'Reyna', 'Raze', 'Viper', 'Omen', 'Brimstone', 'Phoenix', 'Sova',
@@ -29,6 +34,10 @@ class LiveStreamOperator {
         this.bindEvents();
         await this.fetchInitialState();
         await this.fetchCasters();
+        await this.fetchBridgeStatus();
+
+        // Background poller for bridge health
+        setInterval(() => this.fetchBridgeStatus(), 3000);
     }
 
     initSocket() {
@@ -57,15 +66,50 @@ class LiveStreamOperator {
             });
 
             this.socket.on('playerUpdate', (players) => {
-                this.playersData = players;
-                this.renderPlayerTable();
+                this.loadPlayersFromResponse(players);
             });
 
             this.socket.on('configUpdate', (config) => {
                 if (config.team_1) this.team1Data = config.team_1;
                 if (config.team_2) this.team2Data = config.team_2;
+                if (config.team_1_count) this.team1Count = config.team_1_count;
+                if (config.team_2_count) this.team2Count = config.team_2_count;
+                this.updateRosterBadges();
                 this.renderScoreboardDisplay();
             });
+
+            this.socket.on('bridgeStatusUpdate', (status) => {
+                this.updateBridgeBadge(status);
+            });
+        }
+    }
+
+    async fetchBridgeStatus() {
+        try {
+            const res = await fetch('../api/bridge/status');
+            if (res.status === 200) {
+                const status = await res.json();
+                this.updateBridgeBadge(status);
+            }
+        } catch (e) {}
+    }
+
+    updateBridgeBadge(status) {
+        const badge = document.getElementById('bridge-status-badge');
+        if (!badge) return;
+
+        if (status && status.connected) {
+            const mapName = (status.map || 'MAP').toUpperCase();
+            const phase = status.phase || 'LIVE';
+            badge.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> INDIA BRIDGE: ONLINE (${mapName} | ${phase})`;
+            badge.style.background = 'rgba(0, 230, 118, 0.15)';
+            badge.style.color = '#00e676';
+            badge.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+        } else {
+            badge.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> INDIA BRIDGE: WAITING FOR CLIENT`;
+            badge.style.background = 'rgba(255, 170, 0, 0.15)';
+            badge.style.color = '#ffaa00';
+            badge.style.borderColor = 'rgba(255, 170, 0, 0.3)';
         }
     }
 
@@ -76,6 +120,12 @@ class LiveStreamOperator {
                 const config = await configRes.json();
                 this.team1Data = config.team_1 || { abbreviation: 'T1' };
                 this.team2Data = config.team_2 || { abbreviation: 'T2' };
+                this.team1Count = config.team_1_count || 5;
+                this.team2Count = config.team_2_count || 5;
+                if (config.roster_mode && document.getElementById('roster-size-select')) {
+                    document.getElementById('roster-size-select').value = config.roster_mode === 'auto' ? 'auto' : this.team1Count;
+                }
+                this.updateRosterBadges();
             }
 
             const stateRes = await fetch('../get_game_state');
@@ -91,6 +141,13 @@ class LiveStreamOperator {
             }
         } catch (err) {
             console.error('Error fetching initial live state:', err);
+        }
+    }
+
+    updateRosterBadges() {
+        const badge = document.getElementById('active-roster-count-badge');
+        if (badge) {
+            badge.textContent = `ROSTER: ${this.team1Count}v${this.team2Count}`;
         }
     }
 
@@ -120,23 +177,42 @@ class LiveStreamOperator {
     }
 
     loadPlayersFromResponse(pData) {
+        if (!pData) return;
+
+        if (pData.team_1_count) this.team1Count = pData.team_1_count;
+        if (pData.team_2_count) this.team2Count = pData.team_2_count;
+        this.updateRosterBadges();
+
         let playersObj = {};
         for (let i = 0; i < 5; i++) {
             if (pData.team_1 && pData.team_1[`player_${i}`]) {
                 playersObj[`player_${i}`] = {
-                    is_registered: true,
+                    is_registered: pData.team_1[`player_${i}`].is_registered !== false,
                     data: pData.team_1[`player_${i}`]
                 };
             }
         }
-        for (let i = 5; i < 10; i++) {
-            if (pData.team_2 && pData.team_2[`player_${i - 5}`]) {
-                playersObj[`player_${i}`] = {
-                    is_registered: true,
-                    data: pData.team_2[`player_${i - 5}`]
+        for (let i = 0; i < 5; i++) {
+            if (pData.team_2 && pData.team_2[`player_${i}`]) {
+                playersObj[`player_${i + 5}`] = {
+                    is_registered: pData.team_2[`player_${i}`].is_registered !== false,
+                    data: pData.team_2[`player_${i}`]
                 };
             }
         }
+
+        // If direct list provided
+        if (Array.isArray(pData.team_1_list)) {
+            pData.team_1_list.forEach((p, idx) => {
+                playersObj[`player_${idx}`] = { is_registered: true, data: p };
+            });
+        }
+        if (Array.isArray(pData.team_2_list)) {
+            pData.team_2_list.forEach((p, idx) => {
+                playersObj[`player_${idx + 5}`] = { is_registered: true, data: p };
+            });
+        }
+
         this.playersData = playersObj;
         this.renderPlayerTable();
     }
@@ -164,6 +240,27 @@ class LiveStreamOperator {
     }
 
     bindEvents() {
+        // Roster size switcher
+        document.getElementById('roster-size-select')?.addEventListener('change', async (e) => {
+            const val = e.target.value;
+            const mode = val === 'auto' ? 'auto' : 'manual';
+            const count = val === 'auto' ? 5 : parseInt(val);
+            const formData = new FormData();
+            formData.append('team_1_count', count);
+            formData.append('team_2_count', count);
+            formData.append('roster_mode', mode);
+            try {
+                await fetch('../api/set_team_roster_size', { method: 'POST', body: formData });
+                this.team1Count = count;
+                this.team2Count = count;
+                this.updateRosterBadges();
+                this.renderPlayerTable();
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom(val === 'auto' ? 'Roster set to Auto-Detect Live' : `Custom Roster size set to ${count}v${count}!`);
+                }
+            } catch (err) {}
+        });
+
         // Tournament Header save
         const saveStageHeader = async () => {
             const title = document.getElementById('tournament-stage-input')?.value.trim() || '';
@@ -432,15 +529,22 @@ class LiveStreamOperator {
         if (!tbody) return;
 
         let html = '';
-        for (let i = 0; i < 10; i++) {
+        
+        // Active slots to render based on team1Count and team2Count
+        const activeIndices = [];
+        for (let i = 0; i < this.team1Count; i++) activeIndices.push(i);
+        for (let i = 0; i < this.team2Count; i++) activeIndices.push(i + 5);
+
+        for (const i of activeIndices) {
             const key = `player_${i}`;
             const isTeam1 = i < 5;
+            const slotNum = isTeam1 ? (i + 1) : (i - 4);
             const teamLabel = isTeam1 ? (this.team1Data.abbreviation || 'T1') : (this.team2Data.abbreviation || 'T2');
             const rowClass = isTeam1 ? 'team-1-row' : 'team-2-row';
 
             const pData = (this.playersData[key] && this.playersData[key].data) ? this.playersData[key].data : {
-                username: `Player ${i + 1}`,
-                agent: isTeam1 ? ['Jett', 'Reyna', 'Sova', 'Omen', 'Killjoy'][i] : ['Raze', 'Viper', 'Fade', 'Cypher', 'Brimstone'][i - 5],
+                username: isTeam1 ? `T1 Player ${slotNum}` : `T2 Player ${slotNum}`,
+                agent: isTeam1 ? ['Jett', 'Reyna', 'Sova', 'Omen', 'Killjoy'][i % 5] : ['Raze', 'Viper', 'Fade', 'Cypher', 'Brimstone'][i % 5],
                 health: 100,
                 shield: 50,
                 weapon: 'vandal',
@@ -453,7 +557,7 @@ class LiveStreamOperator {
 
             html += `
             <tr class="${rowClass}">
-                <td style="font-weight: 700;">${i + 1}</td>
+                <td style="font-weight: 700;">${isTeam1 ? slotNum : slotNum + this.team1Count}</td>
                 <td><span style="color: ${isTeam1 ? 'var(--green-team)' : 'var(--red-team)'}; font-weight: 700;">${teamLabel}</span></td>
                 <td><input type="text" class="input-field" style="padding: 4px 8px; font-size: 0.8rem;" value="${pData.username || ''}" id="p-name-${i}"></td>
                 <td>
@@ -534,7 +638,7 @@ class LiveStreamOperator {
         try {
             await fetch('../update_player_direct', { method: 'POST', body: formData });
             if (typeof successAlertLowerBottom === 'function') {
-                successAlertLowerBottom(`Updated Player #${index + 1} (${name})`);
+                successAlertLowerBottom(`Updated Player slot #${index + 1} (${name})`);
             }
         } catch (e) {}
     }
@@ -557,14 +661,18 @@ class LiveStreamOperator {
     }
 
     async runQuickSimulation() {
-        for (let i = 0; i < 10; i++) {
+        const activeIndices = [];
+        for (let i = 0; i < this.team1Count; i++) activeIndices.push(i);
+        for (let i = 0; i < this.team2Count; i++) activeIndices.push(i + 5);
+
+        for (const i of activeIndices) {
             const isDead = Math.random() < 0.25;
             const hp = isDead ? 0 : Math.floor(Math.random() * 85) + 15;
             const shield = isDead ? 0 : (Math.random() < 0.5 ? 50 : 25);
             const ult = Math.floor(Math.random() * 8);
 
             const pData = {
-                username: `Player ${i + 1}`,
+                username: `Player ${i < 5 ? i + 1 : (i - 4 + this.team1Count)}`,
                 agent: this.agentsList[i % this.agentsList.length],
                 health: hp,
                 shield: shield,
@@ -587,7 +695,7 @@ class LiveStreamOperator {
         }
 
         if (typeof successAlertLowerBottom === 'function') {
-            successAlertLowerBottom('Simulated Combat Round Stats across 10 Players!');
+            successAlertLowerBottom(`Simulated Combat Stats across ${this.team1Count}v${this.team2Count} Players!`);
         }
     }
 }
