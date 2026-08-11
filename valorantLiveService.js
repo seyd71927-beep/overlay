@@ -127,6 +127,9 @@ class ValorantLiveService {
             'lockfile'
         );
 
+        this.cloudRateLimitUntil = 0;
+        this.lastCloudPollTime = 0;
+
         this.startLoop();
     }
 
@@ -147,9 +150,19 @@ class ValorantLiveService {
 
     updateConfig(enabled, mode, riotId, apiKey, lockTeams) {
         if (typeof enabled === 'boolean') this.autoFetchEnabled = enabled;
-        if (mode) this.fetchMode = mode;
+        if (mode) {
+            if (this.fetchMode !== mode) {
+                this.cloudRateLimitUntil = 0; // Reset rate limit cooldown on mode switch
+            }
+            this.fetchMode = mode;
+        }
         if (typeof riotId === 'string') this.cloudRiotId = riotId.trim();
-        if (typeof apiKey === 'string') this.cloudApiKey = apiKey.trim();
+        if (typeof apiKey === 'string') {
+            if (this.cloudApiKey !== apiKey.trim()) {
+                this.cloudRateLimitUntil = 0; // Reset rate limit cooldown if new key provided
+            }
+            this.cloudApiKey = apiKey.trim();
+        }
         if (typeof lockTeams === 'boolean') this.lockManualTeamInfo = lockTeams;
 
         // Persist to disk via dataBus
@@ -182,9 +195,22 @@ class ValorantLiveService {
             if (this.fetchMode === 'local') {
                 await this.pollLocalClient();
             } else if (this.fetchMode === 'cloud') {
+                const now = Date.now();
+                if (this.cloudRateLimitUntil && now < this.cloudRateLimitUntil) {
+                    const secsRemaining = Math.max(1, Math.ceil((this.cloudRateLimitUntil - now) / 1000));
+                    this.currentStatusText = `Cloud API: Rate limited by HenrikDev. Cooling down (${secsRemaining}s remaining)... Tip: Switch to Local Client Mode for instant 0-limit sync.`;
+                    return;
+                }
+
+                // Cloud Mode Polling Interval: 5s in live match, 10s otherwise to prevent rate limits
+                const pollInterval = this.inGame ? 5000 : 10000;
+                if (now - this.lastCloudPollTime < pollInterval) {
+                    return;
+                }
+                this.lastCloudPollTime = now;
                 await this.pollCloudApi();
             }
-        }, 1200);
+        }, 1000);
     }
 
     // --- Automatic In-Game Live Match Data Capture ---
@@ -465,6 +491,7 @@ class ValorantLiveService {
         try {
             const data = await this.makeHttpsGet(url, this.cloudApiKey);
             if (data && data.data) {
+                this.cloudRateLimitUntil = 0; // Successfully retrieved match data
                 const match = data.data;
                 const mapName = (match.map || 'sunset').toLowerCase();
                 const t1Score = match.team_1_score || 0;
@@ -523,11 +550,25 @@ class ValorantLiveService {
                         this.io.emit('playerStatsUpdate', formattedStats);
                     }
                 }
+            } else if (data && (data.status === 429 || (data.errors && data.errors[0]?.message?.toLowerCase().includes('rate limit')))) {
+                // Rate limit handling with exponential/header-based backoff cooldown
+                let cooldownSecs = 45;
+                if (data._headers && data._headers['retry-after']) {
+                    const parsedRetry = parseInt(data._headers['retry-after'], 10);
+                    if (!isNaN(parsedRetry) && parsedRetry > 0) {
+                        cooldownSecs = Math.min(180, parsedRetry);
+                    }
+                }
+                this.cloudRateLimitUntil = Date.now() + (cooldownSecs * 1000);
+                this.clientDetected = false;
+                this.gameRunning = false;
+                this.inGame = false;
+                this.currentStatusText = `Cloud API: Rate limit exceeded. Cooling down (${cooldownSecs}s)... Tip: Switch to Local Client Mode for zero rate limits.`;
             } else if (data && (data.status === 401 || (data.errors && data.errors[0]?.message?.toLowerCase().includes('unauthorized')))) {
                 this.clientDetected = false;
                 this.gameRunning = false;
                 this.inGame = false;
-                this.currentStatusText = 'Cloud API: Invalid API Key. Enter a free key from api.henrikdev.xyz/dashboard or use Local Client mode.';
+                this.currentStatusText = 'Cloud API: Invalid API Key. Enter a free key from api.henrikdev.xyz/dashboard or switch to Local Client mode.';
             } else if (data && data.status === 404) {
                 this.clientDetected = true;
                 this.gameRunning = false;
@@ -576,9 +617,10 @@ class ValorantLiveService {
                             if (res.statusCode >= 400 && !json.status) {
                                 json.status = res.statusCode;
                             }
+                            json._headers = res.headers;
                             resolve(json);
                         } catch (e) {
-                            resolve({ status: res.statusCode, raw: data });
+                            resolve({ status: res.statusCode, raw: data, _headers: res.headers });
                         }
                     });
                 });

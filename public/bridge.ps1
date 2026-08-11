@@ -43,14 +43,8 @@ try {
     }
 } catch {}
 
-$LockfileCandidates = @(
-    "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile",
-    "C:\Users\$env:USERNAME\AppData\Local\Riot Games\Riot Client\Config\lockfile",
-    "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
-)
-
 Write-Host "[Bridge] Target Overlay Server: $OverlayServer" -ForegroundColor Cyan
-Write-Host "[Bridge] Scanning for Valorant Client Lockfile..." -ForegroundColor Yellow
+Write-Host "[Bridge] Connecting to VALORANT / Riot Client..." -ForegroundColor Yellow
 Write-Host ""
 
 $agentMap = @{
@@ -108,82 +102,158 @@ $mapMap = @{
     "pitt" = "pearl"
     "juliett" = "sunset"
     "infinity" = "abyss"
+    "hurm" = "district"
+    "kasbah" = "kasbah"
+    "drift" = "drift"
+    "pia" = "glitch"
+}
+
+function Get-RiotClientCredentials {
+    # 1. Multi-Drive & Multi-User Lockfile Discovery
+    $driveLetters = @("C", "D", "E", "F")
+    $lockCandidates = @(
+        "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile",
+        "$env:USERPROFILE\AppData\Local\Riot Games\Riot Client\Config\lockfile",
+        "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
+    )
+
+    foreach ($d in $driveLetters) {
+        $lockCandidates += "$($d):\Users\*\AppData\Local\Riot Games\Riot Client\Config\lockfile"
+    }
+
+    foreach ($pattern in $lockCandidates) {
+        try {
+            $files = Get-ChildItem -Path $pattern -ErrorAction SilentlyContinue
+            foreach ($f in $files) {
+                if (Test-Path $f.FullName) {
+                    $fileStream = [System.IO.File]::Open($f.FullName, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                    $sr = New-Object System.IO.StreamReader($fileStream)
+                    $content = $sr.ReadToEnd().Trim()
+                    $sr.Close()
+                    $fileStream.Close()
+
+                    $parts = $content -split ':'
+                    if ($parts.Length -ge 5) {
+                        return @{
+                            Port = $parts[2]
+                            Password = $parts[3]
+                            Source = "Lockfile"
+                        }
+                    }
+                }
+            }
+        } catch {}
+    }
+
+    # 2. Direct Process Inspection Fallback (Works across elevated/different user sessions)
+    try {
+        $procs = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "*Riot*" -or $_.Name -like "*VALORANT*" }
+        foreach ($proc in $procs) {
+            $cmd = $proc.CommandLine
+            if ($cmd) {
+                $foundPort = $null
+                $foundToken = $null
+
+                if ($cmd -match '--riotclient-app-port=(\d+)' -or $cmd -match '--app-port=(\d+)' -or $cmd -match '-riotclient-app-port=(\d+)') {
+                    $foundPort = $Matches[1]
+                }
+                if ($cmd -match '--riotclient-auth-token=([a-zA-Z0-9_\-]+)' -or $cmd -match '--remoting-auth-token=([a-zA-Z0-9_\-]+)' -or $cmd -match '-riotclient-auth-token=([a-zA-Z0-9_\-]+)') {
+                    $foundToken = $Matches[1]
+                }
+
+                if ($foundPort -and $foundToken) {
+                    return @{
+                        Port = $foundPort
+                        Password = $foundToken
+                        Source = "Process ($($proc.Name))"
+                    }
+                }
+            }
+        }
+    } catch {}
+
+    return $null
+}
+
+$lastStatusMsg = ""
+function Show-Status($msg, $color = "Yellow") {
+    if ($global:lastStatusMsg -ne $msg) {
+        $global:lastStatusMsg = $msg
+        $timeStr = (Get-Date).ToString("HH:mm:ss")
+        Write-Host "[$timeStr] $msg" -ForegroundColor $color
+    }
 }
 
 while ($true) {
     try {
-        $LockfilePath = $null
-        foreach ($candidate in $LockfileCandidates) {
-            if (Test-Path $candidate) {
-                $LockfilePath = $candidate
-                break
-            }
-        }
+        $creds = Get-RiotClientCredentials
 
-        if (-not $LockfilePath) {
-            Write-Host "`r[Waiting] Please launch VALORANT on this PC...                    " -NoNewline -ForegroundColor Yellow
+        if (-not $creds) {
+            Show-Status "[Waiting] Riot Client / VALORANT is not detected. Please ensure VALORANT is running on this PC..." "Yellow"
             Start-Sleep -Seconds 2
             continue
         }
 
-        $lockfileContent = (Get-Content $LockfilePath -Raw).Trim()
-        $parts = $lockfileContent -split ':'
-        if ($parts.Length -lt 5) {
-            Start-Sleep -Seconds 1
-            continue
-        }
-
-        $port = $parts[2]
-        $password = $parts[3]
+        $port = $creds.Port
+        $password = $creds.Password
         $auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("riot:$password"))
         $headers = @{
             "Authorization" = "Basic $auth"
             "Content-Type" = "application/json"
         }
 
-        # 1. Get Session / Presence
+        # 1. Get Session & Presences
         $sessionUrl = "https://127.0.0.1:$port/chat/v4/presences"
         $presences = Invoke-RestMethod -Uri $sessionUrl -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
 
-        # 2. Get active core-game player
-        $localPuuid = $null
-        if ($presences -and $presences.presences) {
-            $self = $presences.presences | Where-Object { $_.championId -ne $null -or $_.puuid -ne $null } | Select-Object -First 1
-            if ($self) { $localPuuid = $self.puuid }
-        }
-
         $loopState = "MENUS"
         $detectedMap = "ascent"
-        $roundNum = 0
+        $roundNum = 1
         $t1Score = 0
         $t2Score = 0
         $team1Players = @()
         $team2Players = @()
+        $localPuuid = $null
 
-        # Check Core-Game (Live In-Game)
-        if ($localPuuid) {
-            $coreGamePlayerUrl = "https://127.0.0.1:$port/core-game/v1/players/$localPuuid"
-            $corePlayer = Invoke-RestMethod -Uri $coreGamePlayerUrl -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
+        # Parse Presences (Works for both Spectator and In-Game Players)
+        if ($presences -and $presences.presences) {
+            foreach ($p in $presences.presences) {
+                if ($p.product -eq "valorant" -and $p.private) {
+                    try {
+                        $rawPriv = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($p.private))
+                        $priv = $rawPriv | ConvertFrom-Json
+                        if ($priv.sessionLoopState -eq "INGAME") {
+                            $loopState = "INGAME"
+                            $t1Score = if ($priv.partyOwnerMatchScore) { [int]$priv.partyOwnerMatchScore } else { 0 }
+                            $t2Score = if ($priv.partyOwnerMatchScoreEnemy) { [int]$priv.partyOwnerMatchScoreEnemy } else { 0 }
+                            $roundNum = $t1Score + $t2Score + 1
 
-            if ($corePlayer -and $corePlayer.MatchID) {
-                $matchId = $corePlayer.MatchID
-                $matchUrl = "https://127.0.0.1:$port/core-game/v1/matches/$matchId"
-                $matchData = Invoke-RestMethod -Uri $matchUrl -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
-
-                if ($matchData) {
-                    $loopState = "INGAME"
-                    
-                    # Extract Map
-                    $rawMapUrl = if ($matchData.MapID) { $matchData.MapID.ToString().ToLower() } else { "" }
-                    foreach ($key in $mapMap.Keys) {
-                        if ($rawMapUrl.Contains($key)) {
-                            $detectedMap = $mapMap[$key]
+                            $rawMap = if ($priv.matchMap) { $priv.matchMap.ToString().ToLower() } else { "" }
+                            foreach ($key in $mapMap.Keys) {
+                                if ($rawMap.Contains($key)) {
+                                    $detectedMap = $mapMap[$key]
+                                    break
+                                }
+                            }
                             break
+                        } elseif ($priv.sessionLoopState -eq "PREGAME") {
+                            $loopState = "PREGAME"
                         }
-                    }
+                    } catch {}
+                }
+                if ($p.puuid -and -not $localPuuid) {
+                    $localPuuid = $p.puuid
+                }
+            }
+        }
 
-                    # Extract Players
-                    if ($matchData.Players) {
+        # Check Core-Game Roster (If In-Game)
+        if ($localPuuid -and $loopState -eq "INGAME") {
+            try {
+                $corePlayer = Invoke-RestMethod -Uri "https://127.0.0.1:$port/core-game/v1/players/$localPuuid" -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
+                if ($corePlayer -and $corePlayer.MatchID) {
+                    $matchData = Invoke-RestMethod -Uri "https://127.0.0.1:$port/core-game/v1/matches/$($corePlayer.MatchID)" -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
+                    if ($matchData -and $matchData.Players) {
                         foreach ($p in $matchData.Players) {
                             $isBlue = ($p.TeamID -eq "Blue" -or $p.TeamID -eq "TeamOne")
                             $charId = $p.CharacterID
@@ -202,12 +272,11 @@ while ($true) {
                                 ult_points_needed = 7
                                 is_dead = $false
                             }
-
                             if ($isBlue) { $team1Players += $pObj } else { $team2Players += $pObj }
                         }
                     }
                 }
-            }
+            } catch {}
         }
 
         # Build Telemetry Payload
@@ -229,14 +298,17 @@ while ($true) {
         $res = Invoke-RestMethod -Uri $syncUrl -Method POST -Body $jsonPayload -ContentType "application/json" -TimeoutSec 4 -ErrorAction SilentlyContinue
 
         if ($loopState -eq "INGAME") {
-            Write-Host "`r[LIVE MATCH SYNC] Map: $($detectedMap.ToUpper()) | Players: $($team1Players.Count)v$($team2Players.Count) | Connected to Overlay Server!        " -NoNewline -ForegroundColor Green
+            Show-Status "[LIVE SYNC ACTIVE] Map: $($detectedMap.ToUpper()) | Round $roundNum ($t1Score-$t2Score) | Streaming to $OverlayServer" "Green"
+        } elseif ($loopState -eq "PREGAME") {
+            Show-Status "[AGENT SELECT] In Match Agent Select Lobby | Connected to $OverlayServer" "Magenta"
         } else {
-            Write-Host "`r[IN MENUS] Valorant Hooked | Connected to Overlay Server ($OverlayServer)...                  " -NoNewline -ForegroundColor Cyan
+            Show-Status "[CONNECTED] VALORANT Online (In Menus/Lobby) | Connected to $OverlayServer" "Cyan"
         }
 
     } catch {
-        # Retry loop on transient error
+        # Silent continue on network glitch
     }
 
     Start-Sleep -Seconds 1
 }
+
