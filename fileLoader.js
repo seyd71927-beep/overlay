@@ -719,6 +719,57 @@ class fileLoader {
         return rows;
     }
 
+    // Parse HTML table from Google Sheets (extracting text and embedded cell images)
+    parseHtmlTable(htmlText) {
+        const rows = [];
+        const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+        let trMatch;
+
+        while ((trMatch = trRegex.exec(htmlText)) !== null) {
+            const row = [];
+            const tdRegex = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
+            let tdMatch;
+
+            while ((tdMatch = tdRegex.exec(trMatch[1])) !== null) {
+                const cellHtml = tdMatch[1];
+                const imgMatch = cellHtml.match(/<img[^>]+src=["']([^"']+)["']/i);
+                if (imgMatch) {
+                    row.push(imgMatch[1].trim());
+                } else {
+                    const text = cellHtml
+                        .replace(/<[^>]+>/g, '')
+                        .replace(/&amp;/g, '&')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'")
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&nbsp;/g, ' ')
+                        .trim();
+                    row.push(text);
+                }
+            }
+            if (row.some(c => c.length > 0)) {
+                rows.push(row);
+            }
+        }
+        return rows;
+    }
+
+    // Clean player username (handling social links, filtering NIL/empty)
+    cleanPlayerName(raw) {
+        if (!raw || typeof raw !== 'string') return '';
+        let name = raw.trim();
+        if (['NIL', 'NA', 'N/A', 'NONE', 'NULL', '-', 'TBD', 'EMPTY', '0', ''].includes(name.toUpperCase())) {
+            return '';
+        }
+        // Extract handle from YouTube / Twitch / Twitter URLs
+        const socialMatch = name.match(/(?:youtube\.com|twitch\.tv|twitter\.com|x\.com)\/@?([a-zA-Z0-9_.-]+)/i);
+        if (socialMatch) {
+            name = socialMatch[1];
+        }
+        return name;
+    }
+
     // Clean and normalize logo URLs (supporting formulas, Google Drive links, Dropbox, etc.)
     cleanLogoUrl(rawUrl) {
         if (!rawUrl || typeof rawUrl !== 'string') return '';
@@ -773,35 +824,47 @@ class fileLoader {
             const docId = sheetIdMatch[1];
             const gid = gidMatch ? gidMatch[1] : '';
 
-            // 1. Google Visualization API (Most reliable for public sheets)
+            // 1. Google Visualization HTML export (Contains cell images & <img src="..."> tags!)
             if (gid) {
-                candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv&gid=${gid}`);
+                candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:html&gid=${gid}`, type: 'html' });
             }
-            candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv`);
+            candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:html`, type: 'html' });
 
-            // 2. Standard Google Export endpoint fallbacks
+            // 2. Google Visualization CSV export
             if (gid) {
-                candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`);
+                candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv&gid=${gid}`, type: 'csv' });
             }
-            candidateUrls.push(`https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`);
+            candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv`, type: 'csv' });
+
+            // 3. Standard Google Export endpoint fallbacks
+            if (gid) {
+                candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`, type: 'csv' });
+            }
+            candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`, type: 'csv' });
         } else if (input.includes('/pubhtml')) {
-            candidateUrls.push(input.replace('/pubhtml', '/pub?output=csv'));
+            candidateUrls.push({ url: input, type: 'html' });
+            candidateUrls.push({ url: input.replace('/pubhtml', '/pub?output=csv'), type: 'csv' });
         } else {
-            candidateUrls.push(input);
+            candidateUrls.push({ url: input, type: 'csv' });
         }
 
-        let csvContent = null;
+        let rawContent = null;
+        let responseType = 'csv';
         let lastError = null;
 
-        for (const targetUrl of candidateUrls) {
+        for (const candidate of candidateUrls) {
             try {
-                const fetched = await this.fetchUrlWithRedirects(targetUrl);
+                const fetched = await this.fetchUrlWithRedirects(candidate.url);
                 if (fetched && fetched.trim().length > 0) {
-                    // Check if Google returned an HTML login page instead of CSV
-                    if (fetched.includes('<!DOCTYPE html') || fetched.includes('<html') || fetched.includes('accounts.google.com')) {
+                    // Check if Google returned an HTML login page instead of data
+                    if (fetched.includes('accounts.google.com') && (fetched.includes('ServiceLogin') || fetched.includes('Sign in'))) {
                         throw new Error('Google Sheet is set to Private. Please open your Google Sheet, click "Share" (top-right), and change "General access" to "Anyone with the link can view" (Viewer)!');
                     }
-                    csvContent = fetched;
+                    rawContent = fetched;
+                    responseType = candidate.type;
+                    if (fetched.includes('<table') || fetched.includes('<tr')) {
+                        responseType = 'html';
+                    }
                     break;
                 }
             } catch (err) {
@@ -810,11 +873,20 @@ class fileLoader {
             }
         }
 
-        if (!csvContent || csvContent.trim().length === 0) {
+        if (!rawContent || rawContent.trim().length === 0) {
             throw new Error(lastError ? lastError.message : 'Could not fetch Google Sheet. Please make sure the sheet is shared as "Anyone with the link can view".');
         }
 
-        const rows = this.parseCsvRows(csvContent);
+        // Parse content based on format (HTML table or CSV)
+        let rows = [];
+        if (responseType === 'html' || rawContent.includes('<table') || rawContent.includes('<tr')) {
+            rows = this.parseHtmlTable(rawContent);
+        }
+        
+        if (rows.length < 2) {
+            rows = this.parseCsvRows(rawContent);
+        }
+
         if (rows.length < 2) {
             throw new Error('Spreadsheet must contain at least 1 header row and 1 data row');
         }
@@ -883,14 +955,29 @@ class fileLoader {
                 let teamSeed = seedIdx !== -1 && row[seedIdx] ? row[seedIdx].trim() : '';
 
                 let players = [];
-                if (p1Idx !== -1 && row[p1Idx]) players.push(row[p1Idx].trim());
-                if (p2Idx !== -1 && row[p2Idx]) players.push(row[p2Idx].trim());
-                if (p3Idx !== -1 && row[p3Idx]) players.push(row[p3Idx].trim());
-                if (p4Idx !== -1 && row[p4Idx]) players.push(row[p4Idx].trim());
-                if (p5Idx !== -1 && row[p5Idx]) players.push(row[p5Idx].trim());
+                if (p1Idx !== -1 && row[p1Idx]) {
+                    const p = this.cleanPlayerName(row[p1Idx]);
+                    if (p) players.push(p);
+                }
+                if (p2Idx !== -1 && row[p2Idx]) {
+                    const p = this.cleanPlayerName(row[p2Idx]);
+                    if (p) players.push(p);
+                }
+                if (p3Idx !== -1 && row[p3Idx]) {
+                    const p = this.cleanPlayerName(row[p3Idx]);
+                    if (p) players.push(p);
+                }
+                if (p4Idx !== -1 && row[p4Idx]) {
+                    const p = this.cleanPlayerName(row[p4Idx]);
+                    if (p) players.push(p);
+                }
+                if (p5Idx !== -1 && row[p5Idx]) {
+                    const p = this.cleanPlayerName(row[p5Idx]);
+                    if (p) players.push(p);
+                }
 
                 if (players.length === 0 && rosterIdx !== -1 && row[rosterIdx]) {
-                    players = row[rosterIdx].split(/[,;/]/).map(p => p.trim()).filter(Boolean);
+                    players = row[rosterIdx].split(/[,;\n/]/).map(p => this.cleanPlayerName(p)).filter(Boolean);
                 }
 
                 parsedTeams.push({
