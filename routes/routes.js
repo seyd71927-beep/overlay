@@ -1042,22 +1042,43 @@ router.post('/api/tournament/upload_sheet_file', memUpload.single('sheetFile'), 
 
 
 router.get('/bridge.bat', (req, res) => {
-    const host = `${req.protocol}://${req.get('host')}`;
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host = req.get('host');
+    const serverUrl = `${proto}://${host}`;
     const batContent = `@echo off
-title ZENX TOURNAMENT LIVE BRIDGE
+title ZENX TOURNAMENT LIVE BRIDGE (STREAMER PC)
 color 0b
 echo =======================================================
 echo    ZENX TOURNAMENT OVERLAY - IN-GAME AUTO-BRIDGE
 echo =======================================================
 echo.
-echo Connecting to Overlay Server: ${host}
+echo Target Overlay Server: ${serverUrl}
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm ${host}/bridge.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm ${serverUrl}/bridge.ps1 | iex"
 pause
 `;
     res.setHeader('Content-Type', 'application/x-bat');
     res.setHeader('Content-Disposition', 'attachment; filename="zenx_streamer_bridge.bat"');
     res.send(batContent);
+});
+
+router.get('/bridge.ps1', (req, res) => {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host = req.get('host');
+    const serverUrl = `${proto}://${host}`;
+
+    const templatePath = path.join(__dirname, '../public/bridge.ps1');
+    let psScript = '';
+    if (fs.existsSync(templatePath)) {
+        psScript = fs.readFileSync(templatePath, 'utf8');
+        psScript = psScript.replace(/\$OverlayServer\s*=\s*["'][^"']*["']/, `$OverlayServer = "${serverUrl}"`);
+    } else {
+        psScript = `# Auto-generated Bridge\n$OverlayServer = "${serverUrl}"\n`;
+    }
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.send(psScript);
 });
 
 router.get('/print_state', (req, res) => {

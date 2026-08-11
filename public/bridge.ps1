@@ -3,6 +3,10 @@
 # Real-time In-Game Telemetry Sync for Valorant Matches
 # =======================================================
 
+param (
+    [string]$TargetServer = ""
+)
+
 [Console]::Title = "ZENX TOURNAMENT LIVE BRIDGE (STREAMER PC)"
 Write-Host "=======================================================" -ForegroundColor Red
 Write-Host "   ZENX VALORANT TOURNAMENT - IN-GAME AUTO-BRIDGE      " -ForegroundColor White
@@ -10,16 +14,44 @@ Write-Host "=======================================================" -Foreground
 Write-Host ""
 
 $OverlayServer = "https://zenx.up.railway.app"
-$LockfilePath = "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile"
+if ($TargetServer -ne "") {
+    $OverlayServer = $TargetServer
+}
+
+# Ensure TLS 1.2 is enabled
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]'Tls,Tls11,Tls12'
+
+# Trust 127.0.0.1 self-signed Riot API certificate
+try {
+    [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+} catch {}
+
+try {
+    if (-not ([System.Management.Automation.PSTypeName]'TrustAllCertsPolicy').Type) {
+        Add-Type -TypeDefinition @"
+            using System.Net;
+            using System.Security.Cryptography.X509Certificates;
+            public class TrustAllCertsPolicy : ICertificatePolicy {
+                public bool CheckValidationResult(
+                    ServicePoint srvPoint, X509Certificate certificate,
+                    WebRequest request, int problem) {
+                    return true;
+                }
+            }
+"@ -ErrorAction SilentlyContinue
+        [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+    }
+} catch {}
+
+$LockfileCandidates = @(
+    "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile",
+    "C:\Users\$env:USERNAME\AppData\Local\Riot Games\Riot Client\Config\lockfile",
+    "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
+)
 
 Write-Host "[Bridge] Target Overlay Server: $OverlayServer" -ForegroundColor Cyan
 Write-Host "[Bridge] Scanning for Valorant Client Lockfile..." -ForegroundColor Yellow
 Write-Host ""
-
-# Disable SSL Certificate Validation for 127.0.0.1 Riot API
-if ([Net.ServicePointManager]::CertificatePolicy -ne $null) {
-    [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-}
 
 $agentMap = @{
     "add6443a-41bd-e414-f6ad-e58d267f4e95" = "jett"
@@ -80,7 +112,15 @@ $mapMap = @{
 
 while ($true) {
     try {
-        if (-not (Test-Path $LockfilePath)) {
+        $LockfilePath = $null
+        foreach ($candidate in $LockfileCandidates) {
+            if (Test-Path $candidate) {
+                $LockfilePath = $candidate
+                break
+            }
+        }
+
+        if (-not $LockfilePath) {
             Write-Host "`r[Waiting] Please launch VALORANT on this PC...                    " -NoNewline -ForegroundColor Yellow
             Start-Sleep -Seconds 2
             continue
@@ -134,7 +174,7 @@ while ($true) {
                     $loopState = "INGAME"
                     
                     # Extract Map
-                    $rawMapUrl = $matchData.MapID.ToLower()
+                    $rawMapUrl = ($matchData.MapID || "").ToLower()
                     foreach ($key in $mapMap.Keys) {
                         if ($rawMapUrl.Contains($key)) {
                             $detectedMap = $mapMap[$key]
@@ -189,13 +229,13 @@ while ($true) {
         $res = Invoke-RestMethod -Uri $syncUrl -Method POST -Body $jsonPayload -ContentType "application/json" -TimeoutSec 4 -ErrorAction SilentlyContinue
 
         if ($loopState -eq "INGAME") {
-            Write-Host "`r[LIVE MATCH SYNC] Map: $($detectedMap.ToUpper()) | Players: $($team1Players.Count)v$($team2Players.Count) | Telemetry OK!        " -NoNewline -ForegroundColor Green
+            Write-Host "`r[LIVE MATCH SYNC] Map: $($detectedMap.ToUpper()) | Players: $($team1Players.Count)v$($team2Players.Count) | Connected to Overlay Server!        " -NoNewline -ForegroundColor Green
         } else {
-            Write-Host "`r[IN MENUS] Valorant Client Connected | Ready for Match...                  " -NoNewline -ForegroundColor Cyan
+            Write-Host "`r[IN MENUS] Valorant Hooked | Connected to Overlay Server ($OverlayServer)...                  " -NoNewline -ForegroundColor Cyan
         }
 
     } catch {
-        # Silent loop retry
+        # Retry loop on transient error
     }
 
     Start-Sleep -Seconds 1
