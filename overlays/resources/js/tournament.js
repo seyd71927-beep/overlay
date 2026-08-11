@@ -46,6 +46,15 @@ class TournamentManager {
         document.getElementById('save-team-modal-btn')?.addEventListener('click', () => this.saveTeamFromModal());
         document.getElementById('sheet-guide-btn')?.addEventListener('click', () => this.openSheetGuideModal());
 
+        // Direct CSV Upload
+        const csvBtn = document.getElementById('upload-csv-btn');
+        const csvInput = document.getElementById('csv-file-input');
+        csvBtn?.addEventListener('click', () => csvInput?.click());
+        csvInput?.addEventListener('change', (e) => this.uploadCsvFile(e.target.files[0]));
+
+        // Logo Upload in modal
+        document.getElementById('modal-upload-logo-btn')?.addEventListener('click', () => this.uploadModalLogoFile());
+
         // Filter pills
         document.querySelectorAll('.filter-pill').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -60,6 +69,72 @@ class TournamentManager {
         document.getElementById('team-search-input')?.addEventListener('input', (e) => {
             this.renderTeams(e.target.value);
         });
+    }
+
+    async uploadCsvFile(file) {
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('sheetFile', file);
+
+        const btn = document.getElementById('upload-csv-btn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Parsing CSV...';
+        }
+
+        try {
+            const res = await fetch('../api/tournament/upload_sheet_file', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (res.status === 200 && data.status) {
+                this.tournamentData = data.tournamentData;
+                this.renderAll();
+                this.updateSyncStatusBadge();
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom(data.message);
+                } else {
+                    alert(data.message);
+                }
+            } else {
+                alert(data.message || 'Failed to upload CSV file');
+            }
+        } catch (e) {
+            alert('Upload error: ' + e.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-file-arrow-up"></i> Upload CSV File Directly';
+            }
+        }
+    }
+
+    async uploadModalLogoFile() {
+        const fileInput = document.getElementById('modal-team-file-input');
+        const file = fileInput?.files?.[0];
+        const tag = document.getElementById('modal-team-tag')?.value.trim();
+
+        if (!file) {
+            alert('Please select an image file to upload first!');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('logoFile', file);
+        formData.append('teamTag', tag || 'TEAM');
+
+        try {
+            const res = await fetch('../api/tournament/upload_team_logo', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (res.status === 200 && data.status) {
+                document.getElementById('modal-team-logo').value = data.logoUrl;
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom('Logo uploaded successfully!');
+                }
+            } else {
+                alert(data.message || 'Upload failed');
+            }
+        } catch (e) {
+            alert('Error uploading logo: ' + e.message);
+        }
     }
 
     async loadTournamentData() {
@@ -248,7 +323,7 @@ class TournamentManager {
 
                 <div class="match-vs-container">
                     <div class="match-team-block left">
-                        <img src="${t1Logo}" alt="${m.team_1_tag}" class="match-team-logo" onerror="this.src='../visual_assets/ZENX_RED.png'">
+                        <img src="${t1Logo}" alt="${m.team_1_tag}" class="match-team-logo" onerror="if (!this.dataset.triedProxy && '${t1?.logo}' && '${t1?.logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t1?.logo}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
                         <div class="match-team-info">
                             <span class="match-team-tag">${m.team_1_tag}</span>
                             <span class="match-team-name">${t1Name}</span>
@@ -265,7 +340,7 @@ class TournamentManager {
                             <span class="match-team-tag">${m.team_2_tag}</span>
                             <span class="match-team-name">${t2Name}</span>
                         </div>
-                        <img src="${t2Logo}" alt="${m.team_2_tag}" class="match-team-logo" onerror="this.src='../visual_assets/ZENX_RED.png'">
+                        <img src="${t2Logo}" alt="${m.team_2_tag}" class="match-team-logo" onerror="if (!this.dataset.triedProxy && '${t2?.logo}' && '${t2?.logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t2?.logo}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
                     </div>
                 </div>
 
@@ -306,7 +381,7 @@ class TournamentManager {
             container.innerHTML = `
                 <div style="grid-column: span 12; text-align: center; padding: 32px; background: rgba(0,0,0,0.2); border-radius: var(--radius-md); border: 1px dashed var(--panel-border);">
                     <i class="fa-solid fa-users-slash" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 8px;"></i>
-                    <p style="color: var(--text-muted); font-size: 0.9rem;">No teams found. Auto-fetch from Google Sheet or click "➕ Add Team Manually"!</p>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">No teams found. Auto-fetch from Google Sheet, upload CSV, or click "➕ Add Team Manually"!</p>
                 </div>`;
             return;
         }
@@ -320,7 +395,7 @@ class TournamentManager {
             html += `
             <div class="team-card">
                 <div class="team-card-header">
-                    <img src="${logoUrl}" alt="${t.tag}" class="team-card-logo" onerror="this.src='../visual_assets/ZENX_RED.png'">
+                    <img src="${logoUrl}" alt="${t.tag}" class="team-card-logo" onerror="if (!this.dataset.triedProxy && '${t.logo}' && '${t.logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t.logo}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
                     <div style="flex-grow: 1;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span class="team-card-tag">${t.tag}</span>
@@ -347,6 +422,9 @@ class TournamentManager {
                         </button>
                     </div>
                     <div style="display: flex; gap: 4px;">
+                        <button class="btn" style="padding: 5px 8px; font-size: 0.72rem; background: rgba(0, 242, 254, 0.12); color: #00f2fe;" title="Upload Logo file for this team" onclick="window.tourneyMgr.quickUploadLogo('${t.tag}')">
+                            <i class="fa-solid fa-camera"></i>
+                        </button>
                         <button class="btn" style="padding: 5px 8px; font-size: 0.72rem; background: rgba(255,255,255,0.06);" onclick="window.tourneyMgr.editTeam('${t.id}')">
                             <i class="fa-solid fa-pen"></i>
                         </button>
@@ -359,6 +437,43 @@ class TournamentManager {
         });
 
         container.innerHTML = html;
+    }
+
+    quickUploadLogo(teamTag) {
+        let input = document.getElementById('dynamic-quick-logo-input');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'file';
+            input.id = 'dynamic-quick-logo-input';
+            input.accept = 'image/*';
+            input.style.display = 'none';
+            document.body.appendChild(input);
+        }
+
+        input.onchange = async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('logoFile', file);
+            formData.append('teamTag', teamTag);
+
+            try {
+                const res = await fetch('../api/tournament/upload_team_logo', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (res.status === 200 && data.status) {
+                    await this.loadTournamentData();
+                    if (typeof successAlertLowerBottom === 'function') {
+                        successAlertLowerBottom(`Logo updated for ${teamTag}!`);
+                    }
+                } else {
+                    alert(data.message || 'Failed to upload logo');
+                }
+            } catch (err) {
+                alert('Upload error: ' + err.message);
+            }
+        };
+
+        input.click();
     }
 
     findTeamByTag(tag) {

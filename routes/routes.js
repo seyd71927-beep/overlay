@@ -4,6 +4,26 @@ const fs = require('fs');
 const router = express.Router();
 const multer = require('multer');
 const upload = multer();
+
+// Logo upload directory
+const uploadLogoDir = path.join(__dirname, '../overlays/visual_assets/teams');
+if (!fs.existsSync(uploadLogoDir)) {
+    fs.mkdirSync(uploadLogoDir, { recursive: true });
+}
+
+const logoStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadLogoDir);
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname) || '.png';
+        const teamTag = (req.body.teamTag || 'team_' + Date.now()).replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
+        cb(null, `${teamTag}_logo${ext}`);
+    }
+});
+const logoUpload = multer({ storage: logoStorage });
+const memUpload = multer({ storage: multer.memoryStorage() });
+
 const fileLoader = require('../fileLoader');
 let dataBus = new fileLoader();
 dataBus.init('./config');
@@ -739,6 +759,165 @@ router.post('/api/tournament/delete_match', upload.none(), (req, res) => {
     const updated = dataBus.deleteTournamentMatch(matchId);
     emitEvent(req, 'tournamentUpdate', dataBus.getTournamentData());
     return res.status(200).json({ status: true, matches: updated });
+});
+
+// Image Proxy to stream Google Drive and external images bypassing browser CORS & cookies
+router.get('/api/tournament/proxy_image', async (req, res) => {
+    const imageUrl = req.query.url;
+    if (!imageUrl) {
+        return res.status(400).send('Missing image url');
+    }
+
+    try {
+        const { buffer, contentType } = await dataBus.fetchBinaryBuffer(imageUrl);
+        res.set('Content-Type', contentType || 'image/png');
+        res.set('Cache-Control', 'public, max-age=86400');
+        return res.send(buffer);
+    } catch (err) {
+        // Return default ZENX logo on proxy error
+        const fallbackPath = path.join(__dirname, '../overlays/visual_assets/ZENX_RED.png');
+        if (fs.existsSync(fallbackPath)) {
+            res.set('Content-Type', 'image/png');
+            return res.sendFile(fallbackPath);
+        }
+        return res.status(404).send('Image fetch failed');
+    }
+});
+
+// Upload Team Logo directly from PC/phone
+router.post('/api/tournament/upload_team_logo', logoUpload.single('logoFile'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ status: false, message: 'No file uploaded' });
+    }
+
+    const { teamTag } = req.body;
+    const cleanTag = (teamTag || '').trim().toUpperCase();
+    const relativeLogoPath = `../visual_assets/teams/${req.file.filename}`;
+
+    const tournament = dataBus.getTournamentData();
+    const teamObj = tournament.teams.find(t => 
+        (t.tag && t.tag.toUpperCase() === cleanTag) || 
+        (t.name && t.name.toUpperCase() === cleanTag)
+    );
+
+    if (teamObj) {
+        teamObj.logo = relativeLogoPath;
+        dataBus.saveTournamentData(tournament);
+    }
+
+    // If active in game state, update live state as well
+    if (dataBus.config.gameState.team_1.abbreviation === cleanTag) {
+        dataBus.config.gameState.team_1.icon_link = relativeLogoPath;
+        dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+        emitEvent(req, 'stateUpdate', dataBus.getGameState());
+    } else if (dataBus.config.gameState.team_2.abbreviation === cleanTag) {
+        dataBus.config.gameState.team_2.icon_link = relativeLogoPath;
+        dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+        emitEvent(req, 'stateUpdate', dataBus.getGameState());
+    }
+
+    emitEvent(req, 'tournamentUpdate', dataBus.getTournamentData());
+    return res.status(200).json({ status: true, logoUrl: relativeLogoPath, message: `Logo uploaded successfully for ${cleanTag}!` });
+});
+
+// Direct Spreadsheet CSV File Upload from PC
+router.post('/api/tournament/upload_sheet_file', memUpload.single('sheetFile'), (req, res) => {
+    if (!req.file || !req.file.buffer) {
+        return res.status(400).json({ status: false, message: 'Please select a CSV file to upload' });
+    }
+
+    try {
+        const csvContent = req.file.buffer.toString('utf8');
+        const rows = dataBus.parseCsvRows(csvContent);
+        if (rows.length < 2) {
+            return res.status(400).json({ status: false, message: 'File must contain at least 1 header row and 1 data row' });
+        }
+
+        // Header detection
+        let headerRowIdx = 0;
+        let maxHeaderScore = -1;
+        const keyTerms = ['team', 'name', 'tag', 'logo', 'icon', 'image', 'seed', 'player', 'roster', 'match', 'stage', 'format', 'upload', 'file', 'link'];
+
+        for (let r = 0; r < Math.min(10, rows.length); r++) {
+            const rowCells = rows[r].map(h => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
+            let score = 0;
+            rowCells.forEach(cell => {
+                if (keyTerms.some(k => cell.includes(k))) score++;
+            });
+            if (score > maxHeaderScore) {
+                maxHeaderScore = score;
+                headerRowIdx = r;
+            }
+        }
+
+        const headers = rows[headerRowIdx].map(h => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const findCol = (...keys) => headers.findIndex(h => keys.some(k => h.includes(k)));
+
+        const teamNameIdx = findCol('teamname', 'team', 'name', 'org');
+        const tagIdx = findCol('tag', 'abbr', 'abbreviation', 'code', 'short');
+        const logoIdx = findCol('logo', 'teamlogo', 'logourl', 'icon', 'teamicon', 'image', 'teamimage', 'avatar', 'pic', 'picture', 'photo', 'badge', 'emblem', 'banner', 'crest', 'symbol', 'img', 'upload', 'file', 'attachment', 'drive', 'link');
+        const seedIdx = findCol('seed', 'rank', 'group', 'division', 'pool', 'tier');
+        const p1Idx = findCol('player1', 'p1', 'roster1');
+        const p2Idx = findCol('player2', 'p2', 'roster2');
+        const p3Idx = findCol('player3', 'p3', 'roster3');
+        const p4Idx = findCol('player4', 'p4', 'roster4');
+        const p5Idx = findCol('player5', 'p5', 'roster5');
+        const rosterIdx = findCol('roster', 'players', 'lineup', 'member');
+
+        const parsedTeams = [];
+        for (let r = headerRowIdx + 1; r < rows.length; r++) {
+            const row = rows[r];
+            if (teamNameIdx !== -1 && row[teamNameIdx] && String(row[teamNameIdx]).trim() !== '') {
+                const teamName = String(row[teamNameIdx]).trim();
+                let teamTag = tagIdx !== -1 && row[tagIdx] ? String(row[tagIdx]).trim() : teamName.slice(0, 4).toUpperCase();
+                let teamLogo = logoIdx !== -1 && row[logoIdx] ? dataBus.cleanLogoUrl(String(row[logoIdx])) : '';
+
+                if (!teamLogo) {
+                    for (let c = 0; c < row.length; c++) {
+                        if (c !== teamNameIdx && c !== tagIdx && c !== seedIdx && row[c]) {
+                            const val = String(row[c]).trim();
+                            if (val.startsWith('http') || val.includes('drive.google.com') || val.includes('discordapp.com') || val.includes('=IMAGE(') || /\.(png|jpg|jpeg|webp|svg)/i.test(val)) {
+                                teamLogo = dataBus.cleanLogoUrl(val);
+                                if (teamLogo) break;
+                            }
+                        }
+                    }
+                }
+
+                let teamSeed = seedIdx !== -1 && row[seedIdx] ? String(row[seedIdx]).trim() : '';
+                let players = [];
+                [p1Idx, p2Idx, p3Idx, p4Idx, p5Idx].forEach(idx => {
+                    if (idx !== -1 && row[idx]) {
+                        const p = dataBus.cleanPlayerName(row[idx]);
+                        if (p) players.push(p);
+                    }
+                });
+
+                if (players.length === 0 && rosterIdx !== -1 && row[rosterIdx]) {
+                    players = String(row[rosterIdx]).split(/[,;\n/]/).map(p => dataBus.cleanPlayerName(p)).filter(Boolean);
+                }
+
+                parsedTeams.push({
+                    id: `team_${parsedTeams.length + 1}_${Date.now()}`,
+                    name: teamName,
+                    tag: teamTag.toUpperCase(),
+                    logo: teamLogo,
+                    seed: teamSeed,
+                    players: players
+                });
+            }
+        }
+
+        const currentData = dataBus.getTournamentData();
+        if (parsedTeams.length > 0) currentData.teams = parsedTeams;
+        currentData.lastSync = Date.now();
+        dataBus.saveTournamentData(currentData);
+        emitEvent(req, 'tournamentUpdate', currentData);
+
+        return res.status(200).json({ status: true, message: `Successfully loaded ${parsedTeams.length} teams from uploaded file!`, teamsCount: parsedTeams.length, tournamentData: currentData });
+    } catch (err) {
+        return res.status(400).json({ status: false, message: 'Failed to parse file: ' + err.message });
+    }
 });
 
 router.get('/print_state', (req, res) => {

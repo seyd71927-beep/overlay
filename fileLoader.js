@@ -668,6 +668,54 @@ class fileLoader {
         });
     }
 
+    // Helper to fetch binary image buffer with redirects
+    fetchBinaryBuffer(targetUrl, maxRedirects = 5) {
+        return new Promise((resolve, reject) => {
+            if (maxRedirects <= 0) return reject(new Error('Too many redirects'));
+
+            try {
+                const parsedUrl = new URL(targetUrl);
+                const protocol = parsedUrl.protocol === 'https:' ? https : http;
+
+                const req = protocol.get(targetUrl, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+                    },
+                    timeout: 10000
+                }, (res) => {
+                    if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                        let redirectUrl = res.headers.location;
+                        if (!redirectUrl.startsWith('http')) {
+                            redirectUrl = new URL(redirectUrl, targetUrl).href;
+                        }
+                        return resolve(this.fetchBinaryBuffer(redirectUrl, maxRedirects - 1));
+                    }
+
+                    if (res.statusCode !== 200) {
+                        return reject(new Error(`Server returned HTTP status ${res.statusCode}`));
+                    }
+
+                    const chunks = [];
+                    res.on('data', chunk => chunks.push(chunk));
+                    res.on('end', () => {
+                        const buffer = Buffer.concat(chunks);
+                        const contentType = res.headers['content-type'] || 'image/png';
+                        resolve({ buffer, contentType });
+                    });
+                });
+
+                req.on('error', err => reject(err));
+                req.on('timeout', () => {
+                    req.destroy();
+                    reject(new Error('Image fetch timeout'));
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
     // Robust CSV parser supporting quotes, commas, and multiline values
     parseCsvRows(csvText) {
         const rows = [];

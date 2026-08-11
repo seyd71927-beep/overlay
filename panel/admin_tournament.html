@@ -354,7 +354,11 @@
                                 <i class="fa-solid fa-table-cells" style="color: var(--accent-secondary);"></i> Google Spreadsheet Auto-Fetch & Live Synchronizer
                             </span>
                         </div>
-                        <div style="display: flex; gap: 8px;">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+                            <button id="upload-csv-btn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">
+                                <i class="fa-solid fa-file-arrow-up"></i> Upload CSV File Directly
+                            </button>
                             <button id="sheet-guide-btn" class="btn" style="padding: 4px 10px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
                                 <i class="fa-solid fa-circle-question"></i> Sheet Template Guide
                             </button>
@@ -550,6 +554,12 @@
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Logo URL / Image Link</label>
                         <input id="modal-team-logo" type="text" class="input-field" placeholder="https://... (or ../visual_assets/ZENX_RED.png)">
+                        <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center;">
+                            <input type="file" id="modal-team-file-input" accept="image/*" class="input-field" style="padding: 4px 6px; font-size: 0.72rem;">
+                            <button type="button" id="modal-upload-logo-btn" class="btn btn-accent" style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
+                                <i class="fa-solid fa-upload"></i> Upload
+                            </button>
+                        </div>
                     </div>
                     <div>
                         <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seed / Group</label>
