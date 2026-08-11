@@ -199,10 +199,10 @@ class fileLoader {
         const team2Obj = findTeam(t2Abbr);
 
         if (team1Obj) {
-            if (team1Obj.logo && !this.config.gameState.team_1.icon_link) {
+            if (team1Obj.logo && team1Obj.logo.trim() !== '') {
                 this.config.gameState.team_1.icon_link = this.cleanLogoUrl(team1Obj.logo);
             }
-            if (team1Obj.name && !this.config.gameState.team_1.name) {
+            if (team1Obj.name) {
                 this.config.gameState.team_1.name = team1Obj.name;
             }
             if (Array.isArray(team1Obj.players) && team1Obj.players.length > 0) {
@@ -233,10 +233,10 @@ class fileLoader {
         }
 
         if (team2Obj) {
-            if (team2Obj.logo && !this.config.gameState.team_2.icon_link) {
+            if (team2Obj.logo && team2Obj.logo.trim() !== '') {
                 this.config.gameState.team_2.icon_link = this.cleanLogoUrl(team2Obj.logo);
             }
-            if (team2Obj.name && !this.config.gameState.team_2.name) {
+            if (team2Obj.name) {
                 this.config.gameState.team_2.name = team2Obj.name;
             }
             if (Array.isArray(team2Obj.players) && team2Obj.players.length > 0) {

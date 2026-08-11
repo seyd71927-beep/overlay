@@ -33,14 +33,14 @@
     },
     "team_1": {
         "abbreviation": "JMP",
-        "icon_link": "../visual_assets/ZENX_RED.png",
+        "icon_link": "https://drive.google.com/thumbnail?id=19EmCs-9bedsg9d4vY0xc4F4jwzKIzlyA&sz=w500",
         "team_info": "",
         "won_games": 0,
-        "name": "ZENX"
+        "name": "JMP Esports"
     },
     "team_2": {
         "abbreviation": "QUAN",
-        "icon_link": "https://res.cloudinary.com/swmd79za/image/upload/v1786179144/NXR_PNG_-_bijin_das_g5iepg.png",
+        "icon_link": "https://drive.google.com/thumbnail?id=1TivMZbvQiE3V-srF8ni4k7HaSY9TJ4LW&sz=w500",
         "team_info": "",
         "won_games": 0,
         "name": "Quantum Elite"

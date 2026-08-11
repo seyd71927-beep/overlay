@@ -890,14 +890,6 @@ router.get('/api/tournament/proxy_image', async (req, res) => {
         const { buffer, contentType } = await dataBus.fetchBinaryBuffer(imageUrl);
         res.set('Content-Type', contentType || 'image/png');
         res.set('Cache-Control', 'public, max-age=86400');
-        return res.send(buffer);
-    } catch (err) {
-        // Return default ZENX logo on proxy error
-        const fallbackPath = path.join(__dirname, '../overlays/visual_assets/ZENX_RED.png');
-        if (fs.existsSync(fallbackPath)) {
-            res.set('Content-Type', 'image/png');
-            return res.sendFile(fallbackPath);
-        }
         return res.status(404).send('Image fetch failed');
     }
 });

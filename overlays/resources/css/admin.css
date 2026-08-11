@@ -30,9 +30,8 @@
 body {
     background-color: var(--bg-dark);
     background-image: 
-        linear-gradient(135deg, rgba(11, 14, 20, 0.88), rgba(11, 14, 20, 0.94)),
-        url('/visual_assets/ZENX_RED.png'),
-        url('https://cdn.discordapp.com/attachments/1509843377976250428/1509848056336748695/ZENX_RED.png?ex=6a7b9154&is=6a7a3fd4&hm=8ca6e3af362ea22a9f579d7238744e641ec36886d3db50cd26edd23293004751&');
+        linear-gradient(135deg, rgba(11, 14, 20, 0.95), rgba(11, 14, 20, 0.98)),
+        url('/visual_assets/ZENX_RED.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

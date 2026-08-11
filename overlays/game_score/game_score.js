@@ -163,9 +163,10 @@ class helValorantGameScore {
     }
 
     formatTeamDisplay(teamAbbr, teamInfo, teamImgLink) {
-        const fallback = '../visual_assets/ZENX_RED.png';
+        const hasImg = teamImgLink && teamImgLink.trim() !== '';
+        const imgTag = hasImg ? `<img class="team-icon" src="${teamImgLink}" alt="${teamAbbr}" onerror="if (!this.dataset.triedProxy && '${teamImgLink}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${teamImgLink}'); } else { this.onerror=null; this.style.display='none'; }">` : '';
         return `<div class="team-information-container">
-                    <img class="team-icon" src="${teamImgLink || fallback}" alt="" onerror="if (!this.dataset.triedProxy && '${teamImgLink}' && '${teamImgLink}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${teamImgLink}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
+                    ${imgTag}
                     <span class="team-name-and-seed">
                         <span class="name">${teamAbbr}</span>
                         <span class="seed">${teamInfo}</span>

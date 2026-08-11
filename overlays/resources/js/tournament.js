@@ -303,10 +303,13 @@ class TournamentManager {
             const t1 = this.findTeamByTag(m.team_1_tag);
             const t2 = this.findTeamByTag(m.team_2_tag);
 
-            const t1Logo = t1?.logo || '../visual_assets/ZENX_RED.png';
-            const t2Logo = t2?.logo || '../visual_assets/ZENX_RED.png';
+            const t1Logo = t1?.logo || '';
+            const t2Logo = t2?.logo || '';
             const t1Name = t1?.name || m.team_1_tag || 'Team 1';
             const t2Name = t2?.name || m.team_2_tag || 'Team 2';
+
+            const t1ImgTag = t1Logo ? `<img src="${t1Logo}" alt="${m.team_1_tag}" class="match-team-logo" onerror="if (!this.dataset.triedProxy && '${t1Logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t1Logo}'); } else { this.onerror=null; this.style.display='none'; }">` : '';
+            const t2ImgTag = t2Logo ? `<img src="${t2Logo}" alt="${m.team_2_tag}" class="match-team-logo" onerror="if (!this.dataset.triedProxy && '${t2Logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t2Logo}'); } else { this.onerror=null; this.style.display='none'; }">` : '';
 
             const statusClass = (m.status === 'LIVE') ? 'status-live' : (m.status === 'FINISHED') ? 'status-finished' : 'status-upcoming';
             const isLive = m.status === 'LIVE';
@@ -323,7 +326,7 @@ class TournamentManager {
 
                 <div class="match-vs-container">
                     <div class="match-team-block left">
-                        <img src="${t1Logo}" alt="${m.team_1_tag}" class="match-team-logo" onerror="if (!this.dataset.triedProxy && '${t1?.logo}' && '${t1?.logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t1?.logo}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
+                        ${t1ImgTag}
                         <div class="match-team-info">
                             <span class="match-team-tag">${m.team_1_tag}</span>
                             <span class="match-team-name">${t1Name}</span>
@@ -340,7 +343,7 @@ class TournamentManager {
                             <span class="match-team-tag">${m.team_2_tag}</span>
                             <span class="match-team-name">${t2Name}</span>
                         </div>
-                        <img src="${t2Logo}" alt="${m.team_2_tag}" class="match-team-logo" onerror="if (!this.dataset.triedProxy && '${t2?.logo}' && '${t2?.logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t2?.logo}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
+                        ${t2ImgTag}
                     </div>
                 </div>
 
@@ -388,12 +391,13 @@ class TournamentManager {
 
         let html = '';
         teams.forEach(t => {
-            const logoUrl = t.logo || '../visual_assets/ZENX_RED.png';
+            const logoUrl = t.logo || '';
+            const logoImgTag = logoUrl ? `<img src="${logoUrl}" alt="${t.tag}" class="team-card-logo" onerror="if (!this.dataset.triedProxy && '${logoUrl}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${logoUrl}'); } else { this.onerror=null; this.style.display='none'; }">` : `<div class="team-card-logo" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);font-weight:800;color:var(--text-muted);font-size:0.8rem;">${t.tag || 'T'}</div>`;
 
             html += `
             <div class="team-card">
                 <div class="team-card-header" style="margin-bottom: 12px;">
-                    <img src="${logoUrl}" alt="${t.tag}" class="team-card-logo" onerror="if (!this.dataset.triedProxy && '${t.logo}' && '${t.logo}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${t.logo}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
+                    ${logoImgTag}
                     <div style="flex-grow: 1; min-width: 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
                             <span class="team-card-tag" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.tag}</span>
