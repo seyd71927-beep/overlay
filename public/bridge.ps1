@@ -142,14 +142,21 @@ function Get-RiotClientCredentials {
 
     foreach ($path in $pathsToCheck) {
         if (Test-Path $path) {
+            $rawContent = $null
             try {
                 $fileStream = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
                 $sr = New-Object System.IO.StreamReader($fileStream)
-                $content = $sr.ReadToEnd().Trim()
+                $rawContent = $sr.ReadToEnd().Trim()
                 $sr.Close()
                 $fileStream.Close()
+            } catch {
+                try {
+                    $rawContent = (Get-Content -Path $path -Raw -ErrorAction SilentlyContinue).Trim()
+                } catch {}
+            }
 
-                $parts = $content -split ':'
+            if ($rawContent) {
+                $parts = $rawContent -split ':'
                 if ($parts.Length -ge 5) {
                     return @{
                         Port = $parts[2]
@@ -157,7 +164,7 @@ function Get-RiotClientCredentials {
                         Source = "Lockfile ($path)"
                     }
                 }
-            } catch {}
+            }
         }
     }
 
@@ -209,12 +216,22 @@ function Show-Status($msg, $color = "Yellow") {
     }
 }
 
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if ($isAdmin) {
+    Write-Host "[Info] Running in Admin mode. Note: Standard PowerShell (Win+R -> powershell) is also supported." -ForegroundColor DarkGray
+}
+
 while ($true) {
     try {
         $creds = Get-RiotClientCredentials
 
         if (-not $creds) {
-            Show-Status "[Waiting] Riot Client / VALORANT is not detected. Please ensure VALORANT is running on this PC..." "Yellow"
+            $procCount = (Get-Process -Name "VALORANT-Win64-Shipping", "RiotClientServices", "VALORANT" -ErrorAction SilentlyContinue).Count
+            if ($procCount -gt 0) {
+                Show-Status "[VALORANT Active] Found $procCount game processes. Initializing game session..." "Cyan"
+            } else {
+                Show-Status "[Waiting] Riot Client / VALORANT is not detected. Please ensure VALORANT is running on this PC..." "Yellow"
+            }
             Start-Sleep -Seconds 2
             continue
         }
