@@ -579,11 +579,14 @@ class LiveStreamOperator {
                 is_dead: false
             };
 
+            const rawName = pData.name || pData.username || '';
+            const displayName = rawName;
+
             html += `
             <tr class="${rowClass}">
                 <td style="font-weight: 700;">${isTeam1 ? slotNum : slotNum + this.team1Count}</td>
                 <td><span style="color: ${isTeam1 ? 'var(--green-team)' : 'var(--red-team)'}; font-weight: 700;">${teamLabel}</span></td>
-                <td><input type="text" class="input-field" style="padding: 4px 8px; font-size: 0.8rem;" value="${pData.username || ''}" id="p-name-${i}"></td>
+                <td><input type="text" class="input-field" style="padding: 4px 8px; font-size: 0.8rem;" value="${displayName}" id="p-name-${i}"></td>
                 <td>
                     <select class="input-field" style="padding: 4px 6px; font-size: 0.8rem;" id="p-agent-${i}">
                         ${this.agentsList.map(a => `<option ${(pData.agent || '').toLowerCase() === a.toLowerCase() ? 'selected' : ''} value="${a}">${a}</option>`).join('')}
@@ -622,6 +625,36 @@ class LiveStreamOperator {
         tbody.innerHTML = html;
     }
 
+    async syncRosterFromTournament() {
+        try {
+            const btn = document.getElementById('sync-roster-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
+            }
+            const res = await fetch('../api/sync_team_rosters', { method: 'POST' });
+            const data = await res.json();
+            if (res.status === 200 && data.status) {
+                if (data.players) this.loadPlayersFromResponse(data.players);
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom(data.message || 'Player roster names synced from tournament database!');
+                }
+            } else {
+                if (typeof errorAlertLowerBottom === 'function') {
+                    errorAlertLowerBottom(data.message || 'Failed to sync rosters');
+                }
+            }
+        } catch (e) {
+            console.error('Error syncing team rosters:', e);
+        } finally {
+            const btn = document.getElementById('sync-roster-btn');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Sync Team Roster Names';
+            }
+        }
+    }
+
     async saveSinglePlayer(index) {
         const name = document.getElementById(`p-name-${index}`).value.trim();
         const agent = document.getElementById(`p-agent-${index}`).value;
@@ -640,6 +673,7 @@ class LiveStreamOperator {
 
         const playerData = {
             username: name,
+            name: name,
             agent: agent,
             health: hp,
             shield: shield,

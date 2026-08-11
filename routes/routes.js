@@ -446,8 +446,13 @@ router.post('/set_team_info', upload.none(), (req, res) => {
             liveService.lockManualTeamInfo = (lockTeams === 'true' || lockTeams === true);
         }
 
+        const formatted = dataBus.getFormattedPlayerStats();
         emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
-        return res.status(200).send({ status: true });
+        emitEvent(req, 'stateUpdate', dataBus.getGameState());
+        emitEvent(req, 'playerUpdate', formatted);
+        emitEvent(req, 'playerStatsUpdate', formatted);
+
+        return res.status(200).send({ status: true, players: formatted });
     } catch (e) {
         return res.status(400).send({ status: false, message: 'Invalid team data' });
     }
@@ -750,31 +755,20 @@ router.post('/api/tournament/set_active_team', upload.none(), (req, res) => {
         if (teamObj && teamObj.logo) {
             dataBus.config.gameState.team_1.icon_link = dataBus.cleanLogoUrl ? dataBus.cleanLogoUrl(teamObj.logo) : teamObj.logo;
         }
-
-        if (teamObj && Array.isArray(teamObj.players)) {
-            for (let i = 0; i < Math.min(5, teamObj.players.length); i++) {
-                const key = `player_${i}`;
-                if (dataBus.config.players[key] && dataBus.config.players[key].data) {
-                    dataBus.config.players[key].data.name = teamObj.players[i];
-                }
-            }
+        if (teamObj && teamObj.name) {
+            dataBus.config.gameState.team_1.name = teamObj.name;
         }
     } else if (slot === 'team_2') {
         dataBus.config.gameState.team_2.abbreviation = teamObj ? (teamObj.tag || teamObj.name) : teamTag.toUpperCase();
         if (teamObj && teamObj.logo) {
             dataBus.config.gameState.team_2.icon_link = dataBus.cleanLogoUrl ? dataBus.cleanLogoUrl(teamObj.logo) : teamObj.logo;
         }
-
-        if (teamObj && Array.isArray(teamObj.players)) {
-            for (let i = 0; i < Math.min(5, teamObj.players.length); i++) {
-                const key = `player_${i + 5}`;
-                if (dataBus.config.players[key] && dataBus.config.players[key].data) {
-                    dataBus.config.players[key].data.name = teamObj.players[i];
-                }
-            }
+        if (teamObj && teamObj.name) {
+            dataBus.config.gameState.team_2.name = teamObj.name;
         }
     }
 
+    dataBus.syncPlayersFromTournamentTeams();
     dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
     dataBus.saveStateToFile('players.json', dataBus.config.players);
     if (dataBus.config.mapPicks) {
@@ -785,11 +779,29 @@ router.post('/api/tournament/set_active_team', upload.none(), (req, res) => {
         dataBus.saveStateToFile('mapPicks.json', dataBus.config.mapPicks);
     }
 
+    const formattedStats = dataBus.getFormattedPlayerStats();
     emitEvent(req, 'stateUpdate', dataBus.getGameState());
     emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
-    emitEvent(req, 'playerUpdate', dataBus.config.players);
+    emitEvent(req, 'playerUpdate', formattedStats);
+    emitEvent(req, 'playerStatsUpdate', formattedStats);
 
-    return res.status(200).json({ status: true, message: `Set ${teamTag} to ${slot === 'team_1' ? 'Team 1 (Left)' : 'Team 2 (Right)'}` });
+    return res.status(200).json({ status: true, message: `Set ${teamTag} to ${slot === 'team_1' ? 'Team 1 (Left)' : 'Team 2 (Right)'}`, players: formattedStats });
+});
+
+router.post('/api/sync_team_rosters', upload.none(), (req, res) => {
+    try {
+        dataBus.syncPlayersFromTournamentTeams();
+        dataBus.saveStateToFile('players.json', dataBus.config.players);
+        dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
+        const formatted = dataBus.getFormattedPlayerStats();
+        emitEvent(req, 'playerUpdate', formatted);
+        emitEvent(req, 'playerStatsUpdate', formatted);
+        emitEvent(req, 'stateUpdate', dataBus.getGameState());
+        emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
+        return res.status(200).json({ status: true, message: 'Tournament team roster player names synchronized successfully!', players: formatted });
+    } catch (err) {
+        return res.status(400).json({ status: false, message: err.message });
+    }
 });
 
 router.post('/api/tournament/save_team', upload.none(), (req, res) => {

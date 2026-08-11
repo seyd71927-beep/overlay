@@ -83,6 +83,7 @@ class fileLoader {
             this._adminPassword = appConfig.admin_key || 'password';
 
             this.isInitialized = true;
+            this.syncPlayersFromTournamentTeams();
             console.info('fileLoader() | All Config Files Loaded into Memory Successfully!');
         } catch (err) {
             console.error('fileLoader() | Error loading config files:', err.message);
@@ -171,7 +172,99 @@ class fileLoader {
             ];
             this.saveStateToFile('mapPicks.json', this.config.mapPicks);
         }
+        this.syncPlayersFromTournamentTeams();
         this.saveStateToFile('gameState.json', this.config.gameState);
+        this.saveStateToFile('players.json', this.config.players);
+    }
+
+    syncPlayersFromTournamentTeams() {
+        const tournament = this.getTournamentData();
+        if (!tournament || !Array.isArray(tournament.teams) || tournament.teams.length === 0) return;
+
+        const findTeam = (abbrOrName) => {
+            if (!abbrOrName) return null;
+            const clean = String(abbrOrName).trim().toUpperCase();
+            return tournament.teams.find(t => 
+                (t.tag && t.tag.toUpperCase() === clean) || 
+                (t.name && t.name.toUpperCase() === clean) ||
+                (t.name && t.name.toUpperCase().includes(clean)) ||
+                (t.tag && clean.includes(t.tag.toUpperCase()))
+            );
+        };
+
+        const t1Abbr = this.config.gameState?.team_1?.abbreviation || this.config.gameState?.team_1?.name;
+        const t2Abbr = this.config.gameState?.team_2?.abbreviation || this.config.gameState?.team_2?.name;
+
+        const team1Obj = findTeam(t1Abbr);
+        const team2Obj = findTeam(t2Abbr);
+
+        if (team1Obj) {
+            if (team1Obj.logo && !this.config.gameState.team_1.icon_link) {
+                this.config.gameState.team_1.icon_link = this.cleanLogoUrl(team1Obj.logo);
+            }
+            if (team1Obj.name && !this.config.gameState.team_1.name) {
+                this.config.gameState.team_1.name = team1Obj.name;
+            }
+            if (Array.isArray(team1Obj.players) && team1Obj.players.length > 0) {
+                for (let i = 0; i < Math.min(5, team1Obj.players.length); i++) {
+                    const key = `player_${i}`;
+                    const rawPlayer = String(team1Obj.players[i]).trim();
+                    const ign = rawPlayer.includes('#') ? rawPlayer.split('#')[0].trim() : rawPlayer;
+                    const tag = rawPlayer.includes('#') ? rawPlayer.split('#')[1].trim() : '';
+                    if (!this.config.players[key]) {
+                        this.config.players[key] = {
+                            token: this.generateRandomUserToken(),
+                            is_registered: true,
+                            last_updated: Date.now(),
+                            data: {}
+                        };
+                    }
+                    this.config.players[key].is_registered = true;
+                    this.config.players[key].data = {
+                        ...this.config.players[key].data,
+                        username: ign,
+                        name: ign,
+                        tag: tag,
+                        riot_id: rawPlayer,
+                        is_registered: true
+                    };
+                }
+            }
+        }
+
+        if (team2Obj) {
+            if (team2Obj.logo && !this.config.gameState.team_2.icon_link) {
+                this.config.gameState.team_2.icon_link = this.cleanLogoUrl(team2Obj.logo);
+            }
+            if (team2Obj.name && !this.config.gameState.team_2.name) {
+                this.config.gameState.team_2.name = team2Obj.name;
+            }
+            if (Array.isArray(team2Obj.players) && team2Obj.players.length > 0) {
+                for (let i = 0; i < Math.min(5, team2Obj.players.length); i++) {
+                    const key = `player_${i + 5}`;
+                    const rawPlayer = String(team2Obj.players[i]).trim();
+                    const ign = rawPlayer.includes('#') ? rawPlayer.split('#')[0].trim() : rawPlayer;
+                    const tag = rawPlayer.includes('#') ? rawPlayer.split('#')[1].trim() : '';
+                    if (!this.config.players[key]) {
+                        this.config.players[key] = {
+                            token: this.generateRandomUserToken(),
+                            is_registered: true,
+                            last_updated: Date.now(),
+                            data: {}
+                        };
+                    }
+                    this.config.players[key].is_registered = true;
+                    this.config.players[key].data = {
+                        ...this.config.players[key].data,
+                        username: ign,
+                        name: ign,
+                        tag: tag,
+                        riot_id: rawPlayer,
+                        is_registered: true
+                    };
+                }
+            }
+        }
     }
 
     // --- Caster Lower Third Logic ---
@@ -285,6 +378,21 @@ class fileLoader {
             ? this.config.gameState.team_2_count 
             : 5;
 
+        const tournament = this.getTournamentData();
+        const findTourneyTeam = (abbrOrName) => {
+            if (!abbrOrName || !tournament || !Array.isArray(tournament.teams)) return null;
+            const clean = String(abbrOrName).trim().toUpperCase();
+            return tournament.teams.find(t => 
+                (t.tag && t.tag.toUpperCase() === clean) || 
+                (t.name && t.name.toUpperCase() === clean) ||
+                (t.name && t.name.toUpperCase().includes(clean)) ||
+                (t.tag && clean.includes(t.tag.toUpperCase()))
+            );
+        };
+
+        const t1Obj = findTourneyTeam(this.config.gameState?.team_1?.abbreviation || this.config.gameState?.team_1?.name);
+        const t2Obj = findTourneyTeam(this.config.gameState?.team_2?.abbreviation || this.config.gameState?.team_2?.name);
+
         const responseObj = {
             status: true,
             switch_teams: switchTeams,
@@ -303,8 +411,25 @@ class fileLoader {
             const key = `player_${i}`;
             const p = this.config.players[key] || {};
             const pDataRaw = p.data || p;
+
+            let pName = pDataRaw.name || pDataRaw.username || '';
+            let pTag = pDataRaw.tag || '';
+            let pRiotId = pDataRaw.riot_id || '';
+
+            // Auto-fetch from tournament roster if name is generic or missing
+            if ((!pName || pName.match(/^Player\s*\d+$/i) || pName.match(/^T1\s*Player/i)) && t1Obj && Array.isArray(t1Obj.players) && t1Obj.players[i]) {
+                const rawP = String(t1Obj.players[i]).trim();
+                pName = rawP.includes('#') ? rawP.split('#')[0].trim() : rawP;
+                pTag = rawP.includes('#') ? rawP.split('#')[1].trim() : '';
+                pRiotId = rawP;
+            }
+            if (!pName) pName = `Player ${i + 1}`;
+
             const pData = {
-                username: pDataRaw.username || `Player ${i + 1}`,
+                username: pName,
+                name: pName,
+                tag: pTag,
+                riot_id: pRiotId,
                 agent: (pDataRaw.agent || defaultAgents1[i % defaultAgents1.length]).toLowerCase(),
                 health: typeof pDataRaw.health !== 'undefined' ? Number(pDataRaw.health) : 100,
                 shield: typeof pDataRaw.shield !== 'undefined' ? Number(pDataRaw.shield) : 50,
@@ -320,8 +445,6 @@ class fileLoader {
                 is_dead: !!pDataRaw.is_dead || (typeof pDataRaw.health !== 'undefined' && Number(pDataRaw.health) <= 0),
                 is_registered: true,
                 puuid: pDataRaw.puuid || `p${i + 1}`,
-                name: pDataRaw.name || pDataRaw.username || `Player ${i + 1}`,
-                tag: pDataRaw.tag || '',
                 kills: typeof pDataRaw.kills !== 'undefined' ? Number(pDataRaw.kills) : undefined,
                 deaths: typeof pDataRaw.deaths !== 'undefined' ? Number(pDataRaw.deaths) : undefined,
                 assists: typeof pDataRaw.assists !== 'undefined' ? Number(pDataRaw.assists) : undefined,
@@ -337,8 +460,25 @@ class fileLoader {
             const subKey = `player_${i}`;
             const p = this.config.players[key] || {};
             const pDataRaw = p.data || p;
+
+            let pName = pDataRaw.name || pDataRaw.username || '';
+            let pTag = pDataRaw.tag || '';
+            let pRiotId = pDataRaw.riot_id || '';
+
+            // Auto-fetch from tournament roster if name is generic or missing
+            if ((!pName || pName.match(/^Player\s*\d+$/i) || pName.match(/^T2\s*Player/i)) && t2Obj && Array.isArray(t2Obj.players) && t2Obj.players[i]) {
+                const rawP = String(t2Obj.players[i]).trim();
+                pName = rawP.includes('#') ? rawP.split('#')[0].trim() : rawP;
+                pTag = rawP.includes('#') ? rawP.split('#')[1].trim() : '';
+                pRiotId = rawP;
+            }
+            if (!pName) pName = `Player ${i + 6}`;
+
             const pData = {
-                username: pDataRaw.username || `Player ${i + 6}`,
+                username: pName,
+                name: pName,
+                tag: pTag,
+                riot_id: pRiotId,
                 agent: (pDataRaw.agent || defaultAgents2[i % defaultAgents2.length]).toLowerCase(),
                 health: typeof pDataRaw.health !== 'undefined' ? Number(pDataRaw.health) : 100,
                 shield: typeof pDataRaw.shield !== 'undefined' ? Number(pDataRaw.shield) : 50,
@@ -354,8 +494,6 @@ class fileLoader {
                 is_dead: !!pDataRaw.is_dead || (typeof pDataRaw.health !== 'undefined' && Number(pDataRaw.health) <= 0),
                 is_registered: true,
                 puuid: pDataRaw.puuid || `p${i + 6}`,
-                name: pDataRaw.name || pDataRaw.username || `Player ${i + 6}`,
-                tag: pDataRaw.tag || '',
                 kills: typeof pDataRaw.kills !== 'undefined' ? Number(pDataRaw.kills) : undefined,
                 deaths: typeof pDataRaw.deaths !== 'undefined' ? Number(pDataRaw.deaths) : undefined,
                 assists: typeof pDataRaw.assists !== 'undefined' ? Number(pDataRaw.assists) : undefined,
@@ -1217,23 +1355,7 @@ class fileLoader {
         }
 
         // If teams have rosters, populate player slots
-        if (team1Obj && Array.isArray(team1Obj.players) && team1Obj.players.length > 0) {
-            for (let i = 0; i < Math.min(5, team1Obj.players.length); i++) {
-                const key = `player_${i}`;
-                if (this.config.players[key] && this.config.players[key].data) {
-                    this.config.players[key].data.name = team1Obj.players[i];
-                }
-            }
-        }
-
-        if (team2Obj && Array.isArray(team2Obj.players) && team2Obj.players.length > 0) {
-            for (let i = 0; i < Math.min(5, team2Obj.players.length); i++) {
-                const key = `player_${i + 5}`;
-                if (this.config.players[key] && this.config.players[key].data) {
-                    this.config.players[key].data.name = team2Obj.players[i];
-                }
-            }
-        }
+        this.syncPlayersFromTournamentTeams();
 
         // Save states
         this.saveStateToFile('gameState.json', this.config.gameState);

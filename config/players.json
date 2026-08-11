@@ -2,9 +2,9 @@
     "player_0": {
         "token": "yAv2hT4URx4U",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "NXR TenZ",
+            "username": "L E V I",
             "agent": "jett",
             "health": 100,
             "shield": 50,
@@ -20,15 +20,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p1",
-            "name": "TenZ"
+            "name": "L E V I",
+            "tag": "H1NT",
+            "riot_id": "L E V I#H1NT"
         }
     },
     "player_1": {
         "token": "BU5QwbxxTUxJ",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "NXR ShahZaM",
+            "username": "uZee",
             "agent": "sova",
             "health": 85,
             "shield": 25,
@@ -44,15 +46,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p2",
-            "name": "ShahZaM"
+            "name": "uZee",
+            "tag": "csgo",
+            "riot_id": "uZee#csgo"
         }
     },
     "player_2": {
         "token": "BO3iZbRuutAC",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "NXR dapr",
+            "username": "ZL Mugiwara",
             "agent": "cypher",
             "health": 100,
             "shield": 50,
@@ -68,15 +72,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p3",
-            "name": "dapr"
+            "name": "ZL Mugiwara",
+            "tag": "ZLT",
+            "riot_id": "ZL Mugiwara#ZLT"
         }
     },
     "player_3": {
         "token": "tssEEXUyVlOw",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "NXR SicK",
+            "username": "Fr0st",
             "agent": "phoenix",
             "health": 100,
             "shield": 50,
@@ -92,15 +98,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p4",
-            "name": "SicK"
+            "name": "Fr0st",
+            "tag": "Pavam",
+            "riot_id": "Fr0st#Pavam"
         }
     },
     "player_4": {
         "token": "E5py5gH0eYty",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "NXR zombs",
+            "username": "ZL Sensei",
             "agent": "omen",
             "health": 59,
             "shield": 50,
@@ -116,15 +124,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p5",
-            "name": "zombs"
+            "name": "ZL Sensei",
+            "tag": "ZLT",
+            "riot_id": "ZL Sensei#ZLT"
         }
     },
     "player_5": {
         "token": "Jm8p0vPGOadu",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "IDLI Boaster",
+            "username": "LEVIXX",
             "agent": "omen",
             "health": 100,
             "shield": 50,
@@ -140,15 +150,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p6",
-            "name": "Boaster"
+            "name": "LEVIXX",
+            "tag": "P4NEL",
+            "riot_id": "LEVIXX#P4NEL"
         }
     },
     "player_6": {
         "token": "U8o5cmidKepp",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "IDLI Derke",
+            "username": "always alone",
             "agent": "raze",
             "health": 100,
             "shield": 50,
@@ -164,15 +176,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p7",
-            "name": "Derke"
+            "name": "always alone",
+            "tag": "LBgod",
+            "riot_id": "always alone#LBgod"
         }
     },
     "player_7": {
         "token": "pMcI01u83OGZ",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "IDLI Chronicle",
+            "username": "See you in Hell",
             "agent": "viper",
             "health": 40,
             "shield": 0,
@@ -188,15 +202,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p8",
-            "name": "Chronicle"
+            "name": "See you in Hell",
+            "tag": "Demon",
+            "riot_id": "See you in Hell #Demon"
         }
     },
     "player_8": {
         "token": "hAkerHVS8F3E",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "IDLI Alfajer",
+            "username": "Apz",
             "agent": "killjoy",
             "health": 100,
             "shield": 50,
@@ -212,15 +228,17 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p9",
-            "name": "Alfajer"
+            "name": "Apz",
+            "tag": "143",
+            "riot_id": "Apz #143"
         }
     },
     "player_9": {
         "token": "Y3im7MUP9pzj",
         "is_registered": true,
-        "last_updated": 1786438291217,
+        "last_updated": 1786451002113,
         "data": {
-            "username": "IDLI Leo",
+            "username": "McB Obsido",
             "agent": "fade",
             "health": 100,
             "shield": 50,
@@ -236,7 +254,9 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p10",
-            "name": "Leo"
+            "name": "McB Obsido",
+            "tag": "McB5",
+            "riot_id": "McB Obsido #McB5"
         }
     }
 }
