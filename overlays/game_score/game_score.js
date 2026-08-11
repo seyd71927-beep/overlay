@@ -39,6 +39,9 @@ class helValorantGameScore {
         if (typeof io !== 'undefined') {
             const socket = io();
             socket.on('stateUpdate', (state) => {
+                if (state.team_1 || state.team_2) {
+                    this.init();
+                }
                 if (state.tournament_stage !== undefined) {
                     this.updateTournamentStage(state.tournament_stage);
                 }
@@ -160,8 +163,9 @@ class helValorantGameScore {
     }
 
     formatTeamDisplay(teamAbbr, teamInfo, teamImgLink) {
+        const fallback = '../visual_assets/ZENX_RED.png';
         return `<div class="team-information-container">
-                    <img class="team-icon" src="${teamImgLink}" alt="" onerror="this.src='../visual_assets/blueTeamPlaceholder.jpg'">
+                    <img class="team-icon" src="${teamImgLink || fallback}" alt="" onerror="if (!this.dataset.triedProxy && '${teamImgLink}' && '${teamImgLink}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${teamImgLink}'); } else { this.onerror=null; this.src='../visual_assets/ZENX_RED.png'; }">
                     <span class="team-name-and-seed">
                         <span class="name">${teamAbbr}</span>
                         <span class="seed">${teamInfo}</span>
