@@ -266,14 +266,38 @@ function copyBridgeCmd() {
     }
 }
 
-function copyObsScoreboardUrl() {
-    const obsUrl = `${window.location.origin}/game_score`;
-    navigator.clipboard.writeText(obsUrl);
+function copyOverlayUrl(path, title) {
+    const fullUrl = `${window.location.origin}${path}`;
+    navigator.clipboard.writeText(fullUrl);
     if (typeof successAlertLowerBottom === 'function') {
-        successAlertLowerBottom('Copied Scoreboard OBS Browser Source Link!');
+        successAlertLowerBottom(`Copied ${title} OBS Browser Source Link!`);
     } else {
-        alert('Copied OBS URL:\n' + obsUrl);
+        alert(`Copied ${title} OBS URL:\n` + fullUrl);
     }
+}
+
+function copyObsScoreboardUrl() {
+    copyOverlayUrl('/game_score', 'Scoreboard');
+}
+
+function copyObsPlayerStatsUrl() {
+    copyOverlayUrl('/player_stats', 'Player Stats HUD');
+}
+
+function copyObsMapPicksUrl() {
+    copyOverlayUrl('/map_picks', 'Map Pick & Ban');
+}
+
+function copyObsCastersUrl() {
+    copyOverlayUrl('/caster_desk', 'Caster Desk');
+}
+
+function copyObsUpcomingMapsUrl() {
+    copyOverlayUrl('/upcomming_maps', 'Upcoming Maps');
+}
+
+function copyObsTimerUrl() {
+    copyOverlayUrl('/timer', 'Intermission Timer');
 }
 
 function openMobileAdmin() {

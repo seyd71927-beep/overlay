@@ -143,11 +143,29 @@
 
                         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                             <button class="btn btn-primary" style="padding: 7px 14px; font-size: 0.8rem;" onclick="copyAdminUrl()">
-                                <i class="fa-solid fa-mobile-screen"></i> Copy Admin Control Link
+                                <i class="fa-solid fa-mobile-screen"></i> Copy Admin Link
                             </button>
                             <button class="btn" style="padding: 7px 14px; font-size: 0.8rem; background: rgba(255,255,255,0.08);" onclick="copyObsScoreboardUrl()">
-                                <i class="fa-solid fa-video"></i> Copy Scoreboard OBS Link
+                                <i class="fa-solid fa-trophy" style="color: var(--accent-primary);"></i> Scoreboard (/game_score)
                             </button>
+                            <button class="btn" style="padding: 7px 14px; font-size: 0.8rem; background: rgba(255,255,255,0.08);" onclick="copyObsPlayerStatsUrl()">
+                                <i class="fa-solid fa-users" style="color: #00f2fe;"></i> Player Stats (/player_stats)
+                            </button>
+                            <button class="btn" style="padding: 7px 14px; font-size: 0.8rem; background: rgba(255,255,255,0.08);" onclick="copyObsMapPicksUrl()">
+                                <i class="fa-solid fa-map-location-dot" style="color: #b388f5;"></i> Map Ban / Picks (/map_picks)
+                            </button>
+                            <button class="btn" style="padding: 7px 14px; font-size: 0.8rem; background: rgba(255,255,255,0.08);" onclick="copyObsUpcomingMapsUrl()">
+                                <i class="fa-solid fa-calendar-days" style="color: #7ed6df;"></i> Upcoming Maps (/upcomming_maps)
+                            </button>
+                            <button class="btn" style="padding: 7px 14px; font-size: 0.8rem; background: rgba(255,255,255,0.08);" onclick="copyObsCastersUrl()">
+                                <i class="fa-solid fa-microphone-lines" style="color: #ffbe76;"></i> Casters (/caster_desk)
+                            </button>
+                            <button class="btn" style="padding: 7px 14px; font-size: 0.8rem; background: rgba(255,255,255,0.08);" onclick="copyObsTimerUrl()">
+                                <i class="fa-solid fa-stopwatch" style="color: #00e676;"></i> Timer (/timer)
+                            </button>
+                            <a href="/" target="_blank" class="btn btn-accent" style="padding: 7px 14px; font-size: 0.8rem; text-decoration: none;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open All Overlays Hub
+                            </a>
                         </div>
                     </div>
                 </div>
