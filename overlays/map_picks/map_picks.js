@@ -64,11 +64,7 @@ class MapPickVetoOverlay {
             let headerText = `${teamName} PICK`;
             let sideBadgeHtml = '';
 
-            if (isLast) {
-                cardTypeClass = 'decider-card';
-                headerText = 'DECIDER MAP';
-                sideBadgeHtml = `<div class="map-picked-by-side decider-side"><i class="fa-solid fa-trophy" style="margin-right: 6px;"></i> DECIDER</div>`;
-            } else if (action === 'ban') {
+            if (action === 'ban') {
                 cardTypeClass = 'ban-card';
                 headerText = `${teamName} BAN`;
                 sideBadgeHtml = `
@@ -76,6 +72,10 @@ class MapPickVetoOverlay {
                     <i class="fa-solid fa-xmark"></i>
                     <span>BANNED</span>
                 </div>`;
+            } else if (isLast) {
+                cardTypeClass = 'decider-card';
+                headerText = 'DECIDER MAP';
+                sideBadgeHtml = `<div class="map-picked-by-side decider-side"><i class="fa-solid fa-trophy" style="margin-right: 6px;"></i> DECIDER</div>`;
             } else if (action === 'attack') {
                 cardTypeClass = 'pick-card';
                 headerText = `${teamName} PICK`;
@@ -84,6 +84,10 @@ class MapPickVetoOverlay {
                 cardTypeClass = 'pick-card';
                 headerText = `${teamName} PICK`;
                 sideBadgeHtml = `<div class="map-picked-by-side defense-side"><i class="fa-solid fa-shield-halved" style="margin-right: 6px;"></i> ${teamName} DEF</div>`;
+            } else {
+                cardTypeClass = 'pick-card';
+                headerText = `${teamName} PICK`;
+                sideBadgeHtml = `<div class="map-picked-by-side"><i class="fa-solid fa-check" style="margin-right: 6px;"></i> PICKED</div>`;
             }
 
             html += `
