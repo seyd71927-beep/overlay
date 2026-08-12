@@ -220,6 +220,103 @@ class fileLoader {
         this.saveStateToFile('players.json', this.config.players);
     }
 
+    getFormattedPlayerStats() {
+        if (!this.config.players) return { status: false, team_1: { players: [] }, team_2: { players: [] } };
+        const switchSides = this.config.gameState?.switch_sides || false;
+
+        let res = {
+            status: true,
+            switch_teams: switchSides,
+            team_1: {
+                name: this.config.gameState?.team_1?.name || "TEAM 1",
+                abbreviation: this.config.gameState?.team_1?.abbreviation || "T1",
+                icon: this.config.gameState?.team_1?.icon_link || "../visual_assets/blueTeamPlaceholder.jpg",
+                players: []
+            },
+            team_2: {
+                name: this.config.gameState?.team_2?.name || "TEAM 2",
+                abbreviation: this.config.gameState?.team_2?.abbreviation || "T2",
+                icon: this.config.gameState?.team_2?.icon_link || "../visual_assets/redTeamPlaceholder.jpg",
+                players: []
+            }
+        };
+
+        for (let i = 0; i < 5; i++) {
+            const key = `player_${i}`;
+            const p = this.config.players[key] || {};
+            const d = p.data || {};
+            const playerObj = {
+                index: i,
+                name: d.name || d.username || `Player ${i + 1}`,
+                username: d.username || d.name || `Player ${i + 1}`,
+                agent: (d.agent || 'jett').toLowerCase(),
+                health: typeof d.health !== 'undefined' ? d.health : 100,
+                shield: typeof d.shield !== 'undefined' ? d.shield : 50,
+                weapon: (d.weapon || 'vandal').toLowerCase(),
+                credits: typeof d.credits !== 'undefined' ? d.credits : 800,
+                kills: typeof d.kills !== 'undefined' ? d.kills : 0,
+                deaths: typeof d.deaths !== 'undefined' ? d.deaths : 0,
+                assists: typeof d.assists !== 'undefined' ? d.assists : 0,
+                score: typeof d.score !== 'undefined' ? d.score : 0,
+                alive: d.is_dead === false || d.alive === true,
+                has_spike: !!d.has_spike,
+                ult_points: typeof d.ult_points_gained !== 'undefined' ? d.ult_points_gained : (d.ult_points || 0),
+                ult_max: typeof d.ult_points_needed !== 'undefined' ? d.ult_points_needed : (d.ult_max || 7),
+                is_registered: !!p.is_registered
+            };
+            res.team_1.players.push(playerObj);
+            res.team_1[`player_${i}`] = playerObj;
+        }
+
+        for (let i = 5; i < 10; i++) {
+            const key = `player_${i}`;
+            const p = this.config.players[key] || {};
+            const d = p.data || {};
+            const playerObj = {
+                index: i,
+                name: d.name || d.username || `Player ${i - 4}`,
+                username: d.username || d.name || `Player ${i - 4}`,
+                agent: (d.agent || 'sova').toLowerCase(),
+                health: typeof d.health !== 'undefined' ? d.health : 100,
+                shield: typeof d.shield !== 'undefined' ? d.shield : 50,
+                weapon: (d.weapon || 'phantom').toLowerCase(),
+                credits: typeof d.credits !== 'undefined' ? d.credits : 800,
+                kills: typeof d.kills !== 'undefined' ? d.kills : 0,
+                deaths: typeof d.deaths !== 'undefined' ? d.deaths : 0,
+                assists: typeof d.assists !== 'undefined' ? d.assists : 0,
+                score: typeof d.score !== 'undefined' ? d.score : 0,
+                alive: d.is_dead === false || d.alive === true,
+                has_spike: !!d.has_spike,
+                ult_points: typeof d.ult_points_gained !== 'undefined' ? d.ult_points_gained : (d.ult_points || 0),
+                ult_max: typeof d.ult_points_needed !== 'undefined' ? d.ult_points_needed : (d.ult_max || 7),
+                is_registered: !!p.is_registered
+            };
+            res.team_2.players.push(playerObj);
+            res.team_2[`player_${i - 5}`] = playerObj;
+        }
+
+        return res;
+    }
+
+    updatePlayerDirect(playerIndex, playerData) {
+        const key = `player_${playerIndex}`;
+        if (!this.config.players[key]) {
+            this.config.players[key] = { is_registered: true, data: {} };
+        }
+        this.config.players[key].data = {
+            ...this.config.players[key].data,
+            ...playerData
+        };
+        if (typeof playerData.name !== 'undefined') this.config.players[key].data.username = playerData.name;
+        if (typeof playerData.ult_points !== 'undefined') this.config.players[key].data.ult_points_gained = playerData.ult_points;
+        if (typeof playerData.ult_max !== 'undefined') this.config.players[key].data.ult_points_needed = playerData.ult_max;
+        if (typeof playerData.alive !== 'undefined') this.config.players[key].data.is_dead = !playerData.alive;
+
+        this.config.players[key].last_updated = Date.now();
+        this.saveStateToFile('players.json', this.config.players);
+        return true;
+    }
+
     syncPlayersFromTournamentTeams() {
         const tournament = this.getTournamentData();
         if (!tournament || !Array.isArray(tournament.teams) || tournament.teams.length === 0) return;

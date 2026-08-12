@@ -2,7 +2,7 @@
     "player_0": {
         "token": "yAv2hT4URx4U",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864591,
         "data": {
             "username": "L E V I",
             "agent": "jett",
@@ -20,15 +20,22 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p1",
-            "name": "L E V I",
+            "name": "TenZ",
             "tag": "H1NT",
-            "riot_id": "L E V I#H1NT"
+            "riot_id": "L E V I#H1NT",
+            "kills": 24,
+            "deaths": 11,
+            "assists": 5,
+            "score": 310,
+            "alive": true,
+            "ult_points": 6,
+            "ult_max": 7
         }
     },
     "player_1": {
         "token": "BU5QwbxxTUxJ",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "uZee",
             "agent": "sova",
@@ -54,7 +61,7 @@
     "player_2": {
         "token": "BO3iZbRuutAC",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "ZL Mugiwara",
             "agent": "cypher",
@@ -80,7 +87,7 @@
     "player_3": {
         "token": "tssEEXUyVlOw",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "Fr0st",
             "agent": "phoenix",
@@ -106,7 +113,7 @@
     "player_4": {
         "token": "E5py5gH0eYty",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "ZL Sensei",
             "agent": "omen",
@@ -132,7 +139,7 @@
     "player_5": {
         "token": "Jm8p0vPGOadu",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "LEVIXX",
             "agent": "omen",
@@ -158,7 +165,7 @@
     "player_6": {
         "token": "U8o5cmidKepp",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "always alone",
             "agent": "raze",
@@ -184,7 +191,7 @@
     "player_7": {
         "token": "pMcI01u83OGZ",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "See you in Hell",
             "agent": "viper",
@@ -210,7 +217,7 @@
     "player_8": {
         "token": "hAkerHVS8F3E",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "Apz",
             "agent": "killjoy",
@@ -236,7 +243,7 @@
     "player_9": {
         "token": "Y3im7MUP9pzj",
         "is_registered": true,
-        "last_updated": 1786451555845,
+        "last_updated": 1786553864568,
         "data": {
             "username": "McB Obsido",
             "agent": "fade",

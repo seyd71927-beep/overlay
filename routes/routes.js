@@ -300,11 +300,11 @@ router.post('/stop_timer', upload.none(), (req, res) => {
 });
 
 router.get('/get_game_configuration', (req, res) => {
-    return res.status(200).send(dataBus.getGameConfiguration());
+    return res.status(200).json(dataBus.getGameConfiguration() || {});
 });
 
 router.get('/get_game_state', (req, res) => {
-    return res.status(200).send(dataBus.getGameState());
+    return res.status(200).json(dataBus.getGameState() || {});
 });
 
 router.post('/change_game_state', upload.none(), (req, res) => {

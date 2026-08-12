@@ -5,5 +5,48 @@
     "spike_down": false,
     "switch_sides": false,
     "round_over": false,
-    "tournament_stage": "Grand Finals"
+    "tournament_stage": "Grand Finals",
+    "game_flow": {
+        "map_1": {
+            "state": "current",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "team_1",
+            "map": "breeze"
+        },
+        "map_2": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "team_2",
+            "map": "haven"
+        },
+        "map_3": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "",
+            "map": "sunset"
+        }
+    }
+}       "map_4": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "team_2",
+            "map": "pearl"
+        },
+        "map_5": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "",
+            "map": "sunset"
+        }
+    }
 }
