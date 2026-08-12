@@ -670,6 +670,10 @@ class fileLoader {
     applyMapBanData(mapBanData) {
         if (!mapBanData) return false;
 
+        if (!this.config.mapPicks) {
+            this.config.mapPicks = { teams: ['TEAM 1', 'TEAM 2'], picks: [], series_type: 'bo3' };
+        }
+
         // Determine series format if available
         let bo = mapBanData.bo || mapBanData.bestOf || (mapBanData.lobby ? mapBanData.lobby.bo : null);
         if (bo === 1 || bo === '1' || bo === 'bo1') this.config.mapPicks.series_type = 'bo1';
@@ -677,45 +681,106 @@ class fileLoader {
         else this.config.mapPicks.series_type = 'bo3';
 
         // Extract team names if available
-        let teamNames = mapBanData.teamNames || (mapBanData.lobby ? mapBanData.lobby.teamNames : null);
-        if (Array.isArray(teamNames) && teamNames.length >= 2) {
-            this.config.mapPicks.teams = [teamNames[0], teamNames[1]];
-            if (this.config.gameState.team_1) this.config.gameState.team_1.abbreviation = teamNames[0];
-            if (this.config.gameState.team_2) this.config.gameState.team_2.abbreviation = teamNames[1];
+        let teamNames = [];
+        if (Array.isArray(mapBanData.teams) && mapBanData.teams.length >= 2) {
+            const t1 = typeof mapBanData.teams[0] === 'object' ? mapBanData.teams[0]?.name : mapBanData.teams[0];
+            const t2 = typeof mapBanData.teams[1] === 'object' ? mapBanData.teams[1]?.name : mapBanData.teams[1];
+            if (t1 && String(t1).trim()) teamNames[0] = String(t1).trim();
+            if (t2 && String(t2).trim()) teamNames[1] = String(t2).trim();
+        } else if (Array.isArray(mapBanData.teamNames) && mapBanData.teamNames.length >= 2) {
+            if (mapBanData.teamNames[0]) teamNames[0] = String(mapBanData.teamNames[0]).trim();
+            if (mapBanData.teamNames[1]) teamNames[1] = String(mapBanData.teamNames[1]).trim();
+        } else if (mapBanData.lobby && Array.isArray(mapBanData.lobby.teamNames) && mapBanData.lobby.teamNames.length >= 2) {
+            if (mapBanData.lobby.teamNames[0]) teamNames[0] = String(mapBanData.lobby.teamNames[0]).trim();
+            if (mapBanData.lobby.teamNames[1]) teamNames[1] = String(mapBanData.lobby.teamNames[1]).trim();
         }
 
-        // Extract picks and bans from logs or picks array
-        let rawLogs = mapBanData.log || mapBanData.logs || mapBanData.picks || mapBanData.events || [];
-        if (Array.isArray(rawLogs) && rawLogs.length > 0) {
+        if (teamNames[0] || teamNames[1]) {
+            const currentTeams = this.config.mapPicks.teams || ['TEAM 1', 'TEAM 2'];
+            this.config.mapPicks.teams = [
+                teamNames[0] || currentTeams[0] || 'TEAM 1',
+                teamNames[1] || currentTeams[1] || 'TEAM 2'
+            ];
+            if (this.config.gameState && this.config.gameState.team_1 && teamNames[0]) {
+                this.config.gameState.team_1.abbreviation = teamNames[0];
+            }
+            if (this.config.gameState && this.config.gameState.team_2 && teamNames[1]) {
+                this.config.gameState.team_2.abbreviation = teamNames[1];
+            }
+        }
+
+        // Extract picks and bans from bans array, logs, or picks array
+        let rawItems = [];
+        if (Array.isArray(mapBanData.bans) && mapBanData.bans.length > 0) {
+            rawItems = mapBanData.bans;
+        } else if (Array.isArray(mapBanData.log) && mapBanData.log.length > 0) {
+            rawItems = mapBanData.log;
+        } else if (Array.isArray(mapBanData.logs) && mapBanData.logs.length > 0) {
+            rawItems = mapBanData.logs;
+        } else if (Array.isArray(mapBanData.picks) && mapBanData.picks.length > 0) {
+            rawItems = mapBanData.picks;
+        } else if (Array.isArray(mapBanData.events) && mapBanData.events.length > 0) {
+            rawItems = mapBanData.events;
+        }
+
+        if (rawItems.length > 0) {
             let parsedPicks = [];
-            for (let i = 0; i < rawLogs.length; i++) {
-                const item = rawLogs[i];
-                let mapName = 'ascent';
+            for (let i = 0; i < rawItems.length; i++) {
+                const item = rawItems[i];
+                if (!item) continue;
+
+                let mapName = '';
                 let action = 'ban';
 
                 if (Array.isArray(item)) {
                     mapName = (item[0] || 'ascent').toLowerCase();
                     action = (item[1] || 'ban').toLowerCase();
                 } else if (typeof item === 'object') {
-                    mapName = (item.map || item.mapName || item.mapId || 'ascent').toLowerCase();
-                    let act = (item.action || item.type || '').toLowerCase();
-                    let side = (item.side || item.selectedSide || '').toLowerCase();
+                    mapName = (item.map || item.mapName || item.mapId || item.name || '').toLowerCase();
 
-                    if (act.includes('ban') || act === 'banned') {
+                    let votetype = (item.votetype || item.type || item.action || '').toLowerCase();
+                    let status = Number(item.status);
+                    let side = (item.side || item.selectedSide || '').toLowerCase();
+                    let teamPickedSide = item.teamPickedSide;
+                    let teamSides = item.teamSides;
+
+                    // If map is not yet selected in MapBan, fallback to existing slot or default
+                    if (!mapName) {
+                        if (this.config.mapPicks.picks && this.config.mapPicks.picks[i] && this.config.mapPicks.picks[i][0]) {
+                            mapName = this.config.mapPicks.picks[i][0].toLowerCase();
+                        } else {
+                            const defaultMaps = ['ascent', 'bind', 'haven', 'split', 'breeze', 'lotus', 'sunset'];
+                            mapName = defaultMaps[i % defaultMaps.length];
+                        }
+                    }
+
+                    if (votetype.includes('ban') || status === 1 || status === 2 || status === 20) {
                         action = 'ban';
-                    } else if (side.includes('atk') || side.includes('attack') || act.includes('attack')) {
-                        action = 'attack';
-                    } else if (side.includes('def') || side.includes('defense') || act.includes('defense')) {
-                        action = 'defense';
-                    } else if (act.includes('pick') || act === 'picked') {
-                        action = 'attack';
+                    } else if (votetype.includes('pick') || votetype.includes('decider') || status === 3 || status === 4 || status === 5) {
+                        if (side.includes('def') || side.includes('defense')) {
+                            action = 'defense';
+                        } else if (side.includes('atk') || side.includes('attack')) {
+                            action = 'attack';
+                        } else if (teamPickedSide !== null && teamPickedSide !== undefined && Array.isArray(teamSides)) {
+                            action = teamSides[teamPickedSide] === 1 ? 'defense' : 'attack';
+                        } else if (teamPickedSide === 1) {
+                            action = 'defense';
+                        } else {
+                            action = 'attack';
+                        }
                     } else {
-                        action = 'attack';
+                        action = 'ban';
                     }
                 }
-                parsedPicks.push([mapName, action]);
+
+                if (mapName) {
+                    parsedPicks.push([mapName, action]);
+                }
             }
-            this.config.mapPicks.picks = parsedPicks;
+
+            if (parsedPicks.length > 0) {
+                this.config.mapPicks.picks = parsedPicks;
+            }
         }
 
         this.reCalculateMapFlow();

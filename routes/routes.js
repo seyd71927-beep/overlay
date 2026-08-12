@@ -470,6 +470,138 @@ router.post('/set_series_format', upload.none(), (req, res) => {
     return res.status(200).send({ status: true, mapPicks: updated, gameConfig: dataBus.getGameConfiguration() });
 });
 
+function httpGetWithRedirects(targetUrl, headers = {}, maxRedirects = 5, timeout = 7000) {
+    const https = require('https');
+    const http = require('http');
+    return new Promise((resolve) => {
+        if (maxRedirects <= 0) return resolve({ error: 'Too many redirects' });
+        try {
+            const parsedUrl = new URL(targetUrl);
+            const client = parsedUrl.protocol === 'http:' ? http : https;
+            
+            const req = client.get({
+                hostname: parsedUrl.hostname,
+                port: parsedUrl.port || (parsedUrl.protocol === 'http:' ? 80 : 443),
+                path: parsedUrl.pathname + parsedUrl.search,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'application/json, text/html, */*',
+                    ...headers
+                },
+                timeout: timeout
+            }, (res) => {
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    let nextUrl = res.headers.location;
+                    if (!nextUrl.startsWith('http://') && !nextUrl.startsWith('https://')) {
+                        nextUrl = parsedUrl.origin + nextUrl;
+                    }
+                    return resolve(httpGetWithRedirects(nextUrl, headers, maxRedirects - 1, timeout));
+                }
+
+                let body = '';
+                res.on('data', chunk => body += chunk);
+                res.on('end', () => resolve({ status: res.statusCode, data: body }));
+            });
+
+            req.on('error', (err) => resolve({ error: err.message }));
+            req.on('timeout', () => { req.destroy(); resolve({ error: 'timeout' }); });
+        } catch (e) {
+            resolve({ error: e.message });
+        }
+    });
+}
+
+async function resolveMapBanData(input) {
+    if (!input || typeof input !== 'string') return null;
+    input = input.trim();
+
+    // 1. Direct match for view/log/bandata in URL
+    let viewMatch = input.match(/\/ban\/(?:view|log)\/([a-zA-Z0-9]+)/i) || input.match(/\/bandata\/([a-zA-Z0-9]+)/i);
+    let potentialViewId = viewMatch ? viewMatch[1] : null;
+
+    if (potentialViewId) {
+        const res = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${potentialViewId}`, {
+            'X-Requested-With': 'XMLHttpRequest'
+        });
+        if (res && res.data) {
+            try {
+                const parsed = JSON.parse(res.data);
+                if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
+                    return { viewId: potentialViewId, data: parsed };
+                }
+            } catch (e) {}
+        }
+    }
+
+    // 2. If it's a URL (like a lobby or team URL)
+    if (input.startsWith('http://') || input.startsWith('https://') || input.includes('mapban.gg')) {
+        let fullUrl = input.startsWith('http') ? input : `https://${input}`;
+        const pageRes = await httpGetWithRedirects(fullUrl);
+        if (pageRes && pageRes.data) {
+            let m = pageRes.data.match(/viewID\s*=\s*["']([a-zA-Z0-9]+)["']/i) ||
+                    pageRes.data.match(/\/ban\/view\/([a-zA-Z0-9]+)/i) ||
+                    pageRes.data.match(/\/bandata\/([a-zA-Z0-9]+)/i) ||
+                    pageRes.data.match(/id="view"[^>]*>https?:\/\/[^\/]+\/ban\/view\/([a-zA-Z0-9]+)/i);
+            if (m) {
+                const extractedId = m[1];
+                const res = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${extractedId}`, {
+                    'X-Requested-With': 'XMLHttpRequest'
+                });
+                if (res && res.data) {
+                    try {
+                        const parsed = JSON.parse(res.data);
+                        if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
+                            return { viewId: extractedId, data: parsed };
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    // 3. Raw alphanumeric code (e.g. 10-32 chars)
+    let rawCodeMatch = input.match(/^[a-zA-Z0-9]{10,32}$/);
+    if (rawCodeMatch) {
+        const code = rawCodeMatch[0];
+        // Try bandata directly
+        let res = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${code}`, {
+            'X-Requested-With': 'XMLHttpRequest'
+        });
+        if (res && res.data) {
+            try {
+                const parsed = JSON.parse(res.data);
+                if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
+                    return { viewId: code, data: parsed };
+                }
+            } catch (e) {}
+        }
+
+        // Try as lobby page
+        let lobbyPage = await httpGetWithRedirects(`https://www.mapban.gg/en/ban/lobby/${code}`);
+        if (lobbyPage && lobbyPage.data) {
+            let m = lobbyPage.data.match(/viewID\s*=\s*["']([a-zA-Z0-9]+)["']/i) ||
+                    lobbyPage.data.match(/\/ban\/view\/([a-zA-Z0-9]+)/i) ||
+                    lobbyPage.data.match(/id="view"[^>]*>https?:\/\/[^\/]+\/ban\/view\/([a-zA-Z0-9]+)/i);
+            if (m) {
+                const extractedId = m[1];
+                let res2 = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${extractedId}`, {
+                    'X-Requested-With': 'XMLHttpRequest'
+                });
+                if (res2 && res2.data) {
+                    try {
+                        const parsed = JSON.parse(res2.data);
+                        if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
+                            return { viewId: extractedId, data: parsed };
+                        }
+                    } catch (e) {}
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
 router.post('/sync_mapban', upload.none(), async (req, res) => {
     const { urlOrId, jsonData } = req.body;
 
@@ -479,7 +611,12 @@ router.post('/sync_mapban', upload.none(), async (req, res) => {
             const updated = dataBus.applyMapBanData(parsed);
             emitEvent(req, 'mapPicksUpdate', updated);
             emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
-            return res.status(200).send({ status: true, message: 'Imported MapBan.gg data successfully', mapPicks: updated });
+            return res.status(200).send({ 
+                status: true, 
+                message: 'Imported MapBan.gg data successfully', 
+                mapPicks: updated,
+                gameConfig: dataBus.getGameConfiguration()
+            });
         } catch (e) {
             return res.status(400).send({ status: false, message: 'Invalid JSON data' });
         }
@@ -489,58 +626,22 @@ router.post('/sync_mapban', upload.none(), async (req, res) => {
         return res.status(400).send({ status: false, message: 'Please provide a MapBan.gg URL or Room ID' });
     }
 
-    let input = urlOrId.trim();
-    let match = input.match(/([a-zA-Z0-9]{10,32})/);
-    let viewId = match ? match[1] : input;
+    const resolved = await resolveMapBanData(urlOrId);
 
-    const tryUrls = [
-        `https://api.mapban.gg/v1/ban/log/${viewId}`,
-        `https://api.mapban.gg/v1/ban/view/${viewId}`
-    ];
-
-    const https = require('https');
-    let fetchedData = null;
-
-    for (const targetUrl of tryUrls) {
-        try {
-            const result = await new Promise((resolve) => {
-                const reqHttps = https.get(targetUrl, {
-                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Accept': 'application/json' },
-                    timeout: 4000
-                }, (response) => {
-                    let body = '';
-                    response.on('data', chunk => body += chunk);
-                    response.on('end', () => {
-                        try {
-                            const parsed = JSON.parse(body);
-                            resolve(parsed);
-                        } catch (e) {
-                            resolve(null);
-                        }
-                    });
-                });
-                reqHttps.on('error', () => resolve(null));
-                reqHttps.on('timeout', () => { reqHttps.destroy(); resolve(null); });
-            });
-
-            if (result && (result.log || result.lobby || result.picks || result.teamNames)) {
-                fetchedData = result;
-                break;
-            }
-        } catch (e) {}
-    }
-
-    if (fetchedData) {
-        const updated = dataBus.applyMapBanData(fetchedData);
+    if (resolved && resolved.data) {
+        const updated = dataBus.applyMapBanData(resolved.data);
         emitEvent(req, 'mapPicksUpdate', updated);
         emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
-        return res.status(200).send({ status: true, message: `Synced from MapBan.gg (${viewId})!`, mapPicks: updated });
-    } else {
         return res.status(200).send({ 
             status: true, 
-            warning: true, 
-            viewId: viewId,
-            message: `MapBan.gg linked: ID ${viewId}. You can also use Browser Source URL https://www.mapban.gg/ban/view/${viewId} in OBS!` 
+            message: `Synced from MapBan.gg (${resolved.viewId})!`, 
+            mapPicks: updated,
+            gameConfig: dataBus.getGameConfiguration()
+        });
+    } else {
+        return res.status(400).send({ 
+            status: false, 
+            message: 'Could not fetch data from MapBan.gg. Please verify the URL or Room ID and ensure the lobby exists.'
         });
     }
 });

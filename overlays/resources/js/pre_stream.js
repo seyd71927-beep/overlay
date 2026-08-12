@@ -33,6 +33,14 @@ class adminPreStreamInterface {
         if (this.bo3Btn) this.bo3Btn.addEventListener('click', () => this.setSeriesFormat('bo3'));
         if (this.bo5Btn) this.bo5Btn.addEventListener('click', () => this.setSeriesFormat('bo5'));
         if (this.syncMapbanBtn) this.syncMapbanBtn.addEventListener('click', () => this.syncMapBan());
+        if (this.mapbanInput) {
+            this.mapbanInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.syncMapBan();
+                }
+            });
+        }
     }
 
     async syncMapBan() {
@@ -45,6 +53,12 @@ class adminPreStreamInterface {
                 alert('Please enter a MapBan.gg URL or ID');
             }
             return;
+        }
+
+        const origBtnHtml = this.syncMapbanBtn ? this.syncMapbanBtn.innerHTML : '';
+        if (this.syncMapbanBtn) {
+            this.syncMapbanBtn.disabled = true;
+            this.syncMapbanBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Syncing...';
         }
 
         const formData = new FormData();
@@ -62,14 +76,25 @@ class adminPreStreamInterface {
                 } else {
                     alert(data.message || 'Synced MapBan.gg!');
                 }
+                await this.loadTeamConfiguration();
                 await this.constructMapPickInterface();
             } else {
                 if (typeof errorAlertLowerBottom === 'function') {
                     errorAlertLowerBottom(data.message || 'Failed to sync from MapBan.gg');
+                } else {
+                    alert(data.message || 'Failed to sync from MapBan.gg');
                 }
             }
         } catch (e) {
             console.error('Error syncing mapban:', e);
+            if (typeof errorAlertLowerBottom === 'function') {
+                errorAlertLowerBottom('Network error while syncing MapBan.gg');
+            }
+        } finally {
+            if (this.syncMapbanBtn) {
+                this.syncMapbanBtn.disabled = false;
+                this.syncMapbanBtn.innerHTML = origBtnHtml;
+            }
         }
     }
 
