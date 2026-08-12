@@ -470,121 +470,82 @@ router.post('/set_series_format', upload.none(), (req, res) => {
     return res.status(200).send({ status: true, mapPicks: updated, gameConfig: dataBus.getGameConfiguration() });
 });
 
-function httpGetWithRedirects(targetUrl, headers = {}, maxRedirects = 5, timeout = 7000) {
-    const https = require('https');
-    const http = require('http');
-    return new Promise((resolve) => {
-        if (maxRedirects <= 0) return resolve({ error: 'Too many redirects' });
-        try {
-            const parsedUrl = new URL(targetUrl);
-            const client = parsedUrl.protocol === 'http:' ? http : https;
-            
-            const req = client.get({
-                hostname: parsedUrl.hostname,
-                port: parsedUrl.port || (parsedUrl.protocol === 'http:' ? 80 : 443),
-                path: parsedUrl.pathname + parsedUrl.search,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'application/json, text/html, */*',
-                    ...headers
-                },
-                timeout: timeout
-            }, (res) => {
-                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                    let nextUrl = res.headers.location;
-                    if (!nextUrl.startsWith('http://') && !nextUrl.startsWith('https://')) {
-                        nextUrl = parsedUrl.origin + nextUrl;
-                    }
-                    return resolve(httpGetWithRedirects(nextUrl, headers, maxRedirects - 1, timeout));
-                }
-
-                let body = '';
-                res.on('data', chunk => body += chunk);
-                res.on('end', () => resolve({ status: res.statusCode, data: body }));
-            });
-
-            req.on('error', (err) => resolve({ error: err.message }));
-            req.on('timeout', () => { req.destroy(); resolve({ error: 'timeout' }); });
-        } catch (e) {
-            resolve({ error: e.message });
-        }
-    });
-}
-
 async function resolveMapBanData(input) {
     if (!input || typeof input !== 'string') return null;
     input = input.trim();
 
-    // Helper to test if a raw string is valid JSON bandata
-    const checkBandata = async (id) => {
-        if (!id) return null;
-        const res = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${id}`, {
-            'X-Requested-With': 'XMLHttpRequest'
-        });
-        if (res && res.data) {
-            try {
-                const parsed = JSON.parse(res.data);
-                if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
-                    return { viewId: id, data: parsed };
-                }
-            } catch (e) {}
-        }
-        return null;
+    const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/html, */*',
+        'X-Requested-With': 'XMLHttpRequest'
     };
 
-    // Helper to scrape HTML page for viewID or bandata link
-    const scrapePageForViewId = async (urlOrId) => {
-        let fullUrl = urlOrId.startsWith('http') ? urlOrId : `https://www.mapban.gg/en/ban/lobby/${urlOrId}`;
-        const pageRes = await httpGetWithRedirects(fullUrl);
-        if (pageRes && pageRes.data) {
-            let m = pageRes.data.match(/viewID\s*=\s*["']([a-zA-Z0-9]+)["']/i) ||
-                    pageRes.data.match(/\/ban\/view\/([a-zA-Z0-9]+)/i) ||
-                    pageRes.data.match(/\/bandata\/([a-zA-Z0-9]+)/i) ||
-                    pageRes.data.match(/id="view"[^>]*>https?:\/\/[^\/]+\/ban\/view\/([a-zA-Z0-9]+)/i);
-            if (m) {
-                return m[1];
+    const tryFetchJson = async (targetUrl) => {
+        try {
+            const res = await fetch(targetUrl, {
+                headers,
+                signal: AbortSignal.timeout(6000),
+                redirect: 'follow'
+            });
+            if (res.ok) {
+                const text = await res.text();
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
+                        return parsed;
+                    }
+                } catch (e) {}
             }
-        }
+        } catch (e) {}
         return null;
     };
 
-    // 1. Direct regex match for any ID in URL
-    let viewMatch = input.match(/\/ban\/(?:view|log|lobby|team\/\d+|editteam\/\d+)\/([a-zA-Z0-9]+)/i) || input.match(/\/bandata\/([a-zA-Z0-9]+)/i);
-    let potentialId = viewMatch ? viewMatch[1] : null;
+    const scrapeHtmlForViewId = async (targetUrl) => {
+        try {
+            const res = await fetch(targetUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+                },
+                signal: AbortSignal.timeout(6000),
+                redirect: 'follow'
+            });
+            if (res.ok) {
+                const html = await res.text();
+                const m = html.match(/viewID\s*=\s*["']([a-zA-Z0-9]+)["']/i) ||
+                          html.match(/\/ban\/view\/([a-zA-Z0-9]+)/i) ||
+                          html.match(/\/bandata\/([a-zA-Z0-9]+)/i) ||
+                          html.match(/id="view"[^>]*>https?:\/\/[^\/]+\/ban\/view\/([a-zA-Z0-9]+)/i);
+                if (m) return m[1];
+            }
+        } catch (e) {}
+        return null;
+    };
+
+    // 1. Direct regex match
+    let match = input.match(/\/ban\/(?:view|log|lobby|team\/\d+|editteam\/\d+)\/([a-zA-Z0-9]+)/i) || input.match(/\/bandata\/([a-zA-Z0-9]+)/i);
+    let potentialId = match ? match[1] : (input.match(/^[a-zA-Z0-9]{10,32}$/) ? input : null);
 
     if (potentialId) {
         // Try directly as bandata
-        let direct = await checkBandata(potentialId);
-        if (direct) return direct;
+        let json = await tryFetchJson(`https://www.mapban.gg/bandata/${potentialId}`);
+        if (json) return { viewId: potentialId, data: json };
 
-        // Try scraping the input URL or lobby page for this ID
-        let extractedFromUrl = await scrapePageForViewId(input.startsWith('http') ? input : `https://www.mapban.gg/en/ban/lobby/${potentialId}`);
-        if (extractedFromUrl) {
-            let res = await checkBandata(extractedFromUrl);
-            if (res) return res;
+        // Try scraping lobby page
+        let extractedId = await scrapeHtmlForViewId(`https://www.mapban.gg/en/ban/lobby/${potentialId}`);
+        if (extractedId) {
+            let json2 = await tryFetchJson(`https://www.mapban.gg/bandata/${extractedId}`);
+            if (json2) return { viewId: extractedId, data: json2 };
         }
     }
 
-    // 2. Full URL (e.g. lobby or team)
+    // 2. Full URL scrape
     if (input.startsWith('http://') || input.startsWith('https://') || input.includes('mapban.gg')) {
-        let extractedId = await scrapePageForViewId(input.startsWith('http') ? input : `https://${input}`);
+        let fullUrl = input.startsWith('http') ? input : `https://${input}`;
+        let extractedId = await scrapeHtmlForViewId(fullUrl);
         if (extractedId) {
-            let res = await checkBandata(extractedId);
-            if (res) return res;
-        }
-    }
-
-    // 3. Raw alphanumeric code (e.g. 10-32 chars)
-    let rawCodeMatch = input.match(/^[a-zA-Z0-9]{10,32}$/);
-    if (rawCodeMatch) {
-        const code = rawCodeMatch[0];
-        let direct = await checkBandata(code);
-        if (direct) return direct;
-
-        let extractedId = await scrapePageForViewId(code);
-        if (extractedId) {
-            let res = await checkBandata(extractedId);
-            if (res) return res;
+            let json = await tryFetchJson(`https://www.mapban.gg/bandata/${extractedId}`);
+            if (json) return { viewId: extractedId, data: json };
         }
     }
 
