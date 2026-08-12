@@ -68,7 +68,7 @@ router.get('/health', (req, res) => {
 });
 
 router.get('/get_map_picks', (req, res) => {
-    return res.status(200).send(dataBus.config.mapPicks);
+    return res.status(200).json(dataBus.config.mapPicks || { teams: ['TEAM 1', 'TEAM 2'], picks: [], series_type: 'bo3' });
 });
 
 router.get('/get_player_stats', (req, res) => {
@@ -515,27 +515,26 @@ async function resolveMapBanData(input) {
     if (!input || typeof input !== 'string') return null;
     input = input.trim();
 
-    // 1. Direct match for view/log/bandata in URL
-    let viewMatch = input.match(/\/ban\/(?:view|log)\/([a-zA-Z0-9]+)/i) || input.match(/\/bandata\/([a-zA-Z0-9]+)/i);
-    let potentialViewId = viewMatch ? viewMatch[1] : null;
-
-    if (potentialViewId) {
-        const res = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${potentialViewId}`, {
+    // Helper to test if a raw string is valid JSON bandata
+    const checkBandata = async (id) => {
+        if (!id) return null;
+        const res = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${id}`, {
             'X-Requested-With': 'XMLHttpRequest'
         });
         if (res && res.data) {
             try {
                 const parsed = JSON.parse(res.data);
                 if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
-                    return { viewId: potentialViewId, data: parsed };
+                    return { viewId: id, data: parsed };
                 }
             } catch (e) {}
         }
-    }
+        return null;
+    };
 
-    // 2. If it's a URL (like a lobby or team URL)
-    if (input.startsWith('http://') || input.startsWith('https://') || input.includes('mapban.gg')) {
-        let fullUrl = input.startsWith('http') ? input : `https://${input}`;
+    // Helper to scrape HTML page for viewID or bandata link
+    const scrapePageForViewId = async (urlOrId) => {
+        let fullUrl = urlOrId.startsWith('http') ? urlOrId : `https://www.mapban.gg/en/ban/lobby/${urlOrId}`;
         const pageRes = await httpGetWithRedirects(fullUrl);
         if (pageRes && pageRes.data) {
             let m = pageRes.data.match(/viewID\s*=\s*["']([a-zA-Z0-9]+)["']/i) ||
@@ -543,19 +542,35 @@ async function resolveMapBanData(input) {
                     pageRes.data.match(/\/bandata\/([a-zA-Z0-9]+)/i) ||
                     pageRes.data.match(/id="view"[^>]*>https?:\/\/[^\/]+\/ban\/view\/([a-zA-Z0-9]+)/i);
             if (m) {
-                const extractedId = m[1];
-                const res = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${extractedId}`, {
-                    'X-Requested-With': 'XMLHttpRequest'
-                });
-                if (res && res.data) {
-                    try {
-                        const parsed = JSON.parse(res.data);
-                        if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
-                            return { viewId: extractedId, data: parsed };
-                        }
-                    } catch (e) {}
-                }
+                return m[1];
             }
+        }
+        return null;
+    };
+
+    // 1. Direct regex match for any ID in URL
+    let viewMatch = input.match(/\/ban\/(?:view|log|lobby|team\/\d+|editteam\/\d+)\/([a-zA-Z0-9]+)/i) || input.match(/\/bandata\/([a-zA-Z0-9]+)/i);
+    let potentialId = viewMatch ? viewMatch[1] : null;
+
+    if (potentialId) {
+        // Try directly as bandata
+        let direct = await checkBandata(potentialId);
+        if (direct) return direct;
+
+        // Try scraping the input URL or lobby page for this ID
+        let extractedFromUrl = await scrapePageForViewId(input.startsWith('http') ? input : `https://www.mapban.gg/en/ban/lobby/${potentialId}`);
+        if (extractedFromUrl) {
+            let res = await checkBandata(extractedFromUrl);
+            if (res) return res;
+        }
+    }
+
+    // 2. Full URL (e.g. lobby or team)
+    if (input.startsWith('http://') || input.startsWith('https://') || input.includes('mapban.gg')) {
+        let extractedId = await scrapePageForViewId(input.startsWith('http') ? input : `https://${input}`);
+        if (extractedId) {
+            let res = await checkBandata(extractedId);
+            if (res) return res;
         }
     }
 
@@ -563,39 +578,13 @@ async function resolveMapBanData(input) {
     let rawCodeMatch = input.match(/^[a-zA-Z0-9]{10,32}$/);
     if (rawCodeMatch) {
         const code = rawCodeMatch[0];
-        // Try bandata directly
-        let res = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${code}`, {
-            'X-Requested-With': 'XMLHttpRequest'
-        });
-        if (res && res.data) {
-            try {
-                const parsed = JSON.parse(res.data);
-                if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
-                    return { viewId: code, data: parsed };
-                }
-            } catch (e) {}
-        }
+        let direct = await checkBandata(code);
+        if (direct) return direct;
 
-        // Try as lobby page
-        let lobbyPage = await httpGetWithRedirects(`https://www.mapban.gg/en/ban/lobby/${code}`);
-        if (lobbyPage && lobbyPage.data) {
-            let m = lobbyPage.data.match(/viewID\s*=\s*["']([a-zA-Z0-9]+)["']/i) ||
-                    lobbyPage.data.match(/\/ban\/view\/([a-zA-Z0-9]+)/i) ||
-                    lobbyPage.data.match(/id="view"[^>]*>https?:\/\/[^\/]+\/ban\/view\/([a-zA-Z0-9]+)/i);
-            if (m) {
-                const extractedId = m[1];
-                let res2 = await httpGetWithRedirects(`https://www.mapban.gg/bandata/${extractedId}`, {
-                    'X-Requested-With': 'XMLHttpRequest'
-                });
-                if (res2 && res2.data) {
-                    try {
-                        const parsed = JSON.parse(res2.data);
-                        if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
-                            return { viewId: extractedId, data: parsed };
-                        }
-                    } catch (e) {}
-                }
-            }
+        let extractedId = await scrapePageForViewId(code);
+        if (extractedId) {
+            let res = await checkBandata(extractedId);
+            if (res) return res;
         }
     }
 
@@ -611,19 +600,19 @@ router.post('/sync_mapban', upload.none(), async (req, res) => {
             const updated = dataBus.applyMapBanData(parsed);
             emitEvent(req, 'mapPicksUpdate', updated);
             emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
-            return res.status(200).send({ 
+            return res.status(200).json({ 
                 status: true, 
                 message: 'Imported MapBan.gg data successfully', 
                 mapPicks: updated,
                 gameConfig: dataBus.getGameConfiguration()
             });
         } catch (e) {
-            return res.status(400).send({ status: false, message: 'Invalid JSON data' });
+            return res.status(400).json({ status: false, message: 'Invalid JSON data' });
         }
     }
 
     if (!urlOrId || typeof urlOrId !== 'string' || urlOrId.trim() === '') {
-        return res.status(400).send({ status: false, message: 'Please provide a MapBan.gg URL or Room ID' });
+        return res.status(400).json({ status: false, message: 'Please provide a MapBan.gg URL or Room ID' });
     }
 
     const resolved = await resolveMapBanData(urlOrId);
@@ -632,16 +621,16 @@ router.post('/sync_mapban', upload.none(), async (req, res) => {
         const updated = dataBus.applyMapBanData(resolved.data);
         emitEvent(req, 'mapPicksUpdate', updated);
         emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
-        return res.status(200).send({ 
+        return res.status(200).json({ 
             status: true, 
             message: `Synced from MapBan.gg (${resolved.viewId})!`, 
             mapPicks: updated,
             gameConfig: dataBus.getGameConfiguration()
         });
     } else {
-        return res.status(400).send({ 
+        return res.status(400).json({ 
             status: false, 
-            message: 'Could not fetch data from MapBan.gg. Please verify the URL or Room ID and ensure the lobby exists.'
+            message: 'MapBan.gg lobby/view ID was not found or has expired. Please copy the "Link for viewers" or "Link for lobby" from an active MapBan room.'
         });
     }
 });
