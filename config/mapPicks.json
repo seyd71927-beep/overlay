@@ -1,0 +1,37 @@
+{
+    "teams": [
+        "TEAM 1",
+        "TEAM 2"
+    ],
+    "picks": [
+        [
+            "ascent",
+            "ban"
+        ],
+        [
+            "bind",
+            "ban"
+        ],
+        [
+            "haven",
+            "attack"
+        ],
+        [
+            "split",
+            "attack"
+        ],
+        [
+            "breeze",
+            "ban"
+        ],
+        [
+            "lotus",
+            "ban"
+        ],
+        [
+            "sunset",
+            "attack"
+        ]
+    ],
+    "series_type": "bo3"
+}

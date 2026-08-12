@@ -37,9 +37,27 @@ class fileLoader {
         }
 
         try {
+            // Helper to safely read JSON with default fallback
+            const safeReadJson = (filename, defaultVal) => {
+                const fullPath = path.join(this.configDir, filename);
+                try {
+                    if (fs.existsSync(fullPath)) {
+                        const raw = fs.readFileSync(fullPath, 'utf8').trim();
+                        if (raw) return JSON.parse(raw);
+                    }
+                } catch (e) {
+                    console.warn(`[fileLoader] Warning loading ${filename}, using default:`, e.message);
+                }
+                this.saveStateToFile(filename, defaultVal);
+                return defaultVal;
+            };
+
             // Read players
-            const playersData = fs.readFileSync(path.join(this.configDir, 'players.json'), 'utf8');
-            const players = JSON.parse(playersData);
+            const defaultPlayers = {
+                team_1: { name: "TEAM 1", tag: "T1", score: 0, logo: "../visual_assets/blueTeamPlaceholder.jpg" },
+                team_2: { name: "TEAM 2", tag: "T2", score: 0, logo: "../visual_assets/redTeamPlaceholder.jpg" }
+            };
+            const players = safeReadJson('players.json', defaultPlayers);
             for (const key in players) {
                 if (key.startsWith('player_')) {
                     players[key].last_updated = Date.now();
@@ -48,37 +66,60 @@ class fileLoader {
             this.config.players = players;
 
             // Read Game State
-            const gameStateData = fs.readFileSync(path.join(this.configDir, 'gameState.json'), 'utf8');
-            this.config.gameState = JSON.parse(gameStateData);
+            this.config.gameState = safeReadJson('gameState.json', {
+                team_1_score: 0,
+                team_2_score: 0,
+                round_number: 1,
+                spike_down: false,
+                switch_sides: false,
+                round_over: false,
+                tournament_stage: "Grand Finals"
+            });
 
             // Read Map Picks
-            const mapPicksData = fs.readFileSync(path.join(this.configDir, 'mapPicks.json'), 'utf8');
-            this.config.mapPicks = JSON.parse(mapPicksData);
+            this.config.mapPicks = safeReadJson('mapPicks.json', {
+                teams: ["TEAM 1", "TEAM 2"],
+                picks: [
+                    ["ascent", "ban"],
+                    ["bind", "ban"],
+                    ["haven", "attack"],
+                    ["split", "attack"],
+                    ["breeze", "ban"],
+                    ["lotus", "ban"],
+                    ["sunset", "attack"]
+                ],
+                series_type: "bo3"
+            });
 
             // Read Timer
-            const timerData = fs.readFileSync(path.join(this.configDir, 'timer.json'), 'utf8');
-            this.config.timer = JSON.parse(timerData);
+            this.config.timer = safeReadJson('timer.json', {
+                timerRunning: false,
+                current_time: 0,
+                target_time: 0
+            });
 
             // Read Tournament Data
-            try {
-                const tournamentData = fs.readFileSync(path.join(this.configDir, 'tournamentData.json'), 'utf8');
-                this.config.tournament = JSON.parse(tournamentData);
-            } catch (e) {
-                this.config.tournament = {
-                    spreadsheetUrl: '',
-                    autoSync: false,
-                    syncInterval: 60,
-                    lastSync: null,
-                    tournamentName: 'ZENX VALORANT TOURNAMENT',
-                    teams: [],
-                    matches: []
-                };
-                this.saveStateToFile('tournamentData.json', this.config.tournament);
-            }
+            this.config.tournament = safeReadJson('tournamentData.json', {
+                spreadsheetUrl: '',
+                autoSync: false,
+                syncInterval: 60,
+                lastSync: null,
+                tournamentName: 'ZENX VALORANT TOURNAMENT',
+                teams: [],
+                matches: []
+            });
 
             // Read Admin Password & App Config
-            const appConfigData = fs.readFileSync(path.join(this.configDir, 'appConfig.json'), 'utf8');
-            const appConfig = JSON.parse(appConfigData);
+            const appConfig = safeReadJson('appConfig.json', {
+                admin_key: "zenx",
+                auto_fetch: {
+                    enabled: true,
+                    mode: "cloud",
+                    riot_id: "MAD BASHA#BOSS",
+                    api_key: "",
+                    lock_manual_teams: false
+                }
+            });
             this.config.appConfig = appConfig;
             this._adminPassword = process.env.ADMIN_KEY || process.env.ADMIN_PASSWORD || appConfig.admin_key || 'zenx';
 
