@@ -67,14 +67,44 @@ class fileLoader {
 
             // Read Game State
             this.config.gameState = safeReadJson('gameState.json', {
+                tournament_stage: "Grand Finals",
+                team_1: {
+                    name: "TEAM 1",
+                    abbreviation: "T1",
+                    team_info: "#1 Seed",
+                    icon_link: "../visual_assets/blueTeamPlaceholder.jpg"
+                },
+                team_2: {
+                    name: "TEAM 2",
+                    abbreviation: "T2",
+                    team_info: "#2 Seed",
+                    icon_link: "../visual_assets/redTeamPlaceholder.jpg"
+                },
                 team_1_score: 0,
                 team_2_score: 0,
                 round_number: 1,
                 spike_down: false,
                 switch_sides: false,
                 round_over: false,
-                tournament_stage: "Grand Finals"
+                game_flow: {}
             });
+
+            if (!this.config.gameState.team_1) {
+                this.config.gameState.team_1 = {
+                    name: "TEAM 1",
+                    abbreviation: "T1",
+                    team_info: "#1 Seed",
+                    icon_link: "../visual_assets/blueTeamPlaceholder.jpg"
+                };
+            }
+            if (!this.config.gameState.team_2) {
+                this.config.gameState.team_2 = {
+                    name: "TEAM 2",
+                    abbreviation: "T2",
+                    team_info: "#2 Seed",
+                    icon_link: "../visual_assets/redTeamPlaceholder.jpg"
+                };
+            }
 
             // Read Map Picks
             this.config.mapPicks = safeReadJson('mapPicks.json', {
@@ -720,8 +750,18 @@ class fileLoader {
     getGameConfiguration() {
         return {
             tournament_stage: this.config.gameState.tournament_stage || "2026 AMERICAS STAGE 2 : WEEK 4",
-            team_1: this.config.gameState.team_1,
-            team_2: this.config.gameState.team_2,
+            team_1: this.config.gameState.team_1 || {
+                name: (this.config.mapPicks?.teams && this.config.mapPicks.teams[0]) || "TEAM 1",
+                abbreviation: (this.config.mapPicks?.teams && this.config.mapPicks.teams[0]) || "T1",
+                team_info: "#1 Seed",
+                icon_link: "../visual_assets/blueTeamPlaceholder.jpg"
+            },
+            team_2: this.config.gameState.team_2 || {
+                name: (this.config.mapPicks?.teams && this.config.mapPicks.teams[1]) || "TEAM 2",
+                abbreviation: (this.config.mapPicks?.teams && this.config.mapPicks.teams[1]) || "T2",
+                team_info: "#2 Seed",
+                icon_link: "../visual_assets/redTeamPlaceholder.jpg"
+            },
             game_flow: this.config.gameState.game_flow,
             team_1_score: this.config.gameState.team_1_score,
             team_2_score: this.config.gameState.team_2_score,

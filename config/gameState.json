@@ -1,33 +1,22 @@
 {
-    "tournament_stage": "Grand Finals",
-    "team_1": {
-        "name": "TEAM 1",
-        "abbreviation": "NEXAURA",
-        "team_info": "#1 Seed",
-        "icon_link": "../visual_assets/blueTeamPlaceholder.jpg"
-    },
-    "team_2": {
-        "name": "TEAM 2",
-        "abbreviation": "ZYCON",
-        "team_info": "#2 Seed",
-        "icon_link": "../visual_assets/redTeamPlaceholder.jpg"
-    },
     "team_1_score": 0,
     "team_2_score": 0,
     "round_number": 1,
     "spike_down": false,
     "switch_sides": false,
     "round_over": false,
+    "tournament_stage": "Grand Finals",
     "game_flow": {
         "map_1": {
             "state": "current",
             "winner": "",
             "team_1_score": 0,
             "team_2_score": 0,
-            "map_pick": "team_1",
-            "map": "lotus"
-        },
-        "map_2": {
+            "map_pick": "",
+            "map": "sunset"
+        }
+    }
+}       "map_2": {
             "state": "upcomming",
             "winner": "",
             "team_1_score": 0,
@@ -44,7 +33,7 @@
             "map": "sunset"
         }
     }
-}"map_4": {
+}}       "map_4": {
             "state": "upcomming",
             "winner": "",
             "team_1_score": 0,

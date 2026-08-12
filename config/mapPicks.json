@@ -1,7 +1,7 @@
 {
     "teams": [
-        "TEAM 1",
-        "TEAM 2"
+        "NEXAURA",
+        "ZYCON"
     ],
     "picks": [
         [
@@ -9,23 +9,23 @@
             "ban"
         ],
         [
-            "bind",
-            "ban"
-        ],
-        [
-            "haven",
-            "attack"
-        ],
-        [
-            "split",
-            "attack"
-        ],
-        [
             "breeze",
             "ban"
         ],
         [
             "lotus",
+            "attack"
+        ],
+        [
+            "haven",
+            "defense"
+        ],
+        [
+            "split",
+            "ban"
+        ],
+        [
+            "bind",
             "ban"
         ],
         [
