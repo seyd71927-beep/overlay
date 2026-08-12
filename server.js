@@ -68,9 +68,9 @@ if (routes.setDataBus) routes.setDataBus(dataBus);
 app.use('/', routes);
 
 // Start server
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
     console.log('\x1b[35m%s\x1b[0m', '=== ZENX TOURNAMENT OVERLAY HOST v1.0.0 ===');
-    console.log('\x1b[32m%s\x1b[0m', `Server running on http://localhost:${port}`);
+    console.log('\x1b[32m%s\x1b[0m', `Server running on port ${port}`);
     console.log('Access ZENX Overlay Portal at http://localhost:' + port + '/');
     console.log('Access ZENX Admin Control Dashboard at http://localhost:' + port + '/admin');
 });
