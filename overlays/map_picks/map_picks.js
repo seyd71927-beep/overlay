@@ -94,7 +94,7 @@ class MapPickVetoOverlay {
             <div class="map-pick-card ${cardTypeClass}" style="animation-delay: ${i * 80}ms;">
                 <div class="map-pick-side">${headerText}</div>
                 <div class="map-pick-image">
-                    <div class="map-image map-${mapName}"></div>
+                    <div class="map-image map-${mapName}" style="background-image: url('../visual_assets/map_images/${mapName}.webp'), url('/visual_assets/map_images/${mapName}.webp'); background-size: cover; background-position: center;"></div>
                     <div class="map-name-label">${mapName}</div>
                     ${sideBadgeHtml}
                 </div>
@@ -106,7 +106,13 @@ class MapPickVetoOverlay {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function startOverlay() {
     const vetoOverlay = new MapPickVetoOverlay();
     vetoOverlay.init();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startOverlay);
+} else {
+    startOverlay();
+}
