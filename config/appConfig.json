@@ -1,5 +1,5 @@
 {
-    "admin_key": "password",
+    "admin_key": "zenx",
     "auto_fetch": {
         "enabled": true,
         "mode": "cloud",

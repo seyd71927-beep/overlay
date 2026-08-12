@@ -80,7 +80,7 @@ class fileLoader {
             const appConfigData = fs.readFileSync(path.join(this.configDir, 'appConfig.json'), 'utf8');
             const appConfig = JSON.parse(appConfigData);
             this.config.appConfig = appConfig;
-            this._adminPassword = appConfig.admin_key || 'password';
+            this._adminPassword = process.env.ADMIN_KEY || process.env.ADMIN_PASSWORD || appConfig.admin_key || 'zenx';
 
             this.isInitialized = true;
             this.syncPlayersFromTournamentTeams();
@@ -104,13 +104,15 @@ class fileLoader {
     }
 
     checkPassword(userInput) {
-        return this._adminPassword === userInput;
+        if (!userInput || typeof userInput !== 'string') return false;
+        const expected = String(this._adminPassword || 'zenx').trim();
+        return expected === userInput.trim();
     }
 
     updateAdminPassword(newPassword) {
-        this._adminPassword = newPassword;
+        this._adminPassword = newPassword.trim();
         if (!this.config.appConfig) this.config.appConfig = {};
-        this.config.appConfig.admin_key = newPassword;
+        this.config.appConfig.admin_key = newPassword.trim();
         this.saveStateToFile('appConfig.json', this.config.appConfig);
         return true;
     }
