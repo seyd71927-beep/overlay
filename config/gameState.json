@@ -2,13 +2,13 @@
     "tournament_stage": "Grand Finals",
     "team_1": {
         "name": "TEAM 1",
-        "abbreviation": "T1",
+        "abbreviation": "NEXAURA",
         "team_info": "#1 Seed",
         "icon_link": "../visual_assets/blueTeamPlaceholder.jpg"
     },
     "team_2": {
         "name": "TEAM 2",
-        "abbreviation": "T2",
+        "abbreviation": "ZYCON",
         "team_info": "#2 Seed",
         "icon_link": "../visual_assets/redTeamPlaceholder.jpg"
     },
@@ -36,6 +36,23 @@
             "map": "haven"
         },
         "map_3": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "",
+            "map": "sunset"
+        }
+    }
+}"map_4": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "team_2",
+            "map": "pearl"
+        },
+        "map_5": {
             "state": "upcomming",
             "winner": "",
             "team_1_score": 0,

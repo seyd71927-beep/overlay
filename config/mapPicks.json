@@ -1,27 +1,27 @@
 {
     "teams": [
-        "T1",
-        "T2"
+        "TEAM 1",
+        "TEAM 2"
     ],
     "picks": [
-        [
-            "bind",
-            "ban"
-        ],
         [
             "ascent",
             "ban"
         ],
         [
-            "breeze",
-            "attack"
+            "bind",
+            "ban"
         ],
         [
             "haven",
-            "defense"
+            "attack"
         ],
         [
             "split",
+            "attack"
+        ],
+        [
+            "breeze",
             "ban"
         ],
         [
@@ -34,5 +34,4 @@
         ]
     ],
     "series_type": "bo3"
-} "bo3"
 }
