@@ -237,10 +237,6 @@ class fileLoader {
         return safeMode;
     }
 
-    generateRandomUserToken() {
-        return crypto.randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
-    }
-
     // --- Timer Logic ---
     setTimer(timeMiliseconds, description) {
         this.config.timer.time = timeMiliseconds;
@@ -326,7 +322,6 @@ class fileLoader {
                     const tag = rawPlayer.includes('#') ? rawPlayer.split('#')[1].trim() : '';
                     if (!this.config.players[key]) {
                         this.config.players[key] = {
-                            token: this.generateRandomUserToken(),
                             is_registered: true,
                             last_updated: Date.now(),
                             data: {}
@@ -360,7 +355,6 @@ class fileLoader {
                     const tag = rawPlayer.includes('#') ? rawPlayer.split('#')[1].trim() : '';
                     if (!this.config.players[key]) {
                         this.config.players[key] = {
-                            token: this.generateRandomUserToken(),
                             is_registered: true,
                             last_updated: Date.now(),
                             data: {}
@@ -469,7 +463,6 @@ class fileLoader {
             const key = `player_${i}`;
             if (!this.config.players[key]) {
                 this.config.players[key] = {
-                    token: this.generateRandomUserToken(),
                     is_registered: false,
                     last_updated: Date.now(),
                     data: {}
@@ -507,7 +500,6 @@ class fileLoader {
             const key = `player_${i + 5}`;
             if (!this.config.players[key]) {
                 this.config.players[key] = {
-                    token: this.generateRandomUserToken(),
                     is_registered: false,
                     last_updated: Date.now(),
                     data: {}
@@ -727,7 +719,6 @@ class fileLoader {
         const key = `player_${playerIndex}`;
         if (!this.config.players[key]) {
             this.config.players[key] = {
-                token: this.generateRandomUserToken(),
                 is_registered: true,
                 last_updated: Date.now(),
                 data: {}
@@ -741,17 +732,6 @@ class fileLoader {
         this.config.players[key].last_updated = Date.now();
         this.saveStateToFile('players.json', this.config.players);
         return true;
-    }
-
-    regeneratePlayerTokens() {
-        for (const key in this.config.players) {
-            if (key.startsWith('player_')) {
-                this.config.players[key].token = this.generateRandomUserToken();
-            }
-        }
-        this.saveStateToFile('players.json', this.config.players);
-        console.log('Regenerated all player tokens');
-        return this.config.players;
     }
 
     // --- Game Logic ---

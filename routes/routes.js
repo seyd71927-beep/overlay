@@ -696,11 +696,7 @@ router.post('/set_casters', upload.none(), (req, res) => {
     }
 });
 
-router.get('/regenerate_user_tokens', (req, res) => {
-    const updated = dataBus.regeneratePlayerTokens();
-    emitEvent(req, 'playerUpdate', updated);
-    return res.status(200).send({ status: true, players: updated });
-});
+
 
 router.post('/change_password', upload.none(), (req, res) => {
     const { newPassword } = req.body;

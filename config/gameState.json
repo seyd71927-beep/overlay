@@ -1,25 +1,151 @@
 {
-    "tournament_stage": "FINALS (BO3)",
+    "tournament_stage": "UPPER BRACKET SEMI-FINALS (BO3)",
     "team_1": {
-        "name": "TEAM 1",
-        "abbreviation": "T1",
-        "team_info": "#1 Seed",
-        "icon_link": "../visual_assets/blueTeamPlaceholder.jpg"
+        "name": "S1N eSports",
+        "abbreviation": "S1N",
+        "team_info": "Asc 3",
+        "icon_link": "https://drive.google.com/thumbnail?id=1gJaMqGxn3tMFJ75lofrxA-2Xsr3NDdY-&sz=w500"
     },
     "team_2": {
-        "name": "TEAM 2",
-        "abbreviation": "T2",
-        "team_info": "#2 Seed",
-        "icon_link": "../visual_assets/redTeamPlaceholder.jpg"
+        "name": "Acceleration Esports",
+        "abbreviation": "ACCE",
+        "team_info": "D1",
+        "icon_link": "https://drive.google.com/thumbnail?id=1yga077_G35M_NgA8ragAUoSRFeAnHMOJ&sz=w500"
     },
-    "team_1_score": 0,
-    "team_2_score": 0,
-    "round_number": 1,
+    "team_1_score": 13,
+    "team_2_score": 9,
+    "round_number": 22,
     "spike_down": false,
-    "switch_sides": false,
+    "switch_sides": true,
     "round_over": false,
     "team_1_count": 5,
     "team_2_count": 5,
-    "roster_mode": "manual",
-    "game_flow": {}
+    "roster_mode": "auto",
+    "game_flow": {
+        "map_1": {
+            "state": "current",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "team_1",
+            "side": "attack",
+            "map": "breeze"
+        },
+        "map_2": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "team_2",
+            "side": "defense",
+            "map": "haven"
+        },
+        "map_3": {
+            "state": "upcomming",
+            "winner": "",
+            "team_1_score": 0,
+            "team_2_score": 0,
+            "map_pick": "",
+            "side": "attack",
+            "map": "sunset"
+        }
+    },
+    "map": "ascent",
+    "is_custom_match": true,
+    "is_tournament_mode": true,
+    "match_type": "CUSTOM_TOURNAMENT",
+    "team_1_roster": [
+        {
+            "slot": 0,
+            "name": "Knight",
+            "character": "Jett",
+            "health": 100,
+            "armor": 50,
+            "weapon": "spectre",
+            "is_dead": false
+        },
+        {
+            "slot": 1,
+            "name": "Vajra",
+            "character": "Sova",
+            "health": 100,
+            "armor": 50,
+            "weapon": "spectre",
+            "is_dead": false
+        },
+        {
+            "slot": 2,
+            "name": "Salamander",
+            "character": "Omen",
+            "health": 100,
+            "armor": 50,
+            "weapon": "spectre",
+            "is_dead": false
+        },
+        {
+            "slot": 3,
+            "name": "Hmza",
+            "character": "Killjoy",
+            "health": 100,
+            "armor": 50,
+            "weapon": "spectre",
+            "is_dead": false
+        },
+        {
+            "slot": 4,
+            "name": "Desert",
+            "character": "Breach",
+            "health": 100,
+            "armor": 50,
+            "weapon": "bulldog",
+            "is_dead": false
+        }
+    ],
+    "team_2_roster": [
+        {
+            "slot": 5,
+            "name": "Acn s1ck",
+            "character": "Reyna",
+            "health": 100,
+            "armor": 0,
+            "weapon": "sheriff",
+            "is_dead": false
+        },
+        {
+            "slot": 6,
+            "name": "Acn ronny",
+            "character": "Raze",
+            "health": 100,
+            "armor": 0,
+            "weapon": "classic",
+            "is_dead": false
+        },
+        {
+            "slot": 7,
+            "name": "Igh v1n1",
+            "character": "Viper",
+            "health": 100,
+            "armor": 25,
+            "weapon": "sheriff",
+            "is_dead": false
+        },
+        {
+            "slot": 8,
+            "name": "Addythegoat",
+            "character": "Cypher",
+            "health": 100,
+            "armor": 0,
+            "weapon": "classic",
+            "is_dead": false
+        },
+        {
+            "slot": 9,
+            "name": "Itzzdexterr",
+            "character": "Fade",
+            "health": 100,
+            "armor": 0,
+            "weapon": "ghost",
+            "is_dead": false
+        }
+    ]
 }

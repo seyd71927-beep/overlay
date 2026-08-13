@@ -5,12 +5,10 @@ class AdminSettingsManager {
 
     async init() {
         this.bindEvents();
-        await this.loadTokens();
     }
 
     bindEvents() {
         document.getElementById('change-pw-btn')?.addEventListener('click', () => this.changePassword());
-        document.getElementById('regen-tokens-btn')?.addEventListener('click', () => this.regenerateTokens());
         document.getElementById('start-sim-btn')?.addEventListener('click', () => this.startDemoSimulation());
         document.getElementById('stop-sim-btn')?.addEventListener('click', () => this.stopDemoSimulation());
     }
@@ -133,64 +131,6 @@ class AdminSettingsManager {
         } catch (e) {
             console.error(e);
         }
-    }
-
-    async loadTokens() {
-        try {
-            const res = await fetch('../print_state');
-            if (res.status === 200) {
-                const state = await res.json();
-                this.renderTokensTable(state.players);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    renderTokensTable(players) {
-        const tbody = document.getElementById('tokens-table-body');
-        if (!tbody || !players) return;
-
-        let html = '';
-        for (let i = 0; i < 10; i++) {
-            const key = `player_${i}`;
-            const p = players[key];
-            const isTeam1 = i < 5;
-
-            html += `
-            <tr class="${isTeam1 ? 'team-1-row' : 'team-2-row'}">
-                <td style="font-weight: 700;">Player Slot #${i + 1}</td>
-                <td style="font-weight: 700; color: ${isTeam1 ? 'var(--green-team)' : 'var(--red-team)'}">${isTeam1 ? 'Team 1 (Left)' : 'Team 2 (Right)'}</td>
-                <td>
-                    <span class="status-badge" style="background: ${p.is_registered ? 'rgba(0,230,118,0.15)' : 'rgba(255,42,95,0.15)'}; color: ${p.is_registered ? '#00e676' : '#ff2a5f'}">
-                        ${p.is_registered ? 'REGISTERED & ACTIVE' : 'WAITING CLIENT'}
-                    </span>
-                </td>
-                <td style="font-family: monospace; font-size: 0.95rem; letter-spacing: 1px; color: var(--accent-secondary); font-weight: 700;">
-                    ${p.token || 'NO_TOKEN'}
-                </td>
-                <td>
-                    <button class="btn btn-accent" style="padding: 4px 10px; font-size: 0.75rem;" onclick="navigator.clipboard.writeText('${p.token}'); if(typeof successAlertLowerBottom==='function') successAlertLowerBottom('Copied Token to Clipboard!');">
-                        <i class="fa-solid fa-copy"></i> Copy Token
-                    </button>
-                </td>
-            </tr>`;
-        }
-        tbody.innerHTML = html;
-    }
-
-    async regenerateTokens() {
-        if (!confirm('Regenerate all 10 player tokens? External clients will need the new tokens to reconnect.')) return;
-        try {
-            const res = await fetch('../regenerate_user_tokens');
-            if (res.status === 200) {
-                const data = await res.json();
-                this.renderTokensTable(data.players);
-                if (typeof successAlertLowerBottom === 'function') {
-                    successAlertLowerBottom('Player Tokens Regenerated!');
-                }
-            }
-        } catch (e) {}
     }
 
     startDemoSimulation() {
