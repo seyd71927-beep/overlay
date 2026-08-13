@@ -171,10 +171,19 @@ class helValorantGameScore {
         } catch (e) {}
     }
 
-    updatePauseState(isPaused) {
+    updatePauseState(isPaused, pauseTimer = 0) {
         const banner = document.getElementById('match-pause-banner');
         if (!banner) return;
-        banner.style.display = isPaused ? 'flex' : 'none';
+        if (isPaused) {
+            banner.style.display = 'flex';
+            const counter = document.getElementById('pause-timer-counter');
+            if (counter) {
+                counter.textContent = (pauseTimer > 0) ? `${pauseTimer}s` : '';
+                counter.style.display = (pauseTimer > 0) ? 'inline-block' : 'none';
+            }
+        } else {
+            banner.style.display = 'none';
+        }
     }
 
     updateTournamentStage(text) {

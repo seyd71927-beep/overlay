@@ -446,6 +446,15 @@ body::before {
     animation: pausePulse 1.4s infinite alternate ease-in-out;
 }
 
+.pause-timer-counter {
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    padding: 1px 8px;
+    border-radius: 3px;
+    font-size: 18px;
+    margin-left: 6px;
+}
+
 @keyframes pausePulse {
     from {
         transform: translateX(-50%) scale(1);

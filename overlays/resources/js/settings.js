@@ -196,29 +196,68 @@ class AdminSettingsManager {
     startDemoSimulation() {
         if (this.simInterval) clearInterval(this.simInterval);
         if (typeof successAlertLowerBottom === 'function') {
-            successAlertLowerBottom('Started Demo Match Simulation Loop!');
+            successAlertLowerBottom('Started Demo Match Simulation Loop (Scores, Pause, Ghost Mode & Cheats)!');
         }
 
         let round = 1;
         let t1Score = 0;
         let t2Score = 0;
+        let tick = 0;
 
         this.simInterval = setInterval(async () => {
+            tick++;
             const spikeDown = (Math.random() < 0.4);
-            if (Math.random() < 0.2) {
+            if (Math.random() < 0.3) {
                 if (Math.random() < 0.5) t1Score++;
                 else t2Score++;
                 round++;
             }
 
-            const formData = new FormData();
-            formData.append('round_number', round);
-            formData.append('team_1_score', t1Score);
-            formData.append('team_2_score', t2Score);
-            formData.append('spike', spikeDown ? 'down' : 'up');
+            // Simulate tactical pause every 8 ticks
+            const isPaused = (tick % 8 === 0 || tick % 8 === 1);
+            const pauseTimer = isPaused ? (tick % 8 === 0 ? 45 : 30) : 0;
+            const ghostMode = (tick % 4 === 0);
+            const cheatsOn = (tick % 6 === 0);
 
-            await fetch('../change_game_state', { method: 'POST', body: formData });
-        }, 3000);
+            // Sync via Bridge Telemetry endpoint
+            try {
+                await fetch('/api/bridge/sync_match', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phase: 'INGAME',
+                        inGame: true,
+                        map: 'ascent',
+                        round_number: round,
+                        team_1_score: t1Score,
+                        team_2_score: t2Score,
+                        spike: spikeDown ? 'down' : 'up',
+                        spike_down: spikeDown,
+                        is_custom_match: true,
+                        is_tournament_mode: true,
+                        match_type: 'CUSTOM_TOURNAMENT',
+                        is_paused: isPaused,
+                        pause_timer: pauseTimer,
+                        ghost_mode: ghostMode,
+                        allow_cheats: cheatsOn,
+                        team_1_players: [
+                            { slot: 0, name: 'Player 1', character: 'Jett', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'vandal', is_dead: false },
+                            { slot: 1, name: 'Player 2', character: 'Reyna', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'phantom', is_dead: false },
+                            { slot: 2, name: 'Player 3', character: 'Omen', health: Math.floor(Math.random() * 100) + 1, armor: 25, weapon: 'spectre', is_dead: false },
+                            { slot: 3, name: 'Player 4', character: 'Sova', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'vandal', is_dead: false },
+                            { slot: 4, name: 'Player 5', character: 'Killjoy', health: 0, armor: 0, weapon: 'ghost', is_dead: true }
+                        ],
+                        team_2_players: [
+                            { slot: 5, name: 'Player 6', character: 'Raze', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'vandal', is_dead: false },
+                            { slot: 6, name: 'Player 7', character: 'Fade', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'phantom', is_dead: false },
+                            { slot: 7, name: 'Player 8', character: 'Viper', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'judge', is_dead: false },
+                            { slot: 8, name: 'Player 9', character: 'Cypher', health: 0, armor: 0, weapon: 'classic', is_dead: true },
+                            { slot: 9, name: 'Player 10', character: 'Breach', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'operator', is_dead: false }
+                        ]
+                    })
+                });
+            } catch (err) {}
+        }, 2500);
     }
 
     stopDemoSimulation() {
