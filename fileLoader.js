@@ -1199,7 +1199,7 @@ class fileLoader {
         return rows;
     }
 
-    // Parse HTML table from Google Sheets (extracting text and embedded cell images)
+    // Parse HTML table from Google Sheets (extracting text, embedded cell images, and hyperlink URLs)
     parseHtmlTable(htmlText) {
         const rows = [];
         const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
@@ -1213,18 +1213,23 @@ class fileLoader {
             while ((tdMatch = tdRegex.exec(trMatch[1])) !== null) {
                 const cellHtml = tdMatch[1];
                 const imgMatch = cellHtml.match(/<img[^>]+src=["']([^"']+)["']/i);
+                const aMatch = cellHtml.match(/<a[^>]+href=["']([^"']+)["']/i);
+                
+                const text = cellHtml
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/&amp;/g, '&')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&nbsp;/g, ' ')
+                    .trim();
+
                 if (imgMatch) {
                     row.push(imgMatch[1].trim());
+                } else if (aMatch && (text === '' || text.toLowerCase().includes('link') || text.toLowerCase().includes('view') || text.toLowerCase().includes('drive') || aMatch[1].includes('drive.google.com') || /\.(png|jpg|jpeg|webp|svg)/i.test(aMatch[1]))) {
+                    row.push(aMatch[1].trim());
                 } else {
-                    const text = cellHtml
-                        .replace(/<[^>]+>/g, '')
-                        .replace(/&amp;/g, '&')
-                        .replace(/&quot;/g, '"')
-                        .replace(/&#39;/g, "'")
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        .replace(/&nbsp;/g, ' ')
-                        .trim();
                     row.push(text);
                 }
             }
@@ -1298,94 +1303,14 @@ class fileLoader {
         return str;
     }
 
-    // Google Spreadsheet Auto-Fetcher and Parser
-    async fetchAndParseGoogleSheet(rawInputUrl) {
-        if (!rawInputUrl || typeof rawInputUrl !== 'string' || rawInputUrl.trim() === '') {
-            throw new Error('Please provide a valid Google Spreadsheet URL or CSV link');
-        }
+    // Helper to parse any 2D row array into Teams and Matches
+    parseRowsToTeamsAndMatches(rows) {
+        if (!rows || rows.length < 2) return { teams: [], matches: [] };
 
-        let input = rawInputUrl.trim();
-        let candidateUrls = [];
-
-        // Detect Google Sheet ID and GID
-        const sheetIdMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-        const gidMatch = input.match(/[#&?]gid=([0-9]+)/);
-
-        if (sheetIdMatch) {
-            const docId = sheetIdMatch[1];
-            const gid = gidMatch ? gidMatch[1] : '';
-
-            // 1. Google Visualization HTML export (Contains cell images & <img src="..."> tags!)
-            if (gid) {
-                candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:html&gid=${gid}`, type: 'html' });
-            }
-            candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:html`, type: 'html' });
-
-            // 2. Google Visualization CSV export
-            if (gid) {
-                candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv&gid=${gid}`, type: 'csv' });
-            }
-            candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:csv`, type: 'csv' });
-
-            // 3. Standard Google Export endpoint fallbacks
-            if (gid) {
-                candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`, type: 'csv' });
-            }
-            candidateUrls.push({ url: `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv`, type: 'csv' });
-        } else if (input.includes('/pubhtml')) {
-            candidateUrls.push({ url: input, type: 'html' });
-            candidateUrls.push({ url: input.replace('/pubhtml', '/pub?output=csv'), type: 'csv' });
-        } else {
-            candidateUrls.push({ url: input, type: 'csv' });
-        }
-
-        let rawContent = null;
-        let responseType = 'csv';
-        let lastError = null;
-
-        for (const candidate of candidateUrls) {
-            try {
-                const fetched = await this.fetchUrlWithRedirects(candidate.url);
-                if (fetched && fetched.trim().length > 0) {
-                    // Check if Google returned an HTML login page instead of data
-                    if (fetched.includes('accounts.google.com') && (fetched.includes('ServiceLogin') || fetched.includes('Sign in'))) {
-                        throw new Error('Google Sheet is set to Private. Please open your Google Sheet, click "Share" (top-right), and change "General access" to "Anyone with the link can view" (Viewer)!');
-                    }
-                    rawContent = fetched;
-                    responseType = candidate.type;
-                    if (fetched.includes('<table') || fetched.includes('<tr')) {
-                        responseType = 'html';
-                    }
-                    break;
-                }
-            } catch (err) {
-                lastError = err;
-                if (err.message.includes('Private')) throw err;
-            }
-        }
-
-        if (!rawContent || rawContent.trim().length === 0) {
-            throw new Error(lastError ? lastError.message : 'Could not fetch Google Sheet. Please make sure the sheet is shared as "Anyone with the link can view".');
-        }
-
-        // Parse content based on format (HTML table or CSV)
-        let rows = [];
-        if (responseType === 'html' || rawContent.includes('<table') || rawContent.includes('<tr')) {
-            rows = this.parseHtmlTable(rawContent);
-        }
-        
-        if (rows.length < 2) {
-            rows = this.parseCsvRows(rawContent);
-        }
-
-        if (rows.length < 2) {
-            throw new Error('Spreadsheet must contain at least 1 header row and 1 data row');
-        }
-
-        // Detect the true header row (in case row 0 is a title or empty)
+        // Detect the true header row
         let headerRowIdx = 0;
         let maxHeaderScore = -1;
-        const keyTerms = ['team', 'name', 'tag', 'logo', 'icon', 'image', 'seed', 'player', 'roster', 'match', 'stage', 'format', 'upload', 'file', 'link', 'photo', 'avatar'];
+        const keyTerms = ['team', 'name', 'tag', 'logo', 'icon', 'image', 'seed', 'player', 'roster', 'match', 'stage', 'format', 'upload', 'file', 'link', 'photo', 'avatar', 'org', 'club', 'clan'];
 
         for (let r = 0; r < Math.min(10, rows.length); r++) {
             const rowCells = rows[r].map(h => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
@@ -1404,15 +1329,11 @@ class fileLoader {
             return headers.findIndex(h => keys.some(k => h.includes(k)));
         };
 
-        // Determine if Sheet is Teams, Schedule, or Hybrid
-        const hasTeamCol = findCol('team', 'name', 'org', 'tag', 'abbr') !== -1;
-        const hasMatchCol = findCol('match', 'stage', 'team1', 'team2', 'vs', 'format', 'bo') !== -1;
-
-        let parsedTeams = [];
-        let parsedMatches = [];
+        const parsedTeams = [];
+        const parsedMatches = [];
 
         // Parse Teams
-        const teamNameIdx = findCol('teamname', 'team', 'name', 'org');
+        const teamNameIdx = findCol('teamname', 'team', 'name', 'org', 'club', 'clan');
         const tagIdx = findCol('teamshorttag', 'tag', 'abbr', 'abbreviation', 'code', 'short');
         const logoIdx = findCol('logo', 'teamlogo', 'logourl', 'icon', 'teamicon', 'image', 'teamimage', 'avatar', 'pic', 'picture', 'photo', 'badge', 'emblem', 'banner', 'crest', 'symbol', 'img', 'upload', 'file', 'attachment', 'drive', 'link');
         const seedIdx = findCol('currentrank', 'rank', 'seed', 'group', 'division', 'pool', 'tier', 'peakrank');
@@ -1423,7 +1344,6 @@ class fileLoader {
         const p5Idx = findCol('player5', 'p5', 'roster5');
         const rosterIdx = findCol('roster', 'players', 'lineup', 'member');
 
-        // Dynamic player Riot ID columns detector (for Google Forms with multiple Riot ID columns)
         const playerCols = [];
         headers.forEach((h, idx) => {
             if (h.includes('riotid') || h.includes('ign') || h.includes('ingamename') || h.includes('playername') || (h.includes('player') && !h.includes('yt') && !h.includes('channel') && !h.includes('channelurl'))) {
@@ -1455,13 +1375,11 @@ class fileLoader {
                     teamTag = tagMatch ? tagMatch[0] : teamName.slice(0, 4).toUpperCase();
                 }
                 
-                // Extract and clean Team Logo URL
                 let teamLogo = '';
                 if (logoIdx !== -1 && row[logoIdx]) {
                     teamLogo = this.cleanLogoUrl(String(row[logoIdx]));
                 }
 
-                // If no logo found from logo column, scan other cells for an image or drive URL
                 if (!teamLogo) {
                     for (let c = 0; c < row.length; c++) {
                         if (c !== teamNameIdx && c !== tagIdx && c !== seedIdx && row[c]) {
@@ -1530,10 +1448,161 @@ class fileLoader {
             }
         }
 
-        // Save imported results
+        return { teams: parsedTeams, matches: parsedMatches };
+    }
+
+    // Google Spreadsheet Auto-Fetcher and Multi-Sheet Parser
+    async fetchAndParseGoogleSheet(rawInputUrl) {
+        if (!rawInputUrl || typeof rawInputUrl !== 'string' || rawInputUrl.trim() === '') {
+            throw new Error('Please provide a valid Google Spreadsheet URL or CSV link');
+        }
+
+        let input = rawInputUrl.trim();
+        const sheetIdMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        const gidMatch = input.match(/[#&?]gid=([0-9]+)/);
+
+        let discoveredTables = [];
+        let discoveredGids = new Set();
+        if (gidMatch && gidMatch[1]) {
+            discoveredGids.add(gidMatch[1]);
+        }
+
+        if (sheetIdMatch) {
+            const docId = sheetIdMatch[1];
+
+            // 1. Fetch the full workbook htmlview which discovers all tabs & renders multi-sheet tables
+            try {
+                const htmlViewUrl = `https://docs.google.com/spreadsheets/d/${docId}/htmlview`;
+                const htmlViewContent = await this.fetchUrlWithRedirects(htmlViewUrl);
+                if (htmlViewContent && htmlViewContent.trim().length > 0) {
+                    if (htmlViewContent.includes('accounts.google.com') && (htmlViewContent.includes('ServiceLogin') || htmlViewContent.includes('Sign in'))) {
+                        throw new Error('Google Sheet is set to Private. Please open your Google Sheet, click "Share" (top-right), and change "General access" to "Anyone with the link can view" (Viewer)!');
+                    }
+
+                    // Discover all GIDs in the workbook HTML
+                    const gidMatches = htmlViewContent.matchAll(/[#&?]gid=([0-9]+)|data-gid="([0-9]+)"|id="sheet-button-([0-9]+)"|gid:\s*["']?([0-9]+)["']?/gi);
+                    for (const m of gidMatches) {
+                        const foundGid = m[1] || m[2] || m[3] || m[4];
+                        if (foundGid) discoveredGids.add(foundGid);
+                    }
+
+                    // Extract all separate tables from htmlview
+                    const tableRegex = /<table[^>]*>[\s\S]*?<\/table>/gi;
+                    const matches = htmlViewContent.match(tableRegex);
+                    if (matches && matches.length > 0) {
+                        matches.forEach(t => discoveredTables.push({ content: t, type: 'html' }));
+                    }
+                }
+            } catch (err) {
+                if (err.message.includes('Private')) throw err;
+            }
+
+            // 2. Also ensure gid=0 and all discovered GIDs are fetched via gviz/html or export/csv
+            if (discoveredGids.size === 0) {
+                discoveredGids.add('0');
+            }
+
+            for (const gid of Array.from(discoveredGids)) {
+                // Try gviz html export
+                const gvizUrl = `https://docs.google.com/spreadsheets/d/${docId}/gviz/tq?tqx=out:html&gid=${gid}`;
+                try {
+                    const content = await this.fetchUrlWithRedirects(gvizUrl);
+                    if (content && (content.includes('<table') || content.includes('<tr'))) {
+                        discoveredTables.push({ content: content, type: 'html' });
+                    }
+                } catch (e) {
+                    try {
+                        const csvUrl = `https://docs.google.com/spreadsheets/d/${docId}/export?format=csv&gid=${gid}`;
+                        const csvContent = await this.fetchUrlWithRedirects(csvUrl);
+                        if (csvContent && csvContent.trim().length > 0) {
+                            discoveredTables.push({ content: csvContent, type: 'csv' });
+                        }
+                    } catch (e2) {}
+                }
+            }
+        } else if (input.includes('/pubhtml')) {
+            try {
+                const pubHtml = await this.fetchUrlWithRedirects(input);
+                discoveredTables.push({ content: pubHtml, type: 'html' });
+            } catch (e) {}
+        } else {
+            try {
+                const csvData = await this.fetchUrlWithRedirects(input);
+                discoveredTables.push({ content: csvData, type: 'csv' });
+            } catch (e) {}
+        }
+
+        if (discoveredTables.length === 0) {
+            throw new Error('Could not fetch Google Sheet. Make sure Link Sharing is set to "Anyone with the link can view".');
+        }
+
+        // Parse all tables and merge teams and matches logically
+        const mergedTeamsMap = new Map();
+        const mergedMatchesMap = new Map();
+
+        for (const item of discoveredTables) {
+            let rows = [];
+            if (item.type === 'html' || item.content.includes('<table') || item.content.includes('<tr')) {
+                rows = this.parseHtmlTable(item.content);
+            }
+            if (rows.length < 2) {
+                rows = this.parseCsvRows(item.content);
+            }
+            if (rows.length < 2) continue;
+
+            const { teams, matches } = this.parseRowsToTeamsAndMatches(rows);
+
+            // Merge Teams Logically across sheets
+            teams.forEach(team => {
+                const key = (team.name || team.tag || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                if (!key) return;
+
+                if (mergedTeamsMap.has(key)) {
+                    const existing = mergedTeamsMap.get(key);
+                    // Merge Logo if existing is missing/placeholder
+                    if ((!existing.logo || existing.logo.includes('Placeholder')) && team.logo && !team.logo.includes('Placeholder')) {
+                        existing.logo = team.logo;
+                    }
+                    // Merge Tag if existing was auto-sliced
+                    if (team.tag && team.tag.length >= 2 && team.tag.length <= 5) {
+                        existing.tag = team.tag;
+                    }
+                    // Merge Seed
+                    if (!existing.seed && team.seed) {
+                        existing.seed = team.seed;
+                    }
+                    // Merge Players
+                    if (team.players && team.players.length > 0) {
+                        if (!existing.players) existing.players = [];
+                        team.players.forEach(p => {
+                            if (!existing.players.includes(p)) existing.players.push(p);
+                        });
+                    }
+                } else {
+                    mergedTeamsMap.set(key, team);
+                }
+            });
+
+            // Merge Matches Logically
+            matches.forEach(match => {
+                const key = `${match.team_1_tag}_vs_${match.team_2_tag}_${match.stage}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (!mergedMatchesMap.has(key)) {
+                    mergedMatchesMap.set(key, match);
+                }
+            });
+        }
+
+        const allParsedTeams = Array.from(mergedTeamsMap.values());
+        const allParsedMatches = Array.from(mergedMatchesMap.values());
+
+        if (allParsedTeams.length === 0 && allParsedMatches.length === 0) {
+            throw new Error('Spreadsheet parsed successfully, but no team or match data columns were identified. Ensure your columns include headers like "Team Name", "Tag", "Logo", "Roster", or "Seed".');
+        }
+
+        // Save to tournamentData
         const currentData = this.getTournamentData();
-        if (parsedTeams.length > 0) currentData.teams = parsedTeams;
-        if (parsedMatches.length > 0) currentData.matches = parsedMatches;
+        if (allParsedTeams.length > 0) currentData.teams = allParsedTeams;
+        if (allParsedMatches.length > 0) currentData.matches = allParsedMatches;
         currentData.spreadsheetUrl = input;
         currentData.lastSync = Date.now();
 
@@ -1541,9 +1610,9 @@ class fileLoader {
 
         return {
             status: true,
-            message: `Successfully synchronized from Google Sheet! Loaded ${parsedTeams.length} Teams and ${parsedMatches.length} Scheduled Matches.`,
-            teamsCount: parsedTeams.length,
-            matchesCount: parsedMatches.length,
+            message: `Successfully synchronized Google Sheet! Loaded ${allParsedTeams.length} Teams and ${allParsedMatches.length} Matches across all sheet tabs.`,
+            teamsCount: allParsedTeams.length,
+            matchesCount: allParsedMatches.length,
             tournamentData: currentData
         };
     }
@@ -1625,6 +1694,68 @@ class fileLoader {
             gameState: this.getGameState(),
             gameConfig: this.getGameConfiguration(),
             players: this.config.players
+        };
+    }
+
+    setActiveTeamSlot(slot, teamIdentifierOrObject) {
+        const tournament = this.getTournamentData();
+        let team = null;
+
+        if (typeof teamIdentifierOrObject === 'object' && teamIdentifierOrObject !== null) {
+            team = teamIdentifierOrObject;
+        } else {
+            const query = String(teamIdentifierOrObject).toUpperCase().trim();
+            team = tournament.teams.find(t => 
+                (t.id && String(t.id) === query) ||
+                (t.tag && t.tag.toUpperCase() === query) ||
+                (t.name && t.name.toUpperCase() === query)
+            );
+        }
+
+        if (!team) {
+            throw new Error(`Team '${teamIdentifierOrObject}' not found`);
+        }
+
+        const slotNum = parseInt(slot) === 2 ? 2 : 1;
+        const targetTeamKey = slotNum === 2 ? 'team_2' : 'team_1';
+
+        // Update gameState team properties
+        this.config.gameState[targetTeamKey].name = team.name || team.tag || `TEAM ${slotNum}`;
+        this.config.gameState[targetTeamKey].abbreviation = team.tag || (team.name ? team.name.slice(0, 4).toUpperCase() : `T${slotNum}`);
+        if (team.seed) {
+            this.config.gameState[targetTeamKey].team_info = team.seed;
+        }
+        if (team.logo) {
+            this.config.gameState[targetTeamKey].icon_link = this.cleanLogoUrl(team.logo);
+        }
+
+        // Update player rosters in players.json if player names are present
+        if (team.players && Array.isArray(team.players) && team.players.length > 0) {
+            const startIdx = slotNum === 1 ? 0 : 5;
+            for (let i = 0; i < Math.min(5, team.players.length); i++) {
+                const playerKey = `player_${startIdx + i}`;
+                if (this.config.players[playerKey]) {
+                    this.config.players[playerKey].data.username = team.players[i];
+                    this.config.players[playerKey].last_updated = Date.now();
+                }
+            }
+            this.saveStateToFile('players.json', this.config.players);
+        }
+
+        // Update map picks team names
+        if (this.config.mapPicks) {
+            if (!this.config.mapPicks.teams) this.config.mapPicks.teams = ['T1', 'T2'];
+            this.config.mapPicks.teams[slotNum - 1] = this.config.gameState[targetTeamKey].abbreviation;
+            this.saveStateToFile('mapPicks.json', this.config.mapPicks);
+        }
+
+        this.saveStateToFile('gameState.json', this.config.gameState);
+
+        return {
+            status: true,
+            message: `Set Team ${slotNum} to ${team.name || team.tag}!`,
+            team: this.config.gameState[targetTeamKey],
+            slot: slotNum
         };
     }
 

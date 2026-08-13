@@ -10,6 +10,60 @@
     <script src="../resources/js/alerts.js?v=2" defer></script>
     <script src="../resources/js/pre_stream.js?v=2" defer></script>
     <script src="https://kit.fontawesome.com/1061ea1575.js" crossorigin="anonymous"></script>
+    <style>
+        .team-card {
+            background: rgba(20, 24, 36, 0.9);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .team-card:hover {
+            border-color: rgba(0, 242, 254, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .team-logo-preview {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2px;
+        }
+
+        .custom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--radius-lg);
+            max-width: 520px;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+    </style>
 </head>
 <body>
 
@@ -33,7 +87,87 @@
     <div class="panel-wrapper">
         <div class="panel">
             <div class="grid-container" style="width: 100%;">
-                
+
+                <!-- Google Spreadsheet Teams & Rosters Importer Card (Multi-Sheet Intelligent Sync) -->
+                <div class="card" style="grid-column: span 12; border-color: rgba(0, 242, 254, 0.4); background: linear-gradient(180deg, rgba(14, 28, 38, 0.95), rgba(10, 20, 30, 0.95));">
+                    <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">
+                                <i class="fa-solid fa-table-cells" style="color: var(--accent-secondary);"></i> Google Spreadsheet Teams & Rosters Sync (Multi-Sheet Auto-Fetcher)
+                            </span>
+                            <span id="teams-count-badge" class="status-badge" style="background: rgba(0, 242, 254, 0.12); color: #00f2fe; border-color: rgba(0, 242, 254, 0.3);">
+                                0 TEAMS LOADED
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <input type="file" id="teams-csv-input" accept=".csv,.html,.tsv" style="display: none;">
+                            <button id="upload-csv-btn" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">
+                                <i class="fa-solid fa-file-arrow-up"></i> Upload CSV Directly
+                            </button>
+                            <button id="add-team-btn" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
+                                <i class="fa-solid fa-plus"></i> Add Team Manually
+                            </button>
+                            <button id="load-sample-teams-btn" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
+                                <i class="fa-solid fa-folder-open"></i> Load Sample Teams
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sync URL & Controls -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                                GOOGLE SPREADSHEET URL (ALL SHEETS & TABS PARSED AUTOMATICALLY):
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <input id="sheet-url-input" type="text" class="input-field" placeholder="Paste link: https://docs.google.com/spreadsheets/d/1BxiMVs.../edit" style="flex-grow: 1; font-size: 0.85rem;">
+                                <button id="sync-sheet-btn" class="btn btn-accent" style="padding: 8px 18px; white-space: nowrap; font-weight: 700;">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i> Sync with Google Sheet
+                                </button>
+                            </div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
+                                *Supports multi-tab Google Spreadsheets, Drive logo thumbnail links, team seeds, and player rosters. Ensure Link Sharing is set to <b>"Anyone with the link can view"</b>.
+                            </span>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                                AUTO-SYNC FREQUENCY:
+                            </label>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="auto-sync-select" class="input-field" style="flex: 1;">
+                                    <option value="false">Manual Sync Only</option>
+                                    <option value="true">ENABLED (Auto-Sync)</option>
+                                </select>
+                                <select id="sync-interval-select" class="input-field" style="flex: 1;">
+                                    <option value="30">Every 30s</option>
+                                    <option value="60" selected>Every 60s</option>
+                                    <option value="120">Every 2 mins</option>
+                                    <option value="300">Every 5 mins</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Filter & Teams Grid -->
+                    <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1; max-width: 400px;">
+                                <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); font-size: 0.85rem;"></i>
+                                <input id="team-search-input" type="text" class="input-field" placeholder="Search team by name, tag, seed, or player..." style="padding: 5px 10px; font-size: 0.8rem;">
+                            </div>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">
+                                Click <b>"Set as Team 1"</b> or <b>"Set as Team 2"</b> to immediately load a team into the matchup!
+                            </span>
+                        </div>
+
+                        <!-- Dynamic Teams Grid -->
+                        <div id="teams-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; max-height: 460px; overflow-y: auto; padding-right: 4px;">
+                            <!-- Populated dynamically by pre_stream.js -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Team Setup Card -->
                 <div class="card" style="grid-column: span 7;">
                     <div class="card-header">
@@ -152,6 +286,41 @@
                     </div>
                 </div>
 
+            </div>
+    <!-- Add / Edit Team Modal -->
+    <div id="team-modal" class="custom-modal">
+        <div class="modal-content">
+            <h4 id="team-modal-title" style="color: #fff; margin-bottom: 14px; font-family: var(--font-display); font-size: 1.2rem;">
+                <i class="fa-solid fa-users"></i> Add / Edit Team
+            </h4>
+            <input type="hidden" id="modal-team-id">
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <div>
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Team Full Name</label>
+                    <input id="modal-team-name" type="text" class="input-field" placeholder="e.g. Sentinels">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Tag / Abbr (2-4 chars)</label>
+                        <input id="modal-team-tag" type="text" class="input-field" placeholder="e.g. SEN">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Seed / Group</label>
+                        <input id="modal-team-seed" type="text" class="input-field" placeholder="e.g. #1 Seed / Group A">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Logo Image URL or Drive Link</label>
+                    <input id="modal-team-logo" type="text" class="input-field" placeholder="https://... or Google Drive link">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">5-Player Roster (Comma or Line Separated)</label>
+                    <textarea id="modal-team-roster" class="input-field" rows="3" placeholder="TenZ, zekken, Sacy, pANcda, johnqt" style="resize: vertical; font-family: inherit; font-size: 0.8rem;"></textarea>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn" onclick="document.getElementById('team-modal').style.display='none'">Cancel</button>
+                <button type="button" id="save-modal-team-btn" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Team</button>
             </div>
         </div>
     </div>

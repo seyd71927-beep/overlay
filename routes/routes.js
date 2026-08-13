@@ -1015,83 +1015,11 @@ router.post('/api/tournament/upload_sheet_file', memUpload.single('sheetFile'), 
             return res.status(400).json({ status: false, message: 'File must contain at least 1 header row and 1 data row' });
         }
 
-        // Header detection
-        let headerRowIdx = 0;
-        let maxHeaderScore = -1;
-        const keyTerms = ['team', 'name', 'tag', 'logo', 'icon', 'image', 'seed', 'player', 'roster', 'match', 'stage', 'format', 'upload', 'file', 'link'];
-
-        for (let r = 0; r < Math.min(10, rows.length); r++) {
-            const rowCells = rows[r].map(h => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
-            let score = 0;
-            rowCells.forEach(cell => {
-                if (keyTerms.some(k => cell.includes(k))) score++;
-            });
-            if (score > maxHeaderScore) {
-                maxHeaderScore = score;
-                headerRowIdx = r;
-            }
-        }
-
-        const headers = rows[headerRowIdx].map(h => String(h).toLowerCase().replace(/[^a-z0-9]/g, ''));
-        const findCol = (...keys) => headers.findIndex(h => keys.some(k => h.includes(k)));
-
-        const teamNameIdx = findCol('teamname', 'team', 'name', 'org');
-        const tagIdx = findCol('tag', 'abbr', 'abbreviation', 'code', 'short');
-        const logoIdx = findCol('logo', 'teamlogo', 'logourl', 'icon', 'teamicon', 'image', 'teamimage', 'avatar', 'pic', 'picture', 'photo', 'badge', 'emblem', 'banner', 'crest', 'symbol', 'img', 'upload', 'file', 'attachment', 'drive', 'link');
-        const seedIdx = findCol('seed', 'rank', 'group', 'division', 'pool', 'tier');
-        const p1Idx = findCol('player1', 'p1', 'roster1');
-        const p2Idx = findCol('player2', 'p2', 'roster2');
-        const p3Idx = findCol('player3', 'p3', 'roster3');
-        const p4Idx = findCol('player4', 'p4', 'roster4');
-        const p5Idx = findCol('player5', 'p5', 'roster5');
-        const rosterIdx = findCol('roster', 'players', 'lineup', 'member');
-
-        const parsedTeams = [];
-        for (let r = headerRowIdx + 1; r < rows.length; r++) {
-            const row = rows[r];
-            if (teamNameIdx !== -1 && row[teamNameIdx] && String(row[teamNameIdx]).trim() !== '') {
-                const teamName = String(row[teamNameIdx]).trim();
-                let teamTag = tagIdx !== -1 && row[tagIdx] ? String(row[tagIdx]).trim() : teamName.slice(0, 4).toUpperCase();
-                let teamLogo = logoIdx !== -1 && row[logoIdx] ? dataBus.cleanLogoUrl(String(row[logoIdx])) : '';
-
-                if (!teamLogo) {
-                    for (let c = 0; c < row.length; c++) {
-                        if (c !== teamNameIdx && c !== tagIdx && c !== seedIdx && row[c]) {
-                            const val = String(row[c]).trim();
-                            if (val.startsWith('http') || val.includes('drive.google.com') || val.includes('discordapp.com') || val.includes('=IMAGE(') || /\.(png|jpg|jpeg|webp|svg)/i.test(val)) {
-                                teamLogo = dataBus.cleanLogoUrl(val);
-                                if (teamLogo) break;
-                            }
-                        }
-                    }
-                }
-
-                let teamSeed = seedIdx !== -1 && row[seedIdx] ? String(row[seedIdx]).trim() : '';
-                let players = [];
-                [p1Idx, p2Idx, p3Idx, p4Idx, p5Idx].forEach(idx => {
-                    if (idx !== -1 && row[idx]) {
-                        const p = dataBus.cleanPlayerName(row[idx]);
-                        if (p) players.push(p);
-                    }
-                });
-
-                if (players.length === 0 && rosterIdx !== -1 && row[rosterIdx]) {
-                    players = String(row[rosterIdx]).split(/[,;\n/]/).map(p => dataBus.cleanPlayerName(p)).filter(Boolean);
-                }
-
-                parsedTeams.push({
-                    id: `team_${parsedTeams.length + 1}_${Date.now()}`,
-                    name: teamName,
-                    tag: teamTag.toUpperCase(),
-                    logo: teamLogo,
-                    seed: teamSeed,
-                    players: players
-                });
-            }
-        }
+        const { teams: parsedTeams, matches: parsedMatches } = dataBus.parseRowsToTeamsAndMatches(rows);
 
         const currentData = dataBus.getTournamentData();
         if (parsedTeams.length > 0) currentData.teams = parsedTeams;
+        if (parsedMatches.length > 0) currentData.matches = parsedMatches;
         currentData.lastSync = Date.now();
         dataBus.saveTournamentData(currentData);
         emitEvent(req, 'tournamentUpdate', currentData);
