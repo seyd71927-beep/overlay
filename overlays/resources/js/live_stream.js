@@ -423,6 +423,8 @@ class LiveStreamOperator {
 
     updateLocalGameState(state) {
         this.gameState = { ...this.gameState, ...state };
+        if (state.team_1) this.team1Data = state.team_1;
+        if (state.team_2) this.team2Data = state.team_2;
         if (state.tournament_stage && document.getElementById('tournament-stage-input')) {
             document.getElementById('tournament-stage-input').value = state.tournament_stage;
         }
@@ -438,8 +440,8 @@ class LiveStreamOperator {
         const t1Side = document.getElementById('display-team1-side');
         const t2Side = document.getElementById('display-team2-side');
 
-        if (t1Name) t1Name.textContent = (this.team1Data.abbreviation || 'TEAM 1').toUpperCase();
-        if (t2Name) t2Name.textContent = (this.team2Data.abbreviation || 'TEAM 2').toUpperCase();
+        if (t1Name) t1Name.textContent = (this.team1Data.name || this.team1Data.abbreviation || 'TEAM 1').toUpperCase();
+        if (t2Name) t2Name.textContent = (this.team2Data.name || this.team2Data.abbreviation || 'TEAM 2').toUpperCase();
         if (t1Score) t1Score.textContent = this.gameState.team_1_score;
         if (t2Score) t2Score.textContent = this.gameState.team_2_score;
         if (roundNum) roundNum.textContent = `ROUND ${this.gameState.round_number || 1}`;

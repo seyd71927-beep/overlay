@@ -154,7 +154,17 @@ class fileLoader {
             this._adminPassword = process.env.ADMIN_KEY || process.env.ADMIN_PASSWORD || appConfig.admin_key || 'zenx';
 
             this.isInitialized = true;
-            this.syncPlayersFromTournamentTeams();
+            if (this.config.gameState?.team_1?.abbreviation === 'T1' && this.config.gameState?.team_2?.abbreviation === 'T2') {
+                const tourney = this.getTournamentData();
+                if (tourney && tourney.matches && tourney.matches.length > 0) {
+                    this.loadMatch(tourney.matches[0].id);
+                } else if (tourney && tourney.teams && tourney.teams.length >= 2) {
+                    this.setActiveTeamSlot(1, tourney.teams[0]);
+                    this.setActiveTeamSlot(2, tourney.teams[1]);
+                }
+            } else {
+                this.syncPlayersFromTournamentTeams();
+            }
             console.info('fileLoader() | All Config Files Loaded into Memory Successfully!');
         } catch (err) {
             console.error('fileLoader() | Error loading config files:', err.message);
