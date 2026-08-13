@@ -34,100 +34,40 @@
         <div class="panel">
             <div class="grid-container" style="width: 100%;">
                 
-                <!-- Worldwide & India-to-India Remote Control Hub -->
-                <div class="card" style="grid-column: span 12; border-color: rgba(0, 230, 118, 0.5); background: linear-gradient(180deg, rgba(14, 34, 28, 0.95), rgba(10, 22, 20, 0.95)); box-shadow: 0 8px 30px rgba(0, 230, 118, 0.1);">
-                    <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+                <!-- Streamer PC Lockfile Bridge & Remote Control Hub -->
+                <div class="card" style="grid-column: span 12; border-color: rgba(0, 230, 118, 0.4); background: linear-gradient(180deg, rgba(14, 28, 22, 0.95), rgba(10, 20, 16, 0.95)); box-shadow: 0 8px 30px rgba(0, 230, 118, 0.08);">
+                    <div class="card-header" style="flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">
-                                <i class="fa-solid fa-earth-americas" style="color: #00e676;"></i> Worldwide & India-to-India Remote Control Hub
+                                <i class="fa-solid fa-bolt" style="color: #00e676;"></i> Streamer PC Automated In-Game Lockfile Bridge
                             </span>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                             <a href="?page=stream" class="btn btn-accent" style="padding: 5px 14px; font-size: 0.75rem; font-weight: 700; text-decoration: none;">
                                 <i class="fa-solid fa-play"></i> Open Live Match Operator
                             </a>
-                            <span class="status-badge" style="background: rgba(255, 153, 51, 0.15); color: #ff9933; border-color: rgba(255, 153, 51, 0.4);">
-                                🇮🇳 INDIA-TO-INDIA READY
-                            </span>
-                            <span class="status-badge" style="background: rgba(0, 242, 254, 0.15); color: #00f2fe; border-color: rgba(0, 242, 254, 0.4);">
-                                🌐 GLOBAL SYNC ACTIVE
-                            </span>
-                            <span id="bridge-connection-status-badge" class="status-badge" style="background: rgba(0,230,118,0.15); color: #00e676; border-color: rgba(0,230,118,0.4);">
-                                ONLINE & READY
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- 3 Usage Scenarios -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 16px;">
-                        
-                        <!-- Scenario 1: India to India -->
-                        <div style="background: rgba(255, 153, 51, 0.05); padding: 14px; border-radius: var(--radius-md); border: 1px solid rgba(255, 153, 51, 0.25);">
-                            <h5 style="color: #ff9933; font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                                <i class="fa-solid fa-location-dot"></i> 1. India-to-India Control
-                            </h5>
-                            <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 6px;">
-                                <b>Streamer in India ⇄ Admin in India:</b><br>
-                                • Works across all Indian networks (Jio 5G, Airtel, ACT, Vi, BSNL).<br>
-                                • Open the Admin Link on your mobile phone or laptop anywhere in India.<br>
-                                • Ultra-low latency (&lt;20ms) via Indian edge nodes.
-                            </p>
-                        </div>
-
-                        <!-- Scenario 2: Cross Country -->
-                        <div style="background: rgba(0, 242, 254, 0.05); padding: 14px; border-radius: var(--radius-md); border: 1px solid rgba(0, 242, 254, 0.25);">
-                            <h5 style="color: var(--accent-secondary); font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-                                <i class="fa-solid fa-plane"></i> 2. Cross-Country (India ⇄ Overseas)
-                            </h5>
-                            <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 6px;">
-                                <b>India Streamer ⇄ Qatar / Overseas Operator:</b><br>
-                                • Run <b>start_online_tunnel.bat</b> or host on <b>Railway.app</b>.<br>
-                                • Admin controls scores and maps from any country in real-time.<br>
-                                • In-game bridge syncs player health, weapons, and kills live.
-                            </p>
-                        </div>
-
-                        <!-- Scenario 3: QR Code & Mobile -->
-                        <div style="background: rgba(0, 230, 118, 0.05); padding: 14px; border-radius: var(--radius-md); border: 1px solid rgba(0, 230, 118, 0.25); display: flex; gap: 12px; align-items: center;">
-                            <div id="qr-container" style="background: #fff; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center; min-width: 84px; height: 84px;">
-                                <img id="mobile-qr-code" src="" alt="Admin QR Code" style="width: 72px; height: 72px; display: block;">
-                            </div>
-                            <div>
-                                <h5 style="color: #00e676; font-size: 0.85rem; margin-bottom: 4px;">
-                                    <i class="fa-solid fa-qrcode"></i> Mobile Phone Control
-                                </h5>
-                                <p style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.35; margin-bottom: 6px;">
-                                    Scan with iPhone or Android camera to control from your phone anywhere in India or the world!
-                                </p>
-                                <button class="btn btn-success" style="padding: 3px 8px; font-size: 0.72rem;" onclick="openMobileAdmin()">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Mobile Panel
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Streamer PC Auto-Bridge Connection Card -->
-                    <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 242, 254, 0.35); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-                            <div>
-                                <span style="font-size: 0.95rem; font-weight: 700; color: #fff;">
-                                    <i class="fa-solid fa-bolt" style="color: #00f2fe;"></i> Streamer PC Automated In-Game Bridge
-                                </span>
-                                <span style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                                    Your friend runs this on their PC while streaming. Telemetry (Rounds, Scores, Maps, Player Health, Weapons) syncs to your dashboard automatically!
-                                </span>
-                            </div>
                             <span id="bridge-live-indicator" class="status-badge" style="background: rgba(255,255,255,0.06); color: var(--text-muted); border-color: rgba(255,255,255,0.15); font-size: 0.78rem;">
                                 ⚪ WAITING FOR STREAMER PC
                             </span>
                         </div>
+                    </div>
 
+                    <!-- Direct Bridge Download & Execution -->
+                    <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <span style="font-size: 0.85rem; font-weight: 700; color: #00e676; display: block;">
+                                🚀 Instant Local Lockfile Telemetry Streaming
+                            </span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                                Run on the streamer PC while playing/spectating VALORANT to stream live HP, armor, weapon loadouts, spike plant, and scores.
+                            </span>
+                        </div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                            <a href="/bridge.bat" download="zenx_streamer_bridge.bat" class="btn btn-success" style="padding: 8px 16px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                            <a href="/bridge.bat" download="zenx_streamer_bridge.bat" class="btn btn-success" style="padding: 8px 16px; font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-weight: 700;">
                                 <i class="fa-solid fa-download"></i> 1. Download Streamer Bridge (.bat)
                             </a>
-                            <button class="btn btn-accent" style="padding: 8px 16px; font-size: 0.82rem;" onclick="copyBridgeCmd()">
-                                <i class="fa-solid fa-terminal"></i> 2. Copy Streamer 1-Line Command
+                            <button class="btn btn-accent" style="padding: 8px 16px; font-size: 0.82rem; font-weight: 700;" onclick="copyBridgeCmd()">
+                                <i class="fa-solid fa-terminal"></i> 2. Copy 1-Line PowerShell Command
                             </button>
                         </div>
                     </div>
