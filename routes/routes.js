@@ -390,7 +390,7 @@ router.get('/admin', (req, res) => {
             case 'prestream':
                 return res.status(200).sendFile(path.join(__dirname, '../panel/admin_pre_live.html'));
             case 'tournament':
-                return res.status(200).sendFile(path.join(__dirname, '../panel/admin_tournament.html'));
+                return res.redirect('/admin?page=prestream');
             case 'stream':
                 return res.status(200).sendFile(path.join(__dirname, '../panel/admin_live.html'));
             case 'settings':

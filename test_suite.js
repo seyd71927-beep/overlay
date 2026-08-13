@@ -166,7 +166,7 @@ async function runAllTests() {
         assert('Authenticated GET /admin?page=prestream returns 200 with Pre-Stream HTML', authAdmin.status === 200 && authAdmin.raw.includes('Pre-Stream'));
 
         const authTourney = await request('GET', '/admin?page=tournament');
-        assert('Authenticated GET /admin?page=tournament returns 200 with Tournament HTML', authTourney.status === 200 && authTourney.raw.includes('Tournament Mode'));
+        assert('Authenticated GET /admin?page=tournament redirects (302) to prestream', authTourney.status === 302);
 
         const authLive = await request('GET', '/admin?page=stream');
         assert('Authenticated GET /admin?page=stream returns 200 with Live Operator HTML', authLive.status === 200 && authLive.raw.includes('Live Match Operator'));
