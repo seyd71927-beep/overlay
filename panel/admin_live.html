@@ -77,9 +77,12 @@
                                     </span>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 8px; align-items: center;">
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <a href="?page=settings" class="btn" style="padding: 5px 12px; font-size: 0.72rem; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3); text-decoration: none;">
+                                    <i class="fa-solid fa-gear"></i> Lockfile & Settings Hub
+                                </a>
                                 <a href="../bridge.bat" download="zenx_valorant_bridge.bat" class="btn" style="padding: 5px 12px; font-size: 0.72rem; background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.3); text-decoration: none;">
-                                    <i class="fa-solid fa-download"></i> Download Streamer Bridge (.bat)
+                                    <i class="fa-solid fa-download"></i> Streamer Bridge (.bat)
                                 </a>
                                 <button type="button" id="override-manual-btn" class="btn" style="padding: 5px 12px; font-size: 0.72rem; background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3);">
                                     <i class="fa-solid fa-hand"></i> Take Manual Control
@@ -112,9 +115,14 @@
                                     </span>
                                 </div>
                             </div>
-                            <button type="button" id="switch-to-auto-btn" class="btn btn-accent" style="padding: 5px 14px; font-size: 0.72rem; font-weight: 700;">
-                                <i class="fa-solid fa-bolt"></i> Switch to Automatic
-                            </button>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <a href="?page=settings" class="btn" style="padding: 5px 12px; font-size: 0.72rem; background: rgba(255, 255, 255, 0.08); text-decoration: none;">
+                                    <i class="fa-solid fa-gear"></i> Settings
+                                </a>
+                                <button type="button" id="switch-to-auto-btn" class="btn btn-accent" style="padding: 5px 14px; font-size: 0.72rem; font-weight: 700;">
+                                    <i class="fa-solid fa-bolt"></i> Switch to Automatic (Lockfile)
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
