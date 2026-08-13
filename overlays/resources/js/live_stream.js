@@ -247,44 +247,6 @@ class LiveStreamOperator {
             badge.style.background = isTourney ? 'rgba(155, 89, 182, 0.2)' : 'rgba(0, 230, 118, 0.15)';
             badge.style.color = isTourney ? '#d29bfe' : '#00e676';
             badge.style.borderColor = isTourney ? 'rgba(155, 89, 182, 0.5)' : 'rgba(0, 230, 118, 0.4)';
-
-            // Update live custom match attribute pills
-            const isPaused = !!(status.is_paused || status.isPaused);
-            const pausePill = document.getElementById('attr-pause-pill');
-            if (pausePill) {
-                const timerStr = (status.pause_timer > 0) ? ` (${status.pause_timer}s)` : '';
-                pausePill.textContent = isPaused ? `⏸️ PAUSE: ON${timerStr}` : '⏸️ PAUSE: OFF';
-                pausePill.style.background = isPaused ? 'rgba(255, 170, 0, 0.25)' : 'rgba(255,255,255,0.06)';
-                pausePill.style.color = isPaused ? '#ffaa00' : 'var(--text-muted)';
-            }
-
-            const ghostPill = document.getElementById('attr-ghost-pill');
-            if (ghostPill) {
-                const isGhost = !!(status.ghost_mode || status.isGhostMode);
-                ghostPill.textContent = isGhost ? '👻 GHOST: ACTIVE' : '👻 GHOST: OFF';
-                ghostPill.style.background = isGhost ? 'rgba(0, 242, 254, 0.2)' : 'rgba(255,255,255,0.06)';
-                ghostPill.style.color = isGhost ? '#00f2fe' : 'var(--text-muted)';
-            }
-
-            const cheatsPill = document.getElementById('attr-cheats-pill');
-            if (cheatsPill) {
-                const allowCheats = !!(status.allow_cheats);
-                cheatsPill.textContent = allowCheats ? '⚡ CHEATS: ON' : '⚡ CHEATS: OFF';
-                cheatsPill.style.background = allowCheats ? 'rgba(255, 70, 85, 0.2)' : 'rgba(255,255,255,0.06)';
-                cheatsPill.style.color = allowCheats ? '#ff4655' : 'var(--text-muted)';
-            }
-
-            const otPill = document.getElementById('attr-ot-pill');
-            if (otPill) {
-                otPill.textContent = isTourney ? '🏆 OT: WIN BY 2' : '🎮 OT: SUDDEN DEATH';
-                otPill.style.color = isTourney ? '#00e676' : 'var(--text-muted)';
-            }
-
-            const typePill = document.getElementById('attr-type-pill');
-            if (typePill) {
-                typePill.textContent = isTourney ? '🏆 MODE: CUSTOM TOURNAMENT' : (isCustom ? '🎮 MODE: CUSTOM MATCH' : '⚡ MODE: STANDARD');
-                typePill.style.color = isTourney ? '#d29bfe' : '#00e676';
-            }
         } else {
             badge.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> INDIA BRIDGE: WAITING FOR CLIENT`;
             badge.style.background = 'rgba(255, 170, 0, 0.15)';
