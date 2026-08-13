@@ -63,6 +63,11 @@ class helValorantGameScore {
                     this._switchSides = state.switch_sides;
                     this.switchSides();
                 }
+                if (state.is_paused !== undefined || state.custom_attributes?.is_paused !== undefined) {
+                    const isPaused = state.is_paused ?? state.custom_attributes?.is_paused;
+                    const pauseTimer = state.pause_timer ?? state.custom_attributes?.pause_timer;
+                    this.updatePauseState(isPaused, pauseTimer);
+                }
             });
 
             socket.on('winBannerTrigger', (data) => {
@@ -157,8 +162,28 @@ class helValorantGameScore {
                     this._switchSides = json.switch_sides;
                     this.switchSides();
                 }
+                if (json.is_paused !== undefined || json.custom_attributes?.is_paused !== undefined) {
+                    const isPaused = json.is_paused ?? json.custom_attributes?.is_paused;
+                    const pauseTimer = json.pause_timer ?? json.custom_attributes?.pause_timer;
+                    this.updatePauseState(isPaused, pauseTimer);
+                }
             }
         } catch (e) {}
+    }
+
+    updatePauseState(isPaused, pauseTimer = 0) {
+        const banner = document.getElementById('match-pause-banner');
+        if (!banner) return;
+        if (isPaused) {
+            banner.style.display = 'flex';
+            const counter = document.getElementById('pause-timer-counter');
+            if (counter) {
+                counter.textContent = (pauseTimer > 0) ? `${pauseTimer}s` : '';
+                counter.style.display = (pauseTimer > 0) ? 'inline-block' : 'none';
+            }
+        } else {
+            banner.style.display = 'none';
+        }
     }
 
     updateTournamentStage(text) {

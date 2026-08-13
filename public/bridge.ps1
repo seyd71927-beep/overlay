@@ -441,6 +441,10 @@ while ($true) {
         $t2Count = if ($team2Players) { $team2Players.Count } else { 5 }
         $isCustomMatch = ($priv.provisioningFlow -eq "CustomGame" -or ($priv.matchPresenceData -and $priv.matchPresenceData.provisioningFlow -eq "CustomGame") -or ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerProvisioningFlow -eq "CustomGame") -or $priv.queueId -eq "custom")
         $isTournament = ($isCustomMatch -and ($priv.tournamentMode -eq $true -or ($priv.matchPresenceData -and $priv.matchPresenceData.tournamentMode -eq $true) -or ($priv.customGameData -and $priv.customGameData.gameRules -and $priv.customGameData.gameRules.TournamentMode -eq "true")))
+        $isPaused = ($priv.isGamePaused -eq $true -or ($priv.matchPresenceData -and $priv.matchPresenceData.isGamePaused -eq $true))
+        $pauseTimer = if ($priv.pauseTimer -ne $null) { [int]$priv.pauseTimer } elseif ($priv.matchPresenceData -and $priv.matchPresenceData.pauseTimer -ne $null) { [int]$priv.matchPresenceData.pauseTimer } else { 0 }
+        $ghostMode = ($priv.ghostMode -eq $true -or ($priv.customGameData -and $priv.customGameData.gameRules -and $priv.customGameData.gameRules.GhostMode -eq "true"))
+        $allowCheats = ($priv.allowCheats -eq $true -or ($priv.customGameData -and $priv.customGameData.gameRules -and $priv.customGameData.gameRules.AllowCheats -eq "true"))
         $matchType = if ($isTournament) { "CUSTOM_TOURNAMENT" } elseif ($isCustomMatch) { "CUSTOM_MATCH" } else { "STANDARD" }
 
         $payload = @{
@@ -450,6 +454,10 @@ while ($true) {
             is_custom_match = $isCustomMatch
             isTournamentMode = $isTournament
             is_tournament_mode = $isTournament
+            is_paused = $isPaused
+            pause_timer = $pauseTimer
+            ghost_mode = $ghostMode
+            allow_cheats = $allowCheats
             match_type = $matchType
             map = $detectedMap
             round_number = $roundNum

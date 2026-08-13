@@ -507,7 +507,7 @@ async function pollLoop() {
                             else team2Players.push(pObj);
                         }
                     }
-        // Detect Custom Game and Tournament Mode
+        // Detect Custom Game and Tournament Mode & Rules
         const isCustomMatch = !!(
             isCustom || 
             matchData?.ProvisioningFlowID === 'CustomGame' ||
@@ -525,14 +525,69 @@ async function pollLoop() {
             priv.tournamentMode === true
         );
 
+        // Custom Match Rules & Live Gameplay Attributes from Lockfile
+        const isPaused = !!(
+            matchData?.IsPaused === true ||
+            matchData?.MatchmakingData?.IsPaused === true ||
+            priv.matchPresenceData?.isGamePaused === true ||
+            priv.isGamePaused === true
+        );
+
+        const pauseTimer = (
+            matchData?.PauseTimer ||
+            matchData?.MatchmakingData?.PauseTimer ||
+            priv.matchPresenceData?.pauseTimer ||
+            priv.pauseTimer ||
+            0
+        );
+
+        const isGhostMode = !!(
+            matchData?.CustomGameData?.Settings?.GameRules?.AllowGhostMode === 'true' ||
+            matchData?.CustomGameData?.Settings?.GameRules?.GhostMode === 'true' ||
+            pregameData?.CustomGameData?.Settings?.GameRules?.AllowGhostMode === 'true' ||
+            pregameData?.CustomGameData?.Settings?.GameRules?.GhostMode === 'true' ||
+            priv.customGameData?.gameRules?.GhostMode === 'true' ||
+            priv.ghostMode === true
+        );
+
+        const allowCheats = !!(
+            matchData?.CustomGameData?.Settings?.GameRules?.AllowCheats === 'true' ||
+            matchData?.MatchmakingData?.AllowCheats === true ||
+            pregameData?.CustomGameData?.Settings?.GameRules?.AllowCheats === 'true' ||
+            priv.customGameData?.gameRules?.AllowCheats === 'true' ||
+            priv.allowCheats === true
+        );
+
+        const overtimeWinByTwo = !!(
+            matchData?.CustomGameData?.Settings?.GameRules?.OvertimeWinByTwo === 'true' ||
+            matchData?.MatchmakingData?.OvertimeWinByTwo === true ||
+            pregameData?.CustomGameData?.Settings?.GameRules?.OvertimeWinByTwo === 'true' ||
+            isTournamentMode
+        );
+
+        const playOutAllRounds = !!(
+            matchData?.CustomGameData?.Settings?.GameRules?.PlayOutAllRounds === 'true' ||
+            pregameData?.CustomGameData?.Settings?.GameRules?.PlayOutAllRounds === 'true'
+        );
+
         const matchType = isTournamentMode 
             ? 'CUSTOM_TOURNAMENT' 
             : (isCustomMatch ? 'CUSTOM_MATCH' : 'STANDARD');
 
+        const customAttributes = {
+            is_paused: isPaused,
+            pause_timer: pauseTimer,
+            ghost_mode: isGhostMode,
+            allow_cheats: allowCheats,
+            tournament_mode: isTournamentMode,
+            overtime_win_by_two: overtimeWinByTwo,
+            play_out_all_rounds: playOutAllRounds
+        };
+
         // Auto-deduce teams if available
         const deducedTeams = deduceTeamsFromRosters(team1Players, team2Players);
 
-        // Build Payload with dynamic team counts & match type from Lockfile
+        // Build Payload with dynamic team counts & match attributes from Lockfile
         const payload = {
             phase: loopState,
             inGame: (loopState === 'INGAME'),
@@ -540,6 +595,13 @@ async function pollLoop() {
             is_custom_match: isCustomMatch,
             isTournamentMode: isTournamentMode,
             is_tournament_mode: isTournamentMode,
+            is_paused: isPaused,
+            pause_timer: pauseTimer,
+            ghost_mode: isGhostMode,
+            allow_cheats: allowCheats,
+            overtime_win_by_two: overtimeWinByTwo,
+            play_out_all_rounds: playOutAllRounds,
+            custom_attributes: customAttributes,
             match_type: matchType,
             map: detectedMap,
             round_number: roundNum,

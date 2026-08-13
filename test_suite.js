@@ -423,12 +423,19 @@ async function runAllTests() {
             `t1 count=${bridgeRosterCheck.body.team_1_list.length}, t2 count=${bridgeRosterCheck.body.team_2_list.length}, t1[4].is_dead=${bridgeRosterCheck.body.team_1_list[4]?.is_dead}`
         );
 
-        // Test Custom Tournament Match Detection
+        // Test Custom Tournament Match Detection & Custom Match Attributes (Ghost mode, Pause timer)
         const tourneySync = await request('POST', '/api/bridge/sync_match', {
             phase: 'INGAME', inGame: true, map: 'bind', round_number: 1,
-            isCustom: true, isTournamentMode: true, match_type: 'CUSTOM_TOURNAMENT'
+            isCustom: true, isTournamentMode: true, match_type: 'CUSTOM_TOURNAMENT',
+            is_paused: true, pause_timer: 45, ghost_mode: true, allow_cheats: true
         }, true);
         assert('POST /api/bridge/sync_match detects Custom Tournament Mode match', tourneySync.status === 200 && tourneySync.body.bridgeStatus.isTournamentMode === true && tourneySync.body.bridgeStatus.matchType === 'CUSTOM_TOURNAMENT');
+        assert('POST /api/bridge/sync_match ingests custom match attributes (pause, ghost mode, timer)', 
+            tourneySync.status === 200 && 
+            tourneySync.body.bridgeStatus.is_paused === true && 
+            tourneySync.body.bridgeStatus.pause_timer === 45 && 
+            tourneySync.body.bridgeStatus.ghost_mode === true
+        );
 
         // Regression: spike_down must NOT be true when spike='up' (was a bug where !!payload.spike was used)
         // Runs last so the playerless payload doesn't wipe the roster before roster assertions above
