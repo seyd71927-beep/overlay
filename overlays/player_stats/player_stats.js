@@ -206,6 +206,7 @@ function buildVCTPlayerCard(p, isRightTeam) {
     const isDead = (p.health === 0 || p.is_dead);
     const agent = (p.agent || 'jett').toLowerCase();
     const weapon = (p.weapon || 'classic').toLowerCase();
+    const weaponFile = weapon === 'marshal' ? 'marshall' : weapon;
     const hp = isDead ? 0 : Math.max(0, Math.min(100, (p.health ?? 100)));
     const shield = isDead ? 0 : Math.max(0, (p.shield ?? 0));
     const credits = p.credits ?? 800;
@@ -227,7 +228,7 @@ function buildVCTPlayerCard(p, isRightTeam) {
     // Weapon silhouette & Creds
     const weaponHTML = `
         <div class="weapon-silhouette-box">
-            <img class="vct-weapon-img" src="../visual_assets/game_icons/${weapon}.webp" alt="${weapon}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+            <img class="vct-weapon-img" src="../visual_assets/game_icons/${weaponFile}.webp" alt="${weapon}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
             <span class="weapon-fallback-text" style="display:none;">${weapon.toUpperCase()}</span>
         </div>`;
 

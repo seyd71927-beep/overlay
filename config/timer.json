@@ -1,6 +1,6 @@
 {
-    "isOn": true,
+    "isOn": false,
     "time": 300000,
-    "description": "MATCH STARTING SOON",
-    "startTime": 1786351079313
+    "description": "TEST BREAK",
+    "startTime": 1786604582616
 }

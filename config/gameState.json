@@ -1,22 +1,33 @@
 {
-    "team_1_score": 0,
-    "team_2_score": 0,
-    "round_number": 1,
-    "spike_down": false,
+    "tournament_stage": "FINALS (BO3)",
+    "team_1": {
+        "name": "FNATIC",
+        "abbreviation": "FNC",
+        "team_info": "#1 Seed",
+        "icon_link": "https://drive.google.com/thumbnail?id=1yga077_G35M_NgA8ragAUoSRFeAnHMOJ&sz=w500"
+    },
+    "team_2": {
+        "name": "SENTINELS",
+        "abbreviation": "SEN",
+        "team_info": "#2 Seed",
+        "icon_link": "https://drive.google.com/thumbnail?id=1gJaMqGxn3tMFJ75lofrxA-2Xsr3NDdY-&sz=w500"
+    },
+    "team_1_score": 4,
+    "team_2_score": 2,
+    "round_number": 7,
+    "spike_down": true,
     "switch_sides": false,
     "round_over": false,
-    "tournament_stage": "Grand Finals",
     "game_flow": {
         "map_1": {
             "state": "current",
             "winner": "",
             "team_1_score": 0,
             "team_2_score": 0,
-            "map_pick": "",
-            "map": "sunset"
-        }
-    }
-}       "map_2": {
+            "map_pick": "team_1",
+            "map": "breeze"
+        },
+        "map_2": {
             "state": "upcomming",
             "winner": "",
             "team_1_score": 0,
@@ -32,22 +43,113 @@
             "map_pick": "",
             "map": "sunset"
         }
-    }
-}}       "map_4": {
-            "state": "upcomming",
-            "winner": "",
-            "team_1_score": 0,
-            "team_2_score": 0,
-            "map_pick": "team_2",
-            "map": "pearl"
+    },
+    "team_1_count": 5,
+    "team_2_count": 5,
+    "roster_mode": "manual",
+    "map": "ascent",
+    "team_1_roster": [
+        {
+            "username": "[FNC] Boaster",
+            "agent": "omen",
+            "health": 100,
+            "shield": 50,
+            "weapon": "phantom",
+            "ult_points_gained": 6,
+            "credits": 3900,
+            "is_dead": false
         },
-        "map_5": {
-            "state": "upcomming",
-            "winner": "",
-            "team_1_score": 0,
-            "team_2_score": 0,
-            "map_pick": "",
-            "map": "sunset"
+        {
+            "username": "[FNC] Derke",
+            "agent": "jett",
+            "health": 100,
+            "shield": 50,
+            "weapon": "operator",
+            "ult_points_gained": 7,
+            "credits": 4500,
+            "is_dead": false
+        },
+        {
+            "username": "[FNC] Alfajer",
+            "agent": "killjoy",
+            "health": 80,
+            "shield": 25,
+            "weapon": "vandal",
+            "ult_points_gained": 4,
+            "credits": 2800,
+            "is_dead": false
+        },
+        {
+            "username": "[FNC] Chronicle",
+            "agent": "breach",
+            "health": 100,
+            "shield": 50,
+            "weapon": "vandal",
+            "ult_points_gained": 5,
+            "credits": 3100,
+            "is_dead": false
+        },
+        {
+            "username": "[FNC] Leo",
+            "agent": "sova",
+            "health": 0,
+            "shield": 0,
+            "weapon": "vandal",
+            "ult_points_gained": 2,
+            "credits": 1900,
+            "is_dead": true
         }
-    }
+    ],
+    "team_2_roster": [
+        {
+            "username": "[SEN] TenZ",
+            "agent": "omen",
+            "health": 100,
+            "shield": 50,
+            "weapon": "vandal",
+            "ult_points_gained": 7,
+            "credits": 5000,
+            "is_dead": false
+        },
+        {
+            "username": "[SEN] zekken",
+            "agent": "raze",
+            "health": 45,
+            "shield": 0,
+            "weapon": "phantom",
+            "ult_points_gained": 5,
+            "credits": 3400,
+            "is_dead": false
+        },
+        {
+            "username": "[SEN] Sacy",
+            "agent": "fade",
+            "health": 100,
+            "shield": 50,
+            "weapon": "vandal",
+            "ult_points_gained": 3,
+            "credits": 2900,
+            "is_dead": false
+        },
+        {
+            "username": "[SEN] johnqt",
+            "agent": "cypher",
+            "health": 100,
+            "shield": 50,
+            "weapon": "vandal",
+            "ult_points_gained": 6,
+            "credits": 4100,
+            "is_dead": false
+        },
+        {
+            "username": "[SEN] Zellsis",
+            "agent": "kayo",
+            "health": 0,
+            "shield": 0,
+            "weapon": "vandal",
+            "ult_points_gained": 1,
+            "credits": 2100,
+            "is_dead": true
+        }
+    ]
 }

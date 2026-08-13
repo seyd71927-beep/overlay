@@ -740,6 +740,18 @@ router.get('/api/tournament/data', (req, res) => {
     return res.status(200).json(data);
 });
 
+router.get('/api/tournament/sample_data', (req, res) => {
+    try {
+        const samplePath = path.join(__dirname, '../config/tournamentData.json');
+        if (fs.existsSync(samplePath)) {
+            const raw = fs.readFileSync(samplePath, 'utf8');
+            const data = JSON.parse(raw);
+            return res.status(200).json(data);
+        }
+    } catch (e) {}
+    return res.status(200).json(dataBus.getTournamentData());
+});
+
 router.get('/api/tournament/sync_local_logos', (req, res) => {
     const data = dataBus.syncLocalLogos ? dataBus.syncLocalLogos() : dataBus.getTournamentData();
     emitEvent(req, 'tournamentUpdate', data);

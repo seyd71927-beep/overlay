@@ -716,11 +716,12 @@ class TournamentManager {
     async loadSampleData() {
         if (!confirm('Load sample tournament demo data (6 Teams & 3 Playoff Matches)?')) return;
         try {
-            const res = await fetch('../config/tournamentData.json');
+            const res = await fetch('../api/tournament/sample_data');
             if (res.status === 200) {
                 const sample = await res.json();
                 this.tournamentData = sample;
                 this.renderAll();
+                this.updateSyncStatusBadge();
                 if (typeof successAlertLowerBottom === 'function') {
                     successAlertLowerBottom('Loaded Sample Tournament Demo Data!');
                 }

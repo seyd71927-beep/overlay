@@ -34,7 +34,7 @@ class helValorantGameScore {
         this.spikeInAnimation = [{transform: 'translateY(-80px) scale(1.2)', color: 'red'}];
         this.spikeOutAnimation = [{transform: 'translateY(0px) scale(1)', color: 'white'}];
         this.animationTiming = {duration: 350, fill: 'forwards'};
-        this.roundWinPanelAnimation = [{transform: 'translateX(-50%) translateY(-50%)', flter: 'blur(0px)'}, {flter: 'blur(100px)'},{transform: 'translateX(-50%) translateY(calc(540px - 100%))', flter: 'blur(0px)'}];
+        this.roundWinPanelAnimation = [{transform: 'translateX(-50%) translateY(-50%)', filter: 'blur(0px)'}, {filter: 'blur(100px)'},{transform: 'translateX(-50%) translateY(calc(540px - 100%))', filter: 'blur(0px)'}];
         // Socket.io real-time connection
         if (typeof io !== 'undefined') {
             const socket = io();
@@ -142,12 +142,20 @@ class helValorantGameScore {
                 if (json.spike_down && !this.spikeDown) {
                     this.spikeDown = true;
                     this.startSpikeCountDown(45000);
+                } else if (!json.spike_down && this.spikeDown) {
+                    this.resetSpikeAnimation();
                 }
                 if (json.tournament_stage !== undefined) {
                     this.updateTournamentStage(json.tournament_stage);
                 }
-                if (json.round_over) {
-                    this.updateTeamScores(json.team_1_score, json.team_2_score);
+                if (json.team_1_score !== undefined && json.team_2_score !== undefined) {
+                    if (json.team_1_score !== this.leftTeamPoints || json.team_2_score !== this.rightTeamPoints) {
+                        this.updateTeamScores(json.team_1_score, json.team_2_score);
+                    }
+                }
+                if (json.switch_sides !== undefined && json.switch_sides !== this._switchSides) {
+                    this._switchSides = json.switch_sides;
+                    this.switchSides();
                 }
             }
         } catch (e) {}

@@ -1,19 +1,19 @@
 {
     "teams": [
-        "NEXAURA",
-        "ZYCON"
+        "ACCE",
+        "S1N"
     ],
     "picks": [
+        [
+            "bind",
+            "ban"
+        ],
         [
             "ascent",
             "ban"
         ],
         [
             "breeze",
-            "ban"
-        ],
-        [
-            "lotus",
             "attack"
         ],
         [
@@ -25,7 +25,7 @@
             "ban"
         ],
         [
-            "bind",
+            "lotus",
             "ban"
         ],
         [
