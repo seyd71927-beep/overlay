@@ -16,6 +16,7 @@ class LiveStreamOperator {
         this.playersData = {};
         this.team1Count = 5;
         this.team2Count = 5;
+        this.operatingMode = 'manual';
 
         this.agentsList = [
             'Jett', 'Reyna', 'Raze', 'Viper', 'Omen', 'Brimstone', 'Phoenix', 'Sova',
@@ -32,6 +33,7 @@ class LiveStreamOperator {
     async init() {
         this.initSocket();
         this.bindEvents();
+        await this.fetchOperatingMode();
         await this.fetchInitialState();
         await this.fetchCasters();
         await this.fetchBridgeStatus();
@@ -89,7 +91,86 @@ class LiveStreamOperator {
             this.socket.on('bridgeTelemetry', (status) => {
                 this.updateBridgeBadge(status);
             });
+
+            this.socket.on('operatorModeUpdate', (data) => {
+                if (data && data.mode) {
+                    this.applyModeUI(data.mode);
+                }
+            });
         }
+    }
+
+    async fetchOperatingMode() {
+        try {
+            const res = await fetch('../api/operator/mode');
+            if (res.status === 200) {
+                const data = await res.json();
+                this.operatingMode = data.mode || 'manual';
+                this.applyModeUI(this.operatingMode);
+            }
+        } catch (e) {
+            console.error('Error fetching operating mode:', e);
+        }
+    }
+
+    async setOperatingMode(newMode) {
+        const formData = new FormData();
+        formData.append('mode', newMode);
+        try {
+            const res = await fetch('../api/operator/mode', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.status) {
+                this.operatingMode = data.mode;
+                this.applyModeUI(data.mode);
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom(data.message || `Switched to ${data.mode.toUpperCase()} mode!`);
+                }
+            }
+        } catch (e) {
+            console.error('Error setting operating mode:', e);
+        }
+    }
+
+    applyModeUI(mode) {
+        this.operatingMode = mode;
+        const manualBtn = document.getElementById('mode-manual-btn');
+        const autoBtn = document.getElementById('mode-auto-btn');
+        const autoBanner = document.getElementById('mode-auto-banner');
+        const manualBanner = document.getElementById('mode-manual-banner');
+
+        const isAuto = (mode === 'automatic');
+
+        if (manualBtn && autoBtn) {
+            if (isAuto) {
+                // Auto active
+                autoBtn.style.background = 'rgba(0, 230, 118, 0.2)';
+                autoBtn.style.color = '#00e676';
+                autoBtn.style.border = '1px solid rgba(0, 230, 118, 0.5)';
+                autoBtn.style.boxShadow = '0 0 10px rgba(0, 230, 118, 0.25)';
+
+                manualBtn.style.background = 'transparent';
+                manualBtn.style.color = 'var(--text-muted)';
+                manualBtn.style.border = '1px solid transparent';
+                manualBtn.style.boxShadow = 'none';
+            } else {
+                // Manual active
+                manualBtn.style.background = 'rgba(0, 242, 254, 0.2)';
+                manualBtn.style.color = '#00f2fe';
+                manualBtn.style.border = '1px solid rgba(0, 242, 254, 0.5)';
+                manualBtn.style.boxShadow = '0 0 10px rgba(0, 242, 254, 0.25)';
+
+                autoBtn.style.background = 'transparent';
+                autoBtn.style.color = 'var(--text-muted)';
+                autoBtn.style.border = '1px solid transparent';
+                autoBtn.style.boxShadow = 'none';
+            }
+        }
+
+        if (autoBanner) autoBanner.style.display = isAuto ? 'block' : 'none';
+        if (manualBanner) manualBanner.style.display = isAuto ? 'none' : 'block';
     }
 
     async fetchBridgeStatus() {
@@ -280,6 +361,12 @@ class LiveStreamOperator {
     }
 
     bindEvents() {
+        // Operating Mode toggles
+        document.getElementById('mode-manual-btn')?.addEventListener('click', () => this.setOperatingMode('manual'));
+        document.getElementById('mode-auto-btn')?.addEventListener('click', () => this.setOperatingMode('automatic'));
+        document.getElementById('override-manual-btn')?.addEventListener('click', () => this.setOperatingMode('manual'));
+        document.getElementById('switch-to-auto-btn')?.addEventListener('click', () => this.setOperatingMode('automatic'));
+
         // Roster size switcher
         document.getElementById('roster-size-select')?.addEventListener('change', async (e) => {
             const val = e.target.value;

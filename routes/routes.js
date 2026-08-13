@@ -731,6 +731,40 @@ router.post('/set_auto_fetch_config', upload.none(), (req, res) => {
     return res.status(500).send({ status: false, message: 'Live service not initialized' });
 });
 
+router.get('/api/operator/mode', (req, res) => {
+    const liveService = req.app.get('liveService');
+    const liveStatus = liveService ? liveService.getStatus() : null;
+    const currentMode = dataBus.getOperatorMode ? dataBus.getOperatorMode() : 'manual';
+    return res.status(200).json({
+        status: true,
+        mode: currentMode,
+        isAutomatic: currentMode === 'automatic',
+        liveServiceStatus: liveStatus
+    });
+});
+
+router.post('/api/operator/mode', upload.none(), (req, res) => {
+    const { mode } = req.body;
+    const newMode = (mode === 'automatic' || mode === 'auto') ? 'automatic' : 'manual';
+    if (dataBus.setOperatorMode) {
+        dataBus.setOperatorMode(newMode);
+    }
+    const liveService = req.app.get('liveService');
+    if (liveService) {
+        liveService.autoFetchEnabled = (newMode === 'automatic');
+    }
+    emitEvent(req, 'operatorModeUpdate', {
+        mode: newMode,
+        isAutomatic: newMode === 'automatic'
+    });
+    return res.status(200).json({
+        status: true,
+        mode: newMode,
+        isAutomatic: newMode === 'automatic',
+        message: newMode === 'automatic' ? 'Switched to Automatic Mode (Live Telemetry)' : 'Switched to Manual Mode (Operator Control)'
+    });
+});
+
 // =========================================
 //       TOURNAMENT MODE API ENDPOINTS
 // =========================================

@@ -199,6 +199,18 @@ class fileLoader {
         this.saveStateToFile('appConfig.json', this.config.appConfig);
     }
 
+    getOperatorMode() {
+        return (this.config.appConfig && this.config.appConfig.operator_mode) ? this.config.appConfig.operator_mode : 'manual';
+    }
+
+    setOperatorMode(mode) {
+        if (!this.config.appConfig) this.config.appConfig = {};
+        const safeMode = (mode === 'automatic' || mode === 'auto') ? 'automatic' : 'manual';
+        this.config.appConfig.operator_mode = safeMode;
+        this.saveStateToFile('appConfig.json', this.config.appConfig);
+        return safeMode;
+    }
+
     generateRandomUserToken() {
         return crypto.randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '').slice(0, 12);
     }

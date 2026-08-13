@@ -40,6 +40,75 @@
         <div class="panel">
             <div class="grid-container" style="width: 100%;">
                 
+                <!-- Operating Mode Selector Card (Manual vs Automatic Live Mode) -->
+                <div class="card" style="grid-column: span 12; border-color: rgba(0, 242, 254, 0.4); background: linear-gradient(180deg, rgba(14, 22, 34, 0.95), rgba(10, 16, 24, 0.95)); margin-bottom: 2px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                        <div>
+                            <span style="font-size: 1.15rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+                                <i class="fa-solid fa-sliders" style="color: var(--accent-secondary);"></i> LIVE MATCH OPERATING MODE
+                            </span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 3px;">
+                                Choose between <b>Manual Operator Control</b> or <b>Automatic Live Telemetry Sync</b>:
+                            </span>
+                        </div>
+
+                        <!-- Mode Toggle Buttons -->
+                        <div style="display: flex; background: rgba(0, 0, 0, 0.5); padding: 4px; border-radius: var(--radius-md); border: 1px solid var(--panel-border); gap: 6px;">
+                            <button type="button" id="mode-manual-btn" class="btn" style="padding: 8px 18px; font-size: 0.82rem; font-weight: 800; border-radius: var(--radius-sm); transition: all 0.25s ease; background: rgba(0, 242, 254, 0.2); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.5); box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);">
+                                <i class="fa-solid fa-gamepad"></i> 🕹️ MANUAL MODE
+                            </button>
+                            <button type="button" id="mode-auto-btn" class="btn" style="padding: 8px 18px; font-size: 0.82rem; font-weight: 800; border-radius: var(--radius-sm); transition: all 0.25s ease; background: transparent; color: var(--text-muted); border: 1px solid transparent;">
+                                <i class="fa-solid fa-bolt"></i> ⚡ AUTOMATIC MODE (LIVE IN-GAME)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Automatic Mode Info Banner -->
+                    <div id="mode-auto-banner" style="display: none; margin-top: 14px; background: rgba(0, 230, 118, 0.08); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: var(--radius-sm); padding: 12px 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 10px; height: 10px; background: #00e676; border-radius: 50%; display: inline-block; box-shadow: 0 0 10px #00e676;"></span>
+                                <div>
+                                    <span style="font-weight: 800; font-size: 0.85rem; color: #00e676;">
+                                        ⚡ AUTOMATIC MODE ACTIVE — LIVE TELEMETRY SYNC ENABLED
+                                    </span>
+                                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                                        Scores, round numbers, spike plant 45s timers, halftime side swaps, player HP, weapons, and deaths sync automatically from live VALORANT telemetry!
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <a href="../bridge.bat" download="zenx_valorant_bridge.bat" class="btn" style="padding: 5px 12px; font-size: 0.72rem; background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.3); text-decoration: none;">
+                                    <i class="fa-solid fa-download"></i> Download Streamer Bridge (.bat)
+                                </a>
+                                <button type="button" id="override-manual-btn" class="btn" style="padding: 5px 12px; font-size: 0.72rem; background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3);">
+                                    <i class="fa-solid fa-hand"></i> Take Manual Control
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Mode Info Banner -->
+                    <div id="mode-manual-banner" style="margin-top: 14px; background: rgba(0, 242, 254, 0.08); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: var(--radius-sm); padding: 12px 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-gamepad" style="color: var(--accent-secondary); font-size: 1.1rem;"></i>
+                                <div>
+                                    <span style="font-weight: 800; font-size: 0.85rem; color: var(--accent-secondary);">
+                                        🕹️ MANUAL MODE ACTIVE — FULL OPERATOR CONTROL
+                                    </span>
+                                    <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 2px;">
+                                        Use the buttons below to manually update scores, change rounds, plant the spike, trigger win banners, and customize player stats.
+                                    </span>
+                                </div>
+                            </div>
+                            <button type="button" id="switch-to-auto-btn" class="btn btn-accent" style="padding: 5px 14px; font-size: 0.72rem; font-weight: 700;">
+                                <i class="fa-solid fa-bolt"></i> Switch to Automatic
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Match Score & Spike Controller Card -->
                 <div class="card" style="grid-column: span 6;">
                     <div class="card-header">

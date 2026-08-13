@@ -6,5 +6,6 @@
         "riot_id": "MAD BASHA#BOSS",
         "api_key": "",
         "lock_manual_teams": false
-    }
+    },
+    "operator_mode": "manual"
 }

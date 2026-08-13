@@ -151,6 +151,15 @@ async function runAllTests() {
         const autoFetch = await request('GET', '/get_auto_fetch_status');
         assert('GET /get_auto_fetch_status returns live service status', autoFetch.status === 200 && typeof autoFetch.body.autoFetchEnabled === 'boolean');
 
+        const getOpMode = await request('GET', '/api/operator/mode');
+        assert('GET /api/operator/mode returns operator mode', getOpMode.status === 200 && typeof getOpMode.body.mode === 'string');
+
+        const setOpAuto = await request('POST', '/api/operator/mode', { mode: 'automatic' }, true);
+        assert('POST /api/operator/mode switches to automatic', setOpAuto.status === 200 && setOpAuto.body.mode === 'automatic');
+
+        const setOpManual = await request('POST', '/api/operator/mode', { mode: 'manual' }, true);
+        assert('POST /api/operator/mode switches to manual', setOpManual.status === 200 && setOpManual.body.mode === 'manual');
+
         // --- 2. AUTHENTICATION & ADMIN ACCESS ---
         console.log('\n\x1b[36m=== 2. Authentication & Admin Security ===\x1b[0m');
         const unauthAdmin = await request('GET', '/admin');
