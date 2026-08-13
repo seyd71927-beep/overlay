@@ -362,7 +362,7 @@ async function pollLoop() {
             priv = JSON.parse(Buffer.from(valorantPresence.private, 'base64').toString('utf8'));
         } catch (e) {}
 
-        const loopState = priv.sessionLoopState || 'MENUS';
+        let loopState = (priv.sessionLoopState || 'MENUS').toUpperCase();
         const isCustom = (priv.provisioningFlow === 'CustomGame');
         const rawMap = (priv.matchMap || '').toLowerCase();
 
@@ -374,24 +374,35 @@ async function pollLoop() {
             }
         }
 
-        const t1Score = parseInt(priv.partyOwnerMatchScore) || 0;
-        const t2Score = parseInt(priv.partyOwnerMatchScoreEnemy) || 0;
-        const roundNum = t1Score + t2Score + 1;
+        let t1Score = parseInt(priv.partyOwnerMatchScore) || 0;
+        let t2Score = parseInt(priv.partyOwnerMatchScoreEnemy) || 0;
 
         // 3. Coregame / Pregame Match extraction for exact custom tournament players
         let team1Players = [];
         let team2Players = [];
         let puuidsToResolve = [];
+        const puuid = cachedSession?.puuid || valorantPresence.puuid;
 
-        if (loopState === 'INGAME') {
-            // Coregame In-Game
-            const puuid = cachedSession?.puuid || valorantPresence.puuid;
-            let matchData = null;
-
-            if (puuid) {
+        // Priority 1: Check if core-game is active directly
+        let matchData = null;
+        if (puuid) {
+            try {
                 const corePlayer = await makeRiotRequest(`/core-game/v1/players/${puuid}`);
                 if (corePlayer && corePlayer.MatchID) {
+                    loopState = 'INGAME';
                     matchData = await makeRiotRequest(`/core-game/v1/matches/${corePlayer.MatchID}`);
+                }
+            } catch (e) {}
+        }
+
+        if (matchData) {
+            if (matchData.MapID) {
+                const cMap = matchData.MapID.toLowerCase();
+                for (const k in MAP_PATH_MAP) {
+                    if (cMap.includes(k)) {
+                        detectedMap = MAP_PATH_MAP[k];
+                        break;
+                    }
                 }
             }
 

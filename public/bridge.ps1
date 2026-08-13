@@ -251,7 +251,20 @@ while ($true) {
             "Content-Type" = "application/json"
         }
 
-        # 1. Query Local Riot Client Chat Presences
+        # 1. Fetch Local Streamer Session to get exact PUUID
+        $localPuuid = $null
+        $localGameName = ""
+        try {
+            $session = Invoke-RestMethod -Uri "https://127.0.0.1:$port/chat/v1/session" -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
+            if ($session -and $session.puuid) {
+                $localPuuid = $session.puuid
+                if ($session.game_name) {
+                    $localGameName = "$($session.game_name)#$($session.game_tag)"
+                }
+            }
+        } catch {}
+
+        # 2. Query Local Riot Client Chat Presences
         $sessionUrl = "https://127.0.0.1:$port/chat/v4/presences"
         $presences = $null
         $isLoggedOut = $false
@@ -282,40 +295,112 @@ while ($true) {
         $t2Score = 0
         $team1Players = @()
         $team2Players = @()
-        $localPuuid = $null
         $foundValorantPresence = $false
 
-        # Parse Presences (Works for Spectator, In-Game Players, and Observers)
+        # 3. Direct Core-Game Check (Live In-Game Match Inspection)
+        if ($localPuuid) {
+            try {
+                $corePlayer = Invoke-RestMethod -Uri "https://127.0.0.1:$port/core-game/v1/players/$localPuuid" -Method GET -Headers $headers -TimeoutSec 2 -ErrorAction SilentlyContinue
+                if ($corePlayer -and $corePlayer.MatchID) {
+                    $loopState = "INGAME"
+                    $matchData = Invoke-RestMethod -Uri "https://127.0.0.1:$port/core-game/v1/matches/$($corePlayer.MatchID)" -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
+                    if ($matchData) {
+                        if ($matchData.MapID) {
+                            $rawMap = $matchData.MapID.ToString().ToLower()
+                            foreach ($key in $mapMap.Keys) {
+                                if ($rawMap.Contains($key)) {
+                                    $detectedMap = $mapMap[$key]
+                                    break
+                                }
+                            }
+                        }
+
+                        if ($matchData.Players) {
+                            $allPuuids = @()
+                            foreach ($p in $matchData.Players) {
+                                if ($p.Subject) { $allPuuids += $p.Subject }
+                            }
+
+                            $nameMap = @{}
+                            if ($allPuuids.Count -gt 0) {
+                                try {
+                                    $nameJson = $allPuuids | ConvertTo-Json -Compress
+                                    $namesRes = Invoke-RestMethod -Uri "https://127.0.0.1:$port/name-service/v2/players" -Method PUT -Body $nameJson -Headers $headers -ContentType "application/json" -TimeoutSec 3 -ErrorAction SilentlyContinue
+                                    if ($namesRes) {
+                                        foreach ($n in $namesRes) {
+                                            if ($n.Subject -and $n.GameName) {
+                                                $nameMap[$n.Subject] = "$($n.GameName)"
+                                            }
+                                        }
+                                    }
+                                } catch {}
+                            }
+
+                            foreach ($p in $matchData.Players) {
+                                $isBlue = ($p.TeamID -eq "Blue" -or $p.TeamID -eq "TeamOne")
+                                $charId = if ($p.CharacterID) { $p.CharacterID.ToString().ToLower() } else { "" }
+                                $agentName = if ($agentMap.ContainsKey($charId)) { $agentMap[$charId] } else { "jett" }
+                                $pIgn = if ($nameMap.ContainsKey($p.Subject)) { $nameMap[$p.Subject] } else { "Player" }
+                                
+                                $pObj = @{
+                                    puuid = $p.Subject
+                                    username = $pIgn
+                                    name = $pIgn
+                                    tag = ""
+                                    agent = $agentName
+                                    health = 100
+                                    shield = 50
+                                    weapon = "vandal"
+                                    credits = 3900
+                                    ult_points_gained = 4
+                                    ult_points_needed = 7
+                                    is_dead = $false
+                                }
+                                if ($isBlue) { $team1Players += $pObj } else { $team2Players += $pObj }
+                            }
+                        }
+                    }
+                }
+            } catch {}
+        }
+
+        # 4. Check Presences for Scores and Fallback Map (Works for Spectator & Player)
         if ($presences -and $presences.presences) {
             foreach ($p in $presences.presences) {
                 if ($p.product -eq "valorant") {
                     $foundValorantPresence = $true
+                    $isSelf = ($localPuuid -ne $null -and $p.puuid -eq $localPuuid)
+                    
                     if ($p.private) {
                         try {
                             $rawPriv = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($p.private))
                             $priv = $rawPriv | ConvertFrom-Json
-                            if ($priv.sessionLoopState -eq "INGAME") {
-                                $loopState = "INGAME"
-                                $t1Score = if ($priv.partyOwnerMatchScore) { [int]$priv.partyOwnerMatchScore } else { 0 }
-                                $t2Score = if ($priv.partyOwnerMatchScoreEnemy) { [int]$priv.partyOwnerMatchScoreEnemy } else { 0 }
-                                $roundNum = $t1Score + $t2Score + 1
+                            $stateStr = if ($priv.sessionLoopState) { $priv.sessionLoopState.ToString().ToUpper() } else { "" }
 
-                                $rawMap = if ($priv.matchMap) { $priv.matchMap.ToString().ToLower() } else { "" }
-                                foreach ($key in $mapMap.Keys) {
-                                    if ($rawMap.Contains($key)) {
-                                        $detectedMap = $mapMap[$key]
-                                        break
+                            if ($stateStr -eq "INGAME") {
+                                if ($loopState -ne "INGAME" -or $isSelf) {
+                                    $loopState = "INGAME"
+                                    if ($priv.partyOwnerMatchScore -ne $null) {
+                                        $t1Score = [int]$priv.partyOwnerMatchScore
+                                    }
+                                    if ($priv.partyOwnerMatchScoreEnemy -ne $null) {
+                                        $t2Score = [int]$priv.partyOwnerMatchScoreEnemy
+                                    }
+                                    $roundNum = $t1Score + $t2Score + 1
+
+                                    $rawMap = if ($priv.matchMap) { $priv.matchMap.ToString().ToLower() } else { "" }
+                                    foreach ($key in $mapMap.Keys) {
+                                        if ($rawMap.Contains($key)) {
+                                            $detectedMap = $mapMap[$key]
+                                            break
+                                        }
                                     }
                                 }
-                                break
-                            } elseif ($priv.sessionLoopState -eq "PREGAME") {
+                            } elseif ($stateStr -eq "PREGAME" -and $loopState -ne "INGAME") {
                                 $loopState = "PREGAME"
                             }
                         } catch {}
                     }
-                }
-                if ($p.puuid -and -not $localPuuid) {
-                    $localPuuid = $p.puuid
                 }
             }
         }
@@ -326,39 +411,7 @@ while ($true) {
             continue
         }
 
-        # Check Core-Game Roster (If In-Game)
-        if ($localPuuid -and $loopState -eq "INGAME") {
-            try {
-                $corePlayer = Invoke-RestMethod -Uri "https://127.0.0.1:$port/core-game/v1/players/$localPuuid" -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
-                if ($corePlayer -and $corePlayer.MatchID) {
-                    $matchData = Invoke-RestMethod -Uri "https://127.0.0.1:$port/core-game/v1/matches/$($corePlayer.MatchID)" -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
-                    if ($matchData -and $matchData.Players) {
-                        foreach ($p in $matchData.Players) {
-                            $isBlue = ($p.TeamID -eq "Blue" -or $p.TeamID -eq "TeamOne")
-                            $charId = $p.CharacterID
-                            $agentName = if ($agentMap.ContainsKey($charId)) { $agentMap[$charId] } else { "jett" }
-                            
-                            $pObj = @{
-                                puuid = $p.Subject
-                                username = "Player"
-                                tag = ""
-                                agent = $agentName
-                                health = 100
-                                shield = 50
-                                weapon = "vandal"
-                                credits = 800
-                                ult_points_gained = 0
-                                ult_points_needed = 7
-                                is_dead = $false
-                            }
-                            if ($isBlue) { $team1Players += $pObj } else { $team2Players += $pObj }
-                        }
-                    }
-                }
-            } catch {}
-        }
-
-        # Build Telemetry Payload
+        # 5. Build Telemetry Payload
         $payload = @{
             phase = $loopState
             inGame = ($loopState -eq "INGAME")
@@ -379,11 +432,13 @@ while ($true) {
         } catch {}
 
         if ($loopState -eq "INGAME") {
-            Show-Status "[LIVE SYNC ACTIVE] Map: $($detectedMap.ToUpper()) | Round $roundNum ($t1Score-$t2Score) | Streaming to $OverlayServer" "Green"
+            $accountLabel = if ($localGameName) { " ($localGameName)" } else { "" }
+            Show-Status "[LIVE SYNC ACTIVE]$accountLabel Map: $($detectedMap.ToUpper()) | Round $roundNum ($t1Score-$t2Score) | Streaming to $OverlayServer" "Green"
         } elseif ($loopState -eq "PREGAME") {
             Show-Status "[AGENT SELECT] In Match Agent Select Lobby | Connected to $OverlayServer" "Magenta"
         } else {
-            Show-Status "[CONNECTED] VALORANT Online (In Menus/Lobby) | Connected to $OverlayServer" "Cyan"
+            $accountLabel = if ($localGameName) { " ($localGameName)" } else { "" }
+            Show-Status "[CONNECTED] VALORANT Online$accountLabel (In Menus/Lobby) | Connected to $OverlayServer" "Cyan"
         }
 
     } catch {
