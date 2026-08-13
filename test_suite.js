@@ -154,7 +154,7 @@ async function runAllTests() {
         // --- 2. AUTHENTICATION & ADMIN ACCESS ---
         console.log('\n\x1b[36m=== 2. Authentication & Admin Security ===\x1b[0m');
         const unauthAdmin = await request('GET', '/admin');
-        assert('Unauthenticated /admin redirects/blocks access', unauthAdmin.status === 401 || unauthAdmin.status === 302 || unauthAdmin.raw.includes('auth'));
+        assert('Unauthenticated /admin returns 401 or 302', unauthAdmin.status === 401 || unauthAdmin.status === 302, `Got status ${unauthAdmin.status}`);
 
         const authFail = await request('POST', '/authenticate', { pw: 'wrong_password_xyz' }, true);
         assert('POST /authenticate with bad password returns 401', authFail.status === 401);
@@ -333,6 +333,8 @@ async function runAllTests() {
 
         const setActiveTeam = await request('POST', '/api/tournament/set_active_team', { teamTag: 'ACCE', slot: 'team_1' }, true);
         assert('POST /api/tournament/set_active_team switches active team 1 slot', setActiveTeam.status === 200 && setActiveTeam.body.status === true);
+        const activeTeamCheck = await request('GET', '/get_game_state');
+        assert('GET /get_game_state reflects set_active_team change (team_1 = ACCE)', activeTeamCheck.body.team_1.abbreviation === 'ACCE', `Got: ${activeTeamCheck.body.team_1?.abbreviation}`);
 
         const deleteTeam = await request('POST', '/api/tournament/delete_team', { teamId: 'TEST' }, true);
         assert('POST /api/tournament/delete_team deletes team cleanly', deleteTeam.status === 200);
@@ -366,8 +368,31 @@ async function runAllTests() {
                 { username: '[SEN] johnqt', agent: 'cypher', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 6, credits: 4100, is_dead: false },
                 { username: '[SEN] Zellsis', agent: 'kayo', health: 0, shield: 0, weapon: 'vandal', ult_points_gained: 1, credits: 2100, is_dead: true }
             ]
-        });
+        }, true);
         assert('POST /api/bridge/sync_match ingests live match telemetry', bridgeSync.status === 200 && bridgeSync.body.status === true);
+
+        // Re-sync bridge with full player payload to override any tournament roster sync from Section 7
+        // (load_match + set_active_team call syncPlayersFromTournamentTeams which can overwrite player names)
+        await request('POST', '/api/bridge/sync_match', {
+            phase: 'INGAME', inGame: true, map: 'ascent', round_number: 7,
+            team_1_score: 4, team_2_score: 2, spike: 'down',
+            team_1: { abbreviation: 'FNC', name: 'FNATIC' },
+            team_2: { abbreviation: 'SEN', name: 'SENTINELS' },
+            team_1_players: [
+                { username: '[FNC] Boaster', agent: 'omen', health: 100, shield: 50, weapon: 'phantom', ult_points_gained: 6, credits: 3900, is_dead: false },
+                { username: '[FNC] Derke', agent: 'jett', health: 100, shield: 50, weapon: 'operator', ult_points_gained: 7, credits: 4500, is_dead: false },
+                { username: '[FNC] Alfajer', agent: 'killjoy', health: 80, shield: 25, weapon: 'vandal', ult_points_gained: 4, credits: 2800, is_dead: false },
+                { username: '[FNC] Chronicle', agent: 'breach', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 5, credits: 3100, is_dead: false },
+                { username: '[FNC] Leo', agent: 'sova', health: 0, shield: 0, weapon: 'vandal', ult_points_gained: 2, credits: 1900, is_dead: true }
+            ],
+            team_2_players: [
+                { username: '[SEN] TenZ', agent: 'omen', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 7, credits: 5000, is_dead: false },
+                { username: '[SEN] zekken', agent: 'raze', health: 45, shield: 0, weapon: 'phantom', ult_points_gained: 5, credits: 3400, is_dead: false },
+                { username: '[SEN] Sacy', agent: 'fade', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 3, credits: 2900, is_dead: false },
+                { username: '[SEN] johnqt', agent: 'cypher', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 6, credits: 4100, is_dead: false },
+                { username: '[SEN] Zellsis', agent: 'kayo', health: 0, shield: 0, weapon: 'vandal', ult_points_gained: 1, credits: 2100, is_dead: true }
+            ]
+        }, true);
 
         const bridgeStatus = await request('GET', '/api/bridge/status');
         assert('GET /api/bridge/status reports bridge connected & online', bridgeStatus.status === 200 && bridgeStatus.body.online === true && bridgeStatus.body.map === 'ascent');
@@ -380,11 +405,19 @@ async function runAllTests() {
         );
 
         const bridgeRosterCheck = await request('GET', '/get_player_stats');
-        assert('Player roster HUD reflects live in-game player names & health', 
-            bridgeRosterCheck.body.team_1_list[0].username === '[FNC] Boaster' && 
-            bridgeRosterCheck.body.team_2_list[0].username === '[SEN] TenZ' && 
-            bridgeRosterCheck.body.team_1_list[4].is_dead === true
+        assert('Player roster HUD reflects bridge is_dead + health (5v5 with dead players)', 
+            bridgeRosterCheck.body.team_1_list.length === 5 &&
+            bridgeRosterCheck.body.team_2_list.length === 5 &&
+            bridgeRosterCheck.body.team_1_list[4].is_dead === true &&
+            bridgeRosterCheck.body.team_1_list[4].health === 0 &&
+            bridgeRosterCheck.body.team_2_list[4].is_dead === true,
+            `t1 count=${bridgeRosterCheck.body.team_1_list.length}, t2 count=${bridgeRosterCheck.body.team_2_list.length}, t1[4].is_dead=${bridgeRosterCheck.body.team_1_list[4]?.is_dead}`
         );
+
+        // Regression: spike_down must NOT be true when spike='up' (was a bug where !!payload.spike was used)
+        // Runs last so the playerless payload doesn't wipe the roster before roster assertions above
+        const bridgeSpikeUp = await request('POST', '/api/bridge/sync_match', { phase: 'INGAME', inGame: true, map: 'ascent', round_number: 7, team_1_score: 4, team_2_score: 2, spike: 'up' }, true);
+        assert('POST /api/bridge/sync_match spike="up" does NOT set spike_down=true (regression)', bridgeSpikeUp.status === 200 && bridgeSpikeUp.body.bridgeStatus.spike_down === false, `spike_down was: ${bridgeSpikeUp.body?.bridgeStatus?.spike_down}`);
 
         // --- 9. STATIC OVERLAY PAGES & ASSET RESOLUTION ---
         console.log('\n\x1b[36m=== 9. Static Overlay Pages & Asset Verification ===\x1b[0m');
@@ -435,6 +468,24 @@ async function runAllTests() {
     } catch (err) {
         console.error('\x1b[31m[Test Suite Error]\x1b[0m', err);
     } finally {
+        // Teardown: reset disk state so next test run starts clean
+        try {
+            const cleanGameState = {
+                tournament_stage: 'FINALS (BO3)',
+                team_1: { name: 'TEAM 1', abbreviation: 'T1', team_info: '#1 Seed', icon_link: '../visual_assets/blueTeamPlaceholder.jpg' },
+                team_2: { name: 'TEAM 2', abbreviation: 'T2', team_info: '#2 Seed', icon_link: '../visual_assets/redTeamPlaceholder.jpg' },
+                team_1_score: 0, team_2_score: 0, round_number: 1,
+                spike_down: false, switch_sides: false, round_over: false,
+                team_1_count: 5, team_2_count: 5, roster_mode: 'manual',
+                game_flow: {}
+            };
+            const cleanMapPicks = { teams: ['T1', 'T2'], picks: [['ascent','ban'],['bind','ban'],['haven','attack'],['split','attack'],['breeze','ban'],['lotus','ban'],['sunset','attack']], series_type: 'bo3' };
+            fs.writeFileSync(path.join(__dirname, './config/gameState.json'), JSON.stringify(cleanGameState, null, 4), 'utf8');
+            fs.writeFileSync(path.join(__dirname, './config/mapPicks.json'), JSON.stringify(cleanMapPicks, null, 4), 'utf8');
+            console.log('\x1b[90m[Teardown] Disk state reset to clean defaults.\x1b[0m');
+        } catch (e) {
+            console.warn('[Teardown] Failed to reset disk state:', e.message);
+        }
         server.close();
         console.log('\n======================================================');
         console.log(`TOTAL TESTS: ${totalTests} | PASSED: ${passedTests} | FAILED: ${failedTests.length}`);

@@ -387,6 +387,8 @@ async function pollLoop() {
 
         let t1Score = priv.partyOwnerMatchScoreAllyTeam ?? priv.partyPresenceData?.partyOwnerMatchScoreAllyTeam ?? priv.partyOwnerMatchScore ?? 0;
         let t2Score = priv.partyOwnerMatchScoreEnemyTeam ?? priv.partyPresenceData?.partyOwnerMatchScoreEnemyTeam ?? priv.partyOwnerMatchScoreEnemy ?? 0;
+        let roundNum = priv.matchPresenceData?.partyOwnerMatchCurrentScore ?? priv.partyOwnerMatchCurrentScore ?? priv.currentRound ?? 1;
+        if (typeof roundNum !== 'number' || isNaN(roundNum) || roundNum < 1) roundNum = 1;
 
         // 3. Coregame / Pregame Match extraction for exact custom tournament players
         let team1Players = [];
@@ -456,7 +458,6 @@ async function pollLoop() {
             }
         } else if (loopState === 'PREGAME') {
             // Agent Selection
-            const puuid = cachedSession?.puuid || valorantPresence.puuid;
             let pregameData = null;
 
             if (puuid) {

@@ -202,7 +202,7 @@
             "id": "team_13_1786453320844",
             "name": "JMP Esports",
             "tag": "JMP",
-            "logo": "https://drive.google.com/thumbnail?id=19EmCs-9bedsg9d4vY0xc4F4jwzKIzlyA&sz=w500",
+            "logo": "/logo/JMP Esports.jpeg",
             "seed": "Ascendant",
             "players": [
                 "L E V I#H1NT",
@@ -219,7 +219,7 @@
             "id": "team_14_1786453320844",
             "name": "Quantum Elite",
             "tag": "QUAN",
-            "logo": "https://drive.google.com/thumbnail?id=1TivMZbvQiE3V-srF8ni4k7HaSY9TJ4LW&sz=w500",
+            "logo": "/logo/Quantum Elite.png",
             "seed": "PLATINUM 3",
             "players": [
                 "LEVIXX#P4NEL",
@@ -235,7 +235,7 @@
             "id": "team_15_1786453320844",
             "name": "XLANTIS",
             "tag": "XLAN",
-            "logo": "https://drive.google.com/thumbnail?id=16AVAzn8tuFSP72QlC4Tn6p9RIM0oe2Zg&sz=w500",
+            "logo": "/logo/XLANTIS.png",
             "seed": "Silver 1",
             "players": [
                 "SEMPAI#2412",
@@ -251,7 +251,7 @@
             "id": "team_16_1786453320844",
             "name": "idlisambar",
             "tag": "IDLI",
-            "logo": "https://drive.google.com/thumbnail?id=11KiBkcZrYpW-I7BOMgOXPv0bHuSU4EkQ&sz=w500",
+            "logo": "/logo/IDLISAMBAR.png",
             "seed": "plat 1",
             "players": [
                 "payback#bot",

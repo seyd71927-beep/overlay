@@ -2,25 +2,25 @@
     "player_0": {
         "token": "yAv2hT4URx4U",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613045104,
         "data": {
-            "username": "[FNC] Boaster",
-            "agent": "omen",
+            "username": "Acn s1ck",
+            "agent": "jett",
             "health": 100,
             "shield": 50,
             "ult_points_needed": 7,
             "ult_points_gained": 6,
-            "weapon": "phantom",
+            "weapon": "operator",
             "c_util": true,
             "q_util": true,
             "e_util": true,
             "x_util": false,
-            "credits": 3900,
+            "credits": 4900,
             "has_spike": true,
             "is_dead": false,
             "is_registered": true,
             "puuid": "p1",
-            "name": "[FNC] Boaster",
+            "name": "Acn s1ck",
             "tag": "igl",
             "riot_id": "Acn s1ck #igl",
             "kills": 24,
@@ -35,9 +35,9 @@
     "player_1": {
         "token": "BU5QwbxxTUxJ",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[FNC] Derke",
+            "username": "Acn ronny",
             "agent": "jett",
             "health": 100,
             "shield": 50,
@@ -53,7 +53,7 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p2",
-            "name": "[FNC] Derke",
+            "name": "Acn ronny",
             "tag": "cris",
             "riot_id": "Acn ronny #cris"
         }
@@ -61,9 +61,9 @@
     "player_2": {
         "token": "BO3iZbRuutAC",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[FNC] Alfajer",
+            "username": "Igh v1n1",
             "agent": "killjoy",
             "health": 80,
             "shield": 25,
@@ -79,7 +79,7 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p3",
-            "name": "[FNC] Alfajer",
+            "name": "Igh v1n1",
             "tag": "fln",
             "riot_id": "Igh v1n1 #fln"
         }
@@ -87,9 +87,9 @@
     "player_3": {
         "token": "tssEEXUyVlOw",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[FNC] Chronicle",
+            "username": "Addythegoat",
             "agent": "breach",
             "health": 100,
             "shield": 50,
@@ -105,7 +105,7 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p4",
-            "name": "[FNC] Chronicle",
+            "name": "Addythegoat",
             "tag": "kid",
             "riot_id": "Addythegoat #kid"
         }
@@ -113,9 +113,9 @@
     "player_4": {
         "token": "E5py5gH0eYty",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[FNC] Leo",
+            "username": "馬特卡特山羊",
             "agent": "sova",
             "health": 0,
             "shield": 0,
@@ -131,7 +131,7 @@
             "is_dead": true,
             "is_registered": true,
             "puuid": "p5",
-            "name": "[FNC] Leo",
+            "name": "馬特卡特山羊",
             "tag": "Easy",
             "riot_id": "馬特卡特山羊#Easy"
         }
@@ -139,9 +139,9 @@
     "player_5": {
         "token": "Jm8p0vPGOadu",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[SEN] TenZ",
+            "username": "Knight",
             "agent": "omen",
             "health": 100,
             "shield": 50,
@@ -157,7 +157,7 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p6",
-            "name": "[SEN] TenZ",
+            "name": "Knight",
             "tag": "diff",
             "riot_id": "Knight #diff"
         }
@@ -165,9 +165,9 @@
     "player_6": {
         "token": "U8o5cmidKepp",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[SEN] zekken",
+            "username": "Vajra",
             "agent": "raze",
             "health": 45,
             "shield": 0,
@@ -183,7 +183,7 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p7",
-            "name": "[SEN] zekken",
+            "name": "Vajra",
             "tag": "diff",
             "riot_id": "Vajra #diff"
         }
@@ -191,9 +191,9 @@
     "player_7": {
         "token": "pMcI01u83OGZ",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[SEN] Sacy",
+            "username": "Salamander",
             "agent": "fade",
             "health": 100,
             "shield": 50,
@@ -209,7 +209,7 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p8",
-            "name": "[SEN] Sacy",
+            "name": "Salamander",
             "tag": "iwin",
             "riot_id": "Salamander#iwin"
         }
@@ -217,9 +217,9 @@
     "player_8": {
         "token": "hAkerHVS8F3E",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[SEN] johnqt",
+            "username": "Hmza",
             "agent": "cypher",
             "health": 100,
             "shield": 50,
@@ -235,7 +235,7 @@
             "is_dead": false,
             "is_registered": true,
             "puuid": "p9",
-            "name": "[SEN] johnqt",
+            "name": "Hmza",
             "tag": "diff",
             "riot_id": "Hmza #diff"
         }
@@ -243,9 +243,9 @@
     "player_9": {
         "token": "Y3im7MUP9pzj",
         "is_registered": true,
-        "last_updated": 1786608291451,
+        "last_updated": 1786613044872,
         "data": {
-            "username": "[SEN] Zellsis",
+            "username": "Desert",
             "agent": "kayo",
             "health": 0,
             "shield": 0,
@@ -261,7 +261,7 @@
             "is_dead": true,
             "is_registered": true,
             "puuid": "p10",
-            "name": "[SEN] Zellsis",
+            "name": "Desert",
             "tag": "faked",
             "riot_id": "Desert#faked"
         }

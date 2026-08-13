@@ -125,7 +125,7 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             round_number: roundNum,
             team_1_score: t1Score,
             team_2_score: t2Score,
-            spike_down: !!payload.spike || !!payload.spike_down,
+            spike_down: (payload.spike === 'down' || payload.spike === true) || (payload.spike_down === true || payload.spike_down === 'true'),
             playerCount: totalPlayers,
             playersCount: totalPlayers,
             source: 'Remote India Bridge'

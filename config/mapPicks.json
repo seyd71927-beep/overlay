@@ -1,27 +1,27 @@
 {
     "teams": [
-        "ACCE",
-        "S1N"
+        "T1",
+        "T2"
     ],
     "picks": [
-        [
-            "bind",
-            "ban"
-        ],
         [
             "ascent",
             "ban"
         ],
         [
-            "breeze",
-            "attack"
+            "bind",
+            "ban"
         ],
         [
             "haven",
-            "defense"
+            "attack"
         ],
         [
             "split",
+            "attack"
+        ],
+        [
+            "breeze",
             "ban"
         ],
         [
