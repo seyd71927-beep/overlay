@@ -171,9 +171,12 @@
                 <!-- Map Pick & Ban Veto Card (Fully Automated via MapBan.gg) -->
                 <div class="card" style="grid-column: span 12; border-color: rgba(123, 44, 191, 0.4); background: linear-gradient(180deg, rgba(20, 16, 36, 0.95), rgba(14, 12, 28, 0.95));">
                     <div class="card-header" style="flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">
                                 <i class="fa-solid fa-map-location-dot" style="color: #b388f5;"></i> Map Pick & Ban Veto (Automated MapBan.gg Live Sync)
+                            </span>
+                            <span id="current-series-badge" class="status-badge" style="background: rgba(0, 242, 254, 0.15); color: var(--accent-secondary); border-color: rgba(0, 242, 254, 0.3);">
+                                BO3 (3 GAMES)
                             </span>
                             <span id="veto-status-badge" class="status-badge" style="background: rgba(123, 44, 191, 0.15); color: #b388f5; border-color: rgba(123, 44, 191, 0.3);">
                                 AUTOMATIC MODE
@@ -189,55 +192,31 @@
                         </div>
                     </div>
 
-                    <!-- Series Format Selector & MapBan Controls -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
-                        
-                        <!-- Series Format Selector -->
-                        <div style="background: rgba(0,0,0,0.35); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--panel-border); display: flex; flex-direction: column; justify-content: space-between;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">MATCH FORMAT PRESET:</span>
-                                <span id="current-series-badge" style="font-size: 0.75rem; font-weight: 800; color: var(--accent-secondary);">BO3 (3 GAMES)</span>
-                            </div>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
-                                <button type="button" id="set-bo1-btn" class="btn btn-accent" style="padding: 6px 4px; font-size: 0.75rem; font-weight: 700;">
-                                    <i class="fa-solid fa-dice-one"></i> BO1 (1 Game)
-                                </button>
-                                <button type="button" id="set-bo3-btn" class="btn btn-primary" style="padding: 6px 4px; font-size: 0.75rem; font-weight: 700;">
-                                    <i class="fa-solid fa-dice-three"></i> BO3 (3 Games)
-                                </button>
-                                <button type="button" id="set-bo5-btn" class="btn btn-success" style="padding: 6px 4px; font-size: 0.75rem; font-weight: 700;">
-                                    <i class="fa-solid fa-dice-five"></i> BO5 (5 Games)
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- MapBan.gg Live Importer Box -->
-                        <div style="background: rgba(123, 44, 191, 0.08); border: 1px solid rgba(123, 44, 191, 0.3); border-radius: var(--radius-md); padding: 12px; grid-column: span 2;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-                                <span style="font-size: 0.8rem; font-weight: 800; color: #b388f5;">
-                                    <i class="fa-solid fa-cloud-arrow-down"></i> MapBan.gg Live Viewer Link / Room ID
-                                </span>
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                    <label style="font-size: 0.72rem; color: var(--text-muted);">Auto-Sync:</label>
-                                    <select id="mapban-autosync-select" class="input-field" style="padding: 2px 6px; font-size: 0.72rem; width: 110px;">
-                                        <option value="false">Manual Sync</option>
-                                        <option value="5" selected>Every 5s (Live)</option>
-                                        <option value="10">Every 10s</option>
-                                        <option value="30">Every 30s</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 8px;">
-                                <input id="mapban-url-input" type="text" class="input-field" placeholder="Paste link: https://mapban.gg/en/ban/1LzBFUAJA6bdst16 or Room ID" style="font-size: 0.82rem; flex-grow: 1;">
-                                <button type="button" id="sync-mapban-btn" class="btn btn-accent" style="padding: 8px 18px; font-size: 0.8rem; white-space: nowrap; font-weight: 700;">
-                                    <i class="fa-solid fa-arrows-rotate"></i> Sync MapBan
-                                </button>
-                            </div>
-                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
-                                *Paste the viewer link from MapBan.gg. Map picks, bans, and attack/defense sides update automatically into the overlay in real-time.
+                    <!-- MapBan.gg Live Importer Controls (Full Width) -->
+                    <div style="background: rgba(123, 44, 191, 0.08); border: 1px solid rgba(123, 44, 191, 0.3); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                            <span style="font-size: 0.82rem; font-weight: 800; color: #b388f5;">
+                                <i class="fa-solid fa-cloud-arrow-down"></i> MAPBAN.GG VIEWER URL / ROOM ID (FORMAT, MAPS & SIDES AUTO-DETECTED):
                             </span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label style="font-size: 0.72rem; color: var(--text-muted);">Auto-Sync:</label>
+                                <select id="mapban-autosync-select" class="input-field" style="padding: 2px 6px; font-size: 0.72rem; width: 110px;">
+                                    <option value="false">Manual Sync</option>
+                                    <option value="5" selected>Every 5s (Live)</option>
+                                    <option value="10">Every 10s</option>
+                                    <option value="30">Every 30s</option>
+                                </select>
+                            </div>
                         </div>
-
+                        <div style="display: flex; gap: 8px;">
+                            <input id="mapban-url-input" type="text" class="input-field" placeholder="Paste link: https://mapban.gg/en/ban/1LzBFUAJA6bdst16 or Room ID" style="font-size: 0.85rem; flex-grow: 1;">
+                            <button type="button" id="sync-mapban-btn" class="btn btn-accent" style="padding: 8px 18px; font-size: 0.8rem; white-space: nowrap; font-weight: 700;">
+                                <i class="fa-solid fa-arrows-rotate"></i> Sync MapBan
+                            </button>
+                        </div>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
+                            *Paste your viewer link. Format (BO1/BO3/BO5), picks, bans, and sides are automatically detected and synced live.
+                        </span>
                     </div>
 
                     <!-- Automated Visual Veto Feed -->
