@@ -168,24 +168,33 @@
                     </div>
                 </div>
 
-                <!-- Map Pick & Ban Veto Card -->
-                <div class="card" style="grid-column: span 12;">
-                    <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 8px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span><i class="fa-solid fa-map-location-dot"></i> Map Pick & Ban Veto</span>
-                            <div style="display: flex; gap: 6px;">
-                                <a href="../map_picks/" target="_blank" class="btn" style="padding: 2px 8px; font-size: 0.7rem; text-decoration: none;">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Veto Overlay
-                                </a>
-                                <a href="../upcomming_maps/" target="_blank" class="btn" style="padding: 2px 8px; font-size: 0.7rem; text-decoration: none;">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Schedule
-                                </a>
-                            </div>
+                <!-- Map Pick & Ban Veto Card (Fully Automated via MapBan.gg) -->
+                <div class="card" style="grid-column: span 12; border-color: rgba(123, 44, 191, 0.4); background: linear-gradient(180deg, rgba(20, 16, 36, 0.95), rgba(14, 12, 28, 0.95));">
+                    <div class="card-header" style="flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">
+                                <i class="fa-solid fa-map-location-dot" style="color: #b388f5;"></i> Map Pick & Ban Veto (Automated MapBan.gg Live Sync)
+                            </span>
+                            <span id="veto-status-badge" class="status-badge" style="background: rgba(123, 44, 191, 0.15); color: #b388f5; border-color: rgba(123, 44, 191, 0.3);">
+                                AUTOMATIC MODE
+                            </span>
                         </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <a href="../map_picks/" target="_blank" class="btn btn-accent" style="padding: 5px 12px; font-size: 0.75rem; text-decoration: none;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Veto Overlay
+                            </a>
+                            <a href="../upcomming_maps/" target="_blank" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08); text-decoration: none;">
+                                <i class="fa-solid fa-calendar-days" style="color: #7ed6df;"></i> Schedule Overlay
+                            </a>
+                        </div>
+                    </div>
 
+                    <!-- Series Format Selector & MapBan Controls -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                        
                         <!-- Series Format Selector -->
-                        <div style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="background: rgba(0,0,0,0.35); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--panel-border); display: flex; flex-direction: column; justify-content: space-between;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">MATCH FORMAT PRESET:</span>
                                 <span id="current-series-badge" style="font-size: 0.75rem; font-weight: 800; color: var(--accent-secondary);">BO3 (3 GAMES)</span>
                             </div>
@@ -201,26 +210,52 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- MapBan.gg Integration Box -->
-                        <div style="background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.25); border-radius: var(--radius-md); padding: 8px 10px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <span style="font-size: 0.75rem; font-weight: 800; color: var(--accent-secondary);">
-                                    <i class="fa-solid fa-cloud-arrow-down"></i> MapBan.gg Live Importer
+
+                        <!-- MapBan.gg Live Importer Box -->
+                        <div style="background: rgba(123, 44, 191, 0.08); border: 1px solid rgba(123, 44, 191, 0.3); border-radius: var(--radius-md); padding: 12px; grid-column: span 2;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                                <span style="font-size: 0.8rem; font-weight: 800; color: #b388f5;">
+                                    <i class="fa-solid fa-cloud-arrow-down"></i> MapBan.gg Live Viewer Link / Room ID
                                 </span>
-                                <span style="font-size: 0.7rem; color: var(--text-muted);">Auto-Sync Picks & Bans</span>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <label style="font-size: 0.72rem; color: var(--text-muted);">Auto-Sync:</label>
+                                    <select id="mapban-autosync-select" class="input-field" style="padding: 2px 6px; font-size: 0.72rem; width: 110px;">
+                                        <option value="false">Manual Sync</option>
+                                        <option value="5" selected>Every 5s (Live)</option>
+                                        <option value="10">Every 10s</option>
+                                        <option value="30">Every 30s</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div style="display: flex; gap: 6px;">
-                                <input id="mapban-url-input" type="text" class="input-field" placeholder="MapBan.gg Viewer URL or ID (e.g. 1LzBFUAJA6bdst16)" style="font-size: 0.75rem; flex-grow: 1;">
-                                <button type="button" id="sync-mapban-btn" class="btn btn-accent" style="padding: 4px 10px; font-size: 0.75rem; white-space: nowrap;">
-                                    <i class="fa-solid fa-arrows-rotate"></i> Sync
+                            <div style="display: flex; gap: 8px;">
+                                <input id="mapban-url-input" type="text" class="input-field" placeholder="Paste link: https://mapban.gg/en/ban/1LzBFUAJA6bdst16 or Room ID" style="font-size: 0.82rem; flex-grow: 1;">
+                                <button type="button" id="sync-mapban-btn" class="btn btn-accent" style="padding: 8px 18px; font-size: 0.8rem; white-space: nowrap; font-weight: 700;">
+                                    <i class="fa-solid fa-arrows-rotate"></i> Sync MapBan
                                 </button>
                             </div>
+                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
+                                *Paste the viewer link from MapBan.gg. Map picks, bans, and attack/defense sides update automatically into the overlay in real-time.
+                            </span>
                         </div>
+
                     </div>
 
-                    <div id="map-pick-holder" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
-                        <!-- Dynamically populated map veto slots -->
+                    <!-- Automated Visual Veto Feed -->
+                    <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">
+                                <i class="fa-solid fa-layer-group"></i> LIVE VETO SEQUENCE (AUTOMATICALLY POPULATED):
+                            </span>
+                            <span id="veto-last-sync-time" style="font-size: 0.72rem; color: var(--text-muted);">
+                                Ready to sync
+                            </span>
+                        </div>
+
+                        <div id="map-pick-holder" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+                            <!-- Populated dynamically by pre_stream.js -->
+                        </div>
                     </div>
+                </div>
             </div>
         </div>
     </div>
