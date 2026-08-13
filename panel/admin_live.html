@@ -112,7 +112,12 @@
                 <!-- Match Score & Spike Controller Card -->
                 <div class="card" style="grid-column: span 6;">
                     <div class="card-header">
-                        <span><i class="fa-solid fa-trophy"></i> Scoreboard & Spike Controller</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span><i class="fa-solid fa-trophy"></i> Scoreboard & Spike Controller</span>
+                            <span id="scoreboard-mode-badge" class="status-badge" style="font-size: 0.72rem; padding: 2px 8px; background: rgba(0, 242, 254, 0.12); color: #00f2fe; border-color: rgba(0, 242, 254, 0.3);">
+                                🕹️ MANUAL CONTROLS
+                            </span>
+                        </div>
                         <button id="reset-match-btn" class="btn btn-danger" style="font-size: 0.75rem; padding: 4px 10px;">Reset Match</button>
                     </div>
 

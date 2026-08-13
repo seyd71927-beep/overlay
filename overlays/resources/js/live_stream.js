@@ -171,6 +171,49 @@ class LiveStreamOperator {
 
         if (autoBanner) autoBanner.style.display = isAuto ? 'block' : 'none';
         if (manualBanner) manualBanner.style.display = isAuto ? 'none' : 'block';
+
+        // Update Scoreboard Mode Badge
+        const scoreBadge = document.getElementById('scoreboard-mode-badge');
+        if (scoreBadge) {
+            if (isAuto) {
+                scoreBadge.innerHTML = '<i class="fa-solid fa-lock" style="color: #00e676;"></i> 🔒 LOCKFILE TELEMETRY (NO MANUAL CONTROLS)';
+                scoreBadge.style.background = 'rgba(0, 230, 118, 0.15)';
+                scoreBadge.style.color = '#00e676';
+                scoreBadge.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+            } else {
+                scoreBadge.innerHTML = '<i class="fa-solid fa-gamepad" style="color: var(--accent-secondary);"></i> 🕹️ MANUAL CONTROLS ENABLED';
+                scoreBadge.style.background = 'rgba(0, 242, 254, 0.12)';
+                scoreBadge.style.color = '#00f2fe';
+                scoreBadge.style.borderColor = 'rgba(0, 242, 254, 0.3)';
+            }
+        }
+
+        // Disable or Enable Manual Control Buttons
+        const manualControlIds = [
+            't1-score-plus', 't1-score-minus', 't2-score-plus', 't2-score-minus',
+            'round-plus', 'round-minus', 'toggle-sides-btn', 'reset-match-btn',
+            'win-team1-btn', 'win-team2-btn', 'plant-spike-btn', 'defuse-spike-btn',
+            'quick-sim-btn'
+        ];
+
+        manualControlIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.disabled = isAuto;
+                if (isAuto) {
+                    el.style.opacity = '0.35';
+                    el.style.cursor = 'not-allowed';
+                    el.style.pointerEvents = 'none';
+                } else {
+                    el.style.opacity = '1';
+                    el.style.cursor = 'pointer';
+                    el.style.pointerEvents = 'auto';
+                }
+            }
+        });
+
+        // Re-render player table to update disabled/enabled state of inputs
+        this.renderPlayerTable();
     }
 
     async fetchBridgeStatus() {
@@ -662,6 +705,10 @@ class LiveStreamOperator {
         for (let i = 0; i < this.team1Count; i++) activeIndices.push(i);
         for (let i = 0; i < this.team2Count; i++) activeIndices.push(i + 5);
 
+        const isAuto = (this.operatingMode === 'automatic');
+        const disabledAttr = isAuto ? 'disabled' : '';
+        const inputStyleExtra = isAuto ? 'opacity: 0.75; cursor: not-allowed;' : '';
+
         for (const i of activeIndices) {
             const key = `player_${i}`;
             const isTeam1 = i < 5;
@@ -689,36 +736,36 @@ class LiveStreamOperator {
             <tr class="${rowClass}">
                 <td style="font-weight: 700;">${isTeam1 ? slotNum : slotNum + this.team1Count}</td>
                 <td><span style="color: ${isTeam1 ? 'var(--green-team)' : 'var(--red-team)'}; font-weight: 700;">${teamLabel}</span></td>
-                <td><input type="text" class="input-field" style="padding: 4px 8px; font-size: 0.8rem;" value="${displayName}" id="p-name-${i}"></td>
+                <td><input type="text" ${disabledAttr} class="input-field" style="padding: 4px 8px; font-size: 0.8rem; ${inputStyleExtra}" value="${displayName}" id="p-name-${i}"></td>
                 <td>
-                    <select class="input-field" style="padding: 4px 6px; font-size: 0.8rem;" id="p-agent-${i}">
+                    <select ${disabledAttr} class="input-field" style="padding: 4px 6px; font-size: 0.8rem; ${inputStyleExtra}" id="p-agent-${i}">
                         ${this.agentsList.map(a => `<option ${(pData.agent || '').toLowerCase() === a.toLowerCase() ? 'selected' : ''} value="${a}">${a}</option>`).join('')}
                     </select>
                 </td>
-                <td><input type="number" min="0" max="100" class="input-field health-bar-input" value="${pData.health ?? 100}" id="p-hp-${i}"></td>
-                <td><input type="number" min="0" max="50" class="input-field health-bar-input" value="${pData.shield ?? 50}" id="p-shield-${i}"></td>
+                <td><input type="number" min="0" max="100" ${disabledAttr} class="input-field health-bar-input" style="${inputStyleExtra}" value="${pData.health ?? 100}" id="p-hp-${i}"></td>
+                <td><input type="number" min="0" max="50" ${disabledAttr} class="input-field health-bar-input" style="${inputStyleExtra}" value="${pData.shield ?? 50}" id="p-shield-${i}"></td>
                 <td>
-                    <select class="input-field" style="padding: 4px 6px; font-size: 0.8rem;" id="p-weapon-${i}">
+                    <select ${disabledAttr} class="input-field" style="padding: 4px 6px; font-size: 0.8rem; ${inputStyleExtra}" id="p-weapon-${i}">
                         ${this.weaponsList.map(w => `<option ${(pData.weapon || '').toLowerCase() === w.toLowerCase() ? 'selected' : ''} value="${w}">${w.toUpperCase()}</option>`).join('')}
                     </select>
                 </td>
                 <td style="text-align: center; white-space: nowrap;">
-                    <label style="font-size: 0.72rem; color: #94a3b8; margin-right: 5px; cursor: pointer;">C:<input type="checkbox" ${pData.c_util !== false ? 'checked' : ''} id="p-c-${i}" style="margin-left: 2px;"></label>
-                    <label style="font-size: 0.72rem; color: #94a3b8; margin-right: 5px; cursor: pointer;">Q:<input type="checkbox" ${pData.q_util !== false ? 'checked' : ''} id="p-q-${i}" style="margin-left: 2px;"></label>
-                    <label style="font-size: 0.72rem; color: #94a3b8; cursor: pointer;">E:<input type="checkbox" ${pData.e_util !== false ? 'checked' : ''} id="p-e-${i}" style="margin-left: 2px;"></label>
+                    <label style="font-size: 0.72rem; color: #94a3b8; margin-right: 5px; cursor: ${isAuto ? 'not-allowed' : 'pointer'};">C:<input type="checkbox" ${disabledAttr} ${pData.c_util !== false ? 'checked' : ''} id="p-c-${i}" style="margin-left: 2px;"></label>
+                    <label style="font-size: 0.72rem; color: #94a3b8; margin-right: 5px; cursor: ${isAuto ? 'not-allowed' : 'pointer'};">Q:<input type="checkbox" ${disabledAttr} ${pData.q_util !== false ? 'checked' : ''} id="p-q-${i}" style="margin-left: 2px;"></label>
+                    <label style="font-size: 0.72rem; color: #94a3b8; cursor: ${isAuto ? 'not-allowed' : 'pointer'};">E:<input type="checkbox" ${disabledAttr} ${pData.e_util !== false ? 'checked' : ''} id="p-e-${i}" style="margin-left: 2px;"></label>
                 </td>
-                <td><input type="number" min="0" max="12" class="input-field" style="width: 45px;" value="${pData.ult_points_gained ?? 0}" id="p-ult-${i}"></td>
-                <td><input type="number" min="0" max="9000" class="input-field" style="width: 65px;" value="${pData.credits ?? 800}" id="p-credits-${i}"></td>
+                <td><input type="number" min="0" max="12" ${disabledAttr} class="input-field" style="width: 45px; ${inputStyleExtra}" value="${pData.ult_points_gained ?? 0}" id="p-ult-${i}"></td>
+                <td><input type="number" min="0" max="9000" ${disabledAttr} class="input-field" style="width: 65px; ${inputStyleExtra}" value="${pData.credits ?? 800}" id="p-credits-${i}"></td>
                 <td style="text-align: center;">
-                    <input type="checkbox" ${pData.has_spike ? 'checked' : ''} id="p-spike-${i}">
+                    <input type="checkbox" ${disabledAttr} ${pData.has_spike ? 'checked' : ''} id="p-spike-${i}">
                 </td>
                 <td style="text-align: center;">
-                    <button class="btn ${pData.is_dead ? 'btn-danger' : 'btn-success'}" style="padding: 2px 8px; font-size: 0.75rem;" onclick="liveOperator.togglePlayerDead(${i})">
+                    <button ${disabledAttr} class="btn ${pData.is_dead ? 'btn-danger' : 'btn-success'}" style="padding: 2px 8px; font-size: 0.75rem; ${isAuto ? 'opacity: 0.65; cursor: not-allowed;' : ''}" onclick="liveOperator.togglePlayerDead(${i})">
                         ${pData.is_dead ? 'DEAD' : 'ALIVE'}
                     </button>
                 </td>
                 <td>
-                    <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="liveOperator.saveSinglePlayer(${i})">
+                    <button ${disabledAttr} class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem; ${isAuto ? 'opacity: 0.35; cursor: not-allowed;' : ''}" onclick="liveOperator.saveSinglePlayer(${i})">
                         Save
                     </button>
                 </td>
