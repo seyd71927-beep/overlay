@@ -1,14 +1,11 @@
 class AdminSettingsManager {
     constructor() {
         this.simInterval = null;
-        this.hasLoadedInitialValues = false;
     }
 
     async init() {
         this.bindEvents();
         await this.loadTokens();
-        await this.loadAutoFetchStatus(true);
-        setInterval(() => this.loadAutoFetchStatus(false), 1200);
     }
 
     bindEvents() {
@@ -16,16 +13,6 @@ class AdminSettingsManager {
         document.getElementById('regen-tokens-btn')?.addEventListener('click', () => this.regenerateTokens());
         document.getElementById('start-sim-btn')?.addEventListener('click', () => this.startDemoSimulation());
         document.getElementById('stop-sim-btn')?.addEventListener('click', () => this.stopDemoSimulation());
-        document.getElementById('save-auto-fetch-btn')?.addEventListener('click', () => this.saveAutoFetchConfig());
-        document.getElementById('auto-fetch-mode')?.addEventListener('change', (e) => this.onModeChange(e.target.value));
-    }
-
-    onModeChange(mode) {
-        const cloudGroup = document.getElementById('cloud-riot-group');
-        const apiGroup = document.getElementById('cloud-api-key-group');
-        const isCloud = (mode === 'cloud');
-        if (cloudGroup) cloudGroup.style.opacity = isCloud ? '1' : '0.4';
-        if (apiGroup) apiGroup.style.opacity = isCloud ? '1' : '0.4';
     }
 
     async loadAutoFetchStatus(isInitial = false) {
