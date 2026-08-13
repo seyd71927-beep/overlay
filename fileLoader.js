@@ -403,7 +403,21 @@ class fileLoader {
         this.config.gameState.team_1_roster = team1Players;
         this.config.gameState.team_2_roster = team2Players;
 
-        // Update Team 1 (Slots 0 to 4)
+        const tournament = this.getTournamentData();
+        const findTourneyTeam = (abbrOrName) => {
+            if (!abbrOrName || !tournament || !Array.isArray(tournament.teams)) return null;
+            const clean = String(abbrOrName).trim().toUpperCase();
+            return tournament.teams.find(t => 
+                (t.tag && t.tag.toUpperCase() === clean) || 
+                (t.name && t.name.toUpperCase() === clean) ||
+                (t.name && t.name.toUpperCase().includes(clean)) ||
+                (t.tag && clean.includes(t.tag.toUpperCase()))
+            );
+        };
+        const t1Obj = findTourneyTeam(this.config.gameState?.team_1?.abbreviation || this.config.gameState?.team_1?.name);
+        const t2Obj = findTourneyTeam(this.config.gameState?.team_2?.abbreviation || this.config.gameState?.team_2?.name);
+
+        // Update Team 1 (Slots 0 to 4) - Player Name from Pre-Stream, all other stats from Lockfile
         for (let i = 0; i < 5; i++) {
             const key = `player_${i}`;
             if (!this.config.players[key]) {
@@ -416,10 +430,15 @@ class fileLoader {
             }
             if (i < t1Count) {
                 const pObj = team1Players[i] || {};
-                const pName = pObj.name || pObj.username || `Player ${i + 1}`;
+                // Pre-Stream configured tournament player name takes precedence
+                let pName = (t1Obj && Array.isArray(t1Obj.players) && t1Obj.players[i]) 
+                    ? String(t1Obj.players[i]).trim() 
+                    : (pObj.name || pObj.username || `Player ${i + 1}`);
+                if (pName.includes('#')) pName = pName.split('#')[0].trim();
+
                 this.config.players[key].data = {
                     ...this.config.players[key].data,
-                    ...pObj,
+                    ...pObj, // Health, shields, weapon, agent, ult, abilities, dead/alive from Lockfile
                     name: pName,
                     username: pName,
                     is_registered: true
@@ -431,7 +450,7 @@ class fileLoader {
             }
         }
 
-        // Update Team 2 (Slots 5 to 9)
+        // Update Team 2 (Slots 5 to 9) - Player Name from Pre-Stream, all other stats from Lockfile
         for (let i = 0; i < 5; i++) {
             const key = `player_${i + 5}`;
             if (!this.config.players[key]) {
@@ -444,10 +463,15 @@ class fileLoader {
             }
             if (i < t2Count) {
                 const pObj = team2Players[i] || {};
-                const pName = pObj.name || pObj.username || `Player ${i + 6}`;
+                // Pre-Stream configured tournament player name takes precedence
+                let pName = (t2Obj && Array.isArray(t2Obj.players) && t2Obj.players[i]) 
+                    ? String(t2Obj.players[i]).trim() 
+                    : (pObj.name || pObj.username || `Player ${i + 6}`);
+                if (pName.includes('#')) pName = pName.split('#')[0].trim();
+
                 this.config.players[key].data = {
                     ...this.config.players[key].data,
-                    ...pObj,
+                    ...pObj, // Health, shields, weapon, agent, ult, abilities, dead/alive from Lockfile
                     name: pName,
                     username: pName,
                     is_registered: true
@@ -511,14 +535,15 @@ class fileLoader {
             let pTag = pDataRaw.tag || '';
             let pRiotId = pDataRaw.riot_id || '';
 
-            // Auto-fetch from tournament roster if name is generic or missing
-            if ((!pName || pName.match(/^Player\s*\d+$/i) || pName.match(/^T1\s*Player/i)) && t1Obj && Array.isArray(t1Obj.players) && t1Obj.players[i]) {
+            // Prioritize player name fetched from Pre-Stream Google Sheet / Tournament Directory
+            if (t1Obj && Array.isArray(t1Obj.players) && t1Obj.players[i]) {
                 const rawP = String(t1Obj.players[i]).trim();
                 pName = rawP.includes('#') ? rawP.split('#')[0].trim() : rawP;
                 pTag = rawP.includes('#') ? rawP.split('#')[1].trim() : '';
                 pRiotId = rawP;
+            } else if (!pName) {
+                pName = `Player ${i + 1}`;
             }
-            if (!pName) pName = `Player ${i + 1}`;
 
             const pData = {
                 username: pName,
@@ -560,14 +585,15 @@ class fileLoader {
             let pTag = pDataRaw.tag || '';
             let pRiotId = pDataRaw.riot_id || '';
 
-            // Auto-fetch from tournament roster if name is generic or missing
-            if ((!pName || pName.match(/^Player\s*\d+$/i) || pName.match(/^T2\s*Player/i)) && t2Obj && Array.isArray(t2Obj.players) && t2Obj.players[i]) {
+            // Prioritize player name fetched from Pre-Stream Google Sheet / Tournament Directory
+            if (t2Obj && Array.isArray(t2Obj.players) && t2Obj.players[i]) {
                 const rawP = String(t2Obj.players[i]).trim();
                 pName = rawP.includes('#') ? rawP.split('#')[0].trim() : rawP;
                 pTag = rawP.includes('#') ? rawP.split('#')[1].trim() : '';
                 pRiotId = rawP;
+            } else if (!pName) {
+                pName = `Player ${i + 6}`;
             }
-            if (!pName) pName = `Player ${i + 6}`;
 
             const pData = {
                 username: pName,
