@@ -364,43 +364,68 @@ while ($true) {
             } catch {}
         }
 
-        # 4. Check Presences for Scores and Fallback Map (Works for Spectator & Player)
+        # 4. Check Presences for Scores and Map (Modern Riot presence schema support)
         if ($presences -and $presences.presences) {
             foreach ($p in $presences.presences) {
-                if ($p.product -eq "valorant") {
+                if ($p.product -eq "valorant" -and $p.private) {
                     $foundValorantPresence = $true
                     $isSelf = ($localPuuid -ne $null -and $p.puuid -eq $localPuuid)
                     
-                    if ($p.private) {
-                        try {
-                            $rawPriv = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($p.private))
-                            $priv = $rawPriv | ConvertFrom-Json
-                            $stateStr = if ($priv.sessionLoopState) { $priv.sessionLoopState.ToString().ToUpper() } else { "" }
+                    try {
+                        $rawPriv = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($p.private))
+                        $priv = $rawPriv | ConvertFrom-Json
+                        
+                        $stateStr = ""
+                        if ($priv.matchPresenceData -and $priv.matchPresenceData.sessionLoopState) {
+                            $stateStr = $priv.matchPresenceData.sessionLoopState.ToString().ToUpper()
+                        } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerSessionLoopState) {
+                            $stateStr = $priv.partyPresenceData.partyOwnerSessionLoopState.ToString().ToUpper()
+                        } elseif ($priv.sessionLoopState) {
+                            $stateStr = $priv.sessionLoopState.ToString().ToUpper()
+                        }
 
-                            if ($stateStr -eq "INGAME") {
-                                if ($loopState -ne "INGAME" -or $isSelf) {
-                                    $loopState = "INGAME"
-                                    if ($priv.partyOwnerMatchScore -ne $null) {
-                                        $t1Score = [int]$priv.partyOwnerMatchScore
-                                    }
-                                    if ($priv.partyOwnerMatchScoreEnemy -ne $null) {
-                                        $t2Score = [int]$priv.partyOwnerMatchScoreEnemy
-                                    }
-                                    $roundNum = $t1Score + $t2Score + 1
+                        if ($stateStr -eq "INGAME") {
+                            if ($loopState -ne "INGAME" -or $isSelf) {
+                                $loopState = "INGAME"
+                                
+                                if ($priv.partyOwnerMatchScoreAllyTeam -ne $null) {
+                                    $t1Score = [int]$priv.partyOwnerMatchScoreAllyTeam
+                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreAllyTeam -ne $null) {
+                                    $t1Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreAllyTeam
+                                } elseif ($priv.partyOwnerMatchScore -ne $null) {
+                                    $t1Score = [int]$priv.partyOwnerMatchScore
+                                }
 
-                                    $rawMap = if ($priv.matchMap) { $priv.matchMap.ToString().ToLower() } else { "" }
-                                    foreach ($key in $mapMap.Keys) {
-                                        if ($rawMap.Contains($key)) {
-                                            $detectedMap = $mapMap[$key]
-                                            break
-                                        }
+                                if ($priv.partyOwnerMatchScoreEnemyTeam -ne $null) {
+                                    $t2Score = [int]$priv.partyOwnerMatchScoreEnemyTeam
+                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreEnemyTeam -ne $null) {
+                                    $t2Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreEnemyTeam
+                                } elseif ($priv.partyOwnerMatchScoreEnemy -ne $null) {
+                                    $t2Score = [int]$priv.partyOwnerMatchScoreEnemy
+                                }
+
+                                $roundNum = $t1Score + $t2Score + 1
+
+                                $rawMap = ""
+                                if ($priv.matchPresenceData -and $priv.matchPresenceData.matchMap) {
+                                    $rawMap = $priv.matchPresenceData.matchMap.ToString().ToLower()
+                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchMap) {
+                                    $rawMap = $priv.partyPresenceData.partyOwnerMatchMap.ToString().ToLower()
+                                } elseif ($priv.matchMap) {
+                                    $rawMap = $priv.matchMap.ToString().ToLower()
+                                }
+
+                                foreach ($key in $mapMap.Keys) {
+                                    if ($rawMap.Contains($key)) {
+                                        $detectedMap = $mapMap[$key]
+                                        break
                                     }
                                 }
-                            } elseif ($stateStr -eq "PREGAME" -and $loopState -ne "INGAME") {
-                                $loopState = "PREGAME"
                             }
-                        } catch {}
-                    }
+                        } elseif ($stateStr -eq "PREGAME" -and $loopState -ne "INGAME") {
+                            $loopState = "PREGAME"
+                        }
+                    } catch {}
                 }
             }
         }

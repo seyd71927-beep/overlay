@@ -362,9 +362,20 @@ async function pollLoop() {
             priv = JSON.parse(Buffer.from(valorantPresence.private, 'base64').toString('utf8'));
         } catch (e) {}
 
-        let loopState = (priv.sessionLoopState || 'MENUS').toUpperCase();
-        const isCustom = (priv.provisioningFlow === 'CustomGame');
-        const rawMap = (priv.matchMap || '').toLowerCase();
+        let loopState = (
+            priv.matchPresenceData?.sessionLoopState ||
+            priv.partyPresenceData?.partyOwnerSessionLoopState ||
+            priv.sessionLoopState ||
+            'MENUS'
+        ).toUpperCase();
+
+        const isCustom = (priv.provisioningFlow === 'CustomGame' || priv.matchPresenceData?.provisioningFlow === 'CustomGame');
+        const rawMap = (
+            priv.matchPresenceData?.matchMap ||
+            priv.partyPresenceData?.partyOwnerMatchMap ||
+            priv.matchMap ||
+            ''
+        ).toLowerCase();
 
         let detectedMap = 'sunset';
         for (const k in MAP_PATH_MAP) {
@@ -374,8 +385,8 @@ async function pollLoop() {
             }
         }
 
-        let t1Score = parseInt(priv.partyOwnerMatchScore) || 0;
-        let t2Score = parseInt(priv.partyOwnerMatchScoreEnemy) || 0;
+        let t1Score = priv.partyOwnerMatchScoreAllyTeam ?? priv.partyPresenceData?.partyOwnerMatchScoreAllyTeam ?? priv.partyOwnerMatchScore ?? 0;
+        let t2Score = priv.partyOwnerMatchScoreEnemyTeam ?? priv.partyPresenceData?.partyOwnerMatchScoreEnemyTeam ?? priv.partyOwnerMatchScoreEnemy ?? 0;
 
         // 3. Coregame / Pregame Match extraction for exact custom tournament players
         let team1Players = [];
