@@ -1,17 +1,17 @@
 {
     "caster_1": {
-        "name": "Ailyrr",
-        "handle": "@ailyrr",
+        "name": "Shubham",
+        "handle": "@shubham_val",
         "role": "CASTER",
         "enabled": true
     },
     "caster_2": {
-        "name": "Vanguard",
-        "handle": "@vanguard",
+        "name": "Aryan",
+        "handle": "@aryan_casts",
         "role": "ANALYST",
         "enabled": true
     },
-    "show_lower_third": false,
+    "show_lower_third": true,
     "auto_loop": false,
     "duration": 6000,
     "interval": 30000,

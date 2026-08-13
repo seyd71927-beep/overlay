@@ -507,6 +507,9 @@ async function pollLoop() {
                             else team2Players.push(pObj);
                         }
                     }
+                }
+            }
+        }
         // Detect Custom Game and Tournament Mode & Rules
         const isCustomMatch = !!(
             isCustom || 
@@ -531,6 +534,7 @@ async function pollLoop() {
             matchData?.MatchmakingData?.IsPaused === true ||
             priv.matchPresenceData?.isGamePaused === true ||
             priv.isGamePaused === true
+        );
         const matchType = isTournamentMode 
             ? 'CUSTOM_TOURNAMENT' 
             : (isCustomMatch ? 'CUSTOM_MATCH' : 'STANDARD');

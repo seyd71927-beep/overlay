@@ -7,5 +7,5 @@
         "api_key": "",
         "lock_manual_teams": false
     },
-    "operator_mode": "automatic"
+    "operator_mode": "manual"
 }
