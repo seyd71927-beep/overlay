@@ -346,12 +346,14 @@ class LiveStreamOperator {
             if (res.status === 200) {
                 const casters = await res.json();
                 if (casters.caster_1) {
-                    document.getElementById('caster1-name').value = casters.caster_1.name || '';
-                    document.getElementById('caster1-handle').value = casters.caster_1.handle || '';
+                    if (document.getElementById('caster1-name')) document.getElementById('caster1-name').value = casters.caster_1.name || '';
+                    if (document.getElementById('caster1-handle')) document.getElementById('caster1-handle').value = casters.caster_1.handle || '';
+                    if (document.getElementById('caster1-role')) document.getElementById('caster1-role').value = casters.caster_1.role || 'TALENT';
                 }
                 if (casters.caster_2) {
-                    document.getElementById('caster2-name').value = casters.caster_2.name || '';
-                    document.getElementById('caster2-handle').value = casters.caster_2.handle || '';
+                    if (document.getElementById('caster2-name')) document.getElementById('caster2-name').value = casters.caster_2.name || '';
+                    if (document.getElementById('caster2-handle')) document.getElementById('caster2-handle').value = casters.caster_2.handle || '';
+                    if (document.getElementById('caster2-role')) document.getElementById('caster2-role').value = casters.caster_2.role || 'ANALYST';
                 }
                 if (casters.duration && document.getElementById('caster-duration-select')) {
                     document.getElementById('caster-duration-select').value = casters.duration;
@@ -617,6 +619,16 @@ class LiveStreamOperator {
         document.getElementById('popup-casters-btn')?.addEventListener('click', () => this.popupCasters());
         document.getElementById('save-casters-btn')?.addEventListener('click', () => this.saveCasters(false));
         document.getElementById('toggle-lower-third-btn')?.addEventListener('click', () => this.saveCasters(true));
+
+        let casterAutoSaveTimer = null;
+        ['caster1-name', 'caster1-handle', 'caster1-role', 'caster2-name', 'caster2-handle', 'caster2-role'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', () => {
+                if (casterAutoSaveTimer) clearTimeout(casterAutoSaveTimer);
+                casterAutoSaveTimer = setTimeout(() => {
+                    this.saveCasters(false);
+                }, 800);
+            });
+        });
         
         document.getElementById('caster-duration-select')?.addEventListener('change', (e) => {
             const btn = document.getElementById('popup-casters-btn');
@@ -624,6 +636,10 @@ class LiveStreamOperator {
                 const sec = Math.round(parseInt(e.target.value) / 1000);
                 btn.innerHTML = `<i class="fa-solid fa-bolt"></i> Popup (${sec}s)`;
             }
+            this.saveCasters(false);
+        });
+        document.getElementById('caster-interval-select')?.addEventListener('change', () => {
+            this.saveCasters(false);
         });
 
         // Simulation
@@ -733,10 +749,12 @@ class LiveStreamOperator {
 
     async toggleCasterLoop() {
         this.casterAutoLoop = !this.casterAutoLoop;
-        const c1Name = document.getElementById('caster1-name').value.trim();
-        const c1Handle = document.getElementById('caster1-handle').value.trim();
-        const c2Name = document.getElementById('caster2-name').value.trim();
-        const c2Handle = document.getElementById('caster2-handle').value.trim();
+        const c1Name = document.getElementById('caster1-name')?.value.trim() || '';
+        const c1Handle = document.getElementById('caster1-handle')?.value.trim() || '';
+        const c1Role = document.getElementById('caster1-role')?.value.trim() || 'TALENT';
+        const c2Name = document.getElementById('caster2-name')?.value.trim() || '';
+        const c2Handle = document.getElementById('caster2-handle')?.value.trim() || '';
+        const c2Role = document.getElementById('caster2-role')?.value.trim() || 'ANALYST';
         const durSelect = document.getElementById('caster-duration-select');
         const dur = durSelect ? parseInt(durSelect.value) : 6000;
         const intvSelect = document.getElementById('caster-interval-select');
@@ -746,8 +764,8 @@ class LiveStreamOperator {
         const intvSec = Math.round(intv / 1000);
 
         const formData = new FormData();
-        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle }));
-        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle }));
+        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role }));
+        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role }));
         formData.append('show_lower_third', this.casterAutoLoop);
         formData.append('auto_loop', this.casterAutoLoop);
         formData.append('duration', dur);
@@ -781,17 +799,19 @@ class LiveStreamOperator {
     }
 
     async popupCasters() {
-        const c1Name = document.getElementById('caster1-name').value.trim();
-        const c1Handle = document.getElementById('caster1-handle').value.trim();
-        const c2Name = document.getElementById('caster2-name').value.trim();
-        const c2Handle = document.getElementById('caster2-handle').value.trim();
+        const c1Name = document.getElementById('caster1-name')?.value.trim() || '';
+        const c1Handle = document.getElementById('caster1-handle')?.value.trim() || '';
+        const c1Role = document.getElementById('caster1-role')?.value.trim() || 'TALENT';
+        const c2Name = document.getElementById('caster2-name')?.value.trim() || '';
+        const c2Handle = document.getElementById('caster2-handle')?.value.trim() || '';
+        const c2Role = document.getElementById('caster2-role')?.value.trim() || 'ANALYST';
         const durSelect = document.getElementById('caster-duration-select');
         const dur = durSelect ? parseInt(durSelect.value) : 6000;
         const durSec = Math.round(dur / 1000);
 
         const formData = new FormData();
-        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle }));
-        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle }));
+        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role }));
+        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role }));
         formData.append('show_lower_third', true);
         formData.append('auto_loop', false);
         formData.append('duration', dur);
@@ -811,10 +831,12 @@ class LiveStreamOperator {
     }
 
     async saveCasters(toggleLowerThird) {
-        const c1Name = document.getElementById('caster1-name').value.trim();
-        const c1Handle = document.getElementById('caster1-handle').value.trim();
-        const c2Name = document.getElementById('caster2-name').value.trim();
-        const c2Handle = document.getElementById('caster2-handle').value.trim();
+        const c1Name = document.getElementById('caster1-name')?.value.trim() || '';
+        const c1Handle = document.getElementById('caster1-handle')?.value.trim() || '';
+        const c1Role = document.getElementById('caster1-role')?.value.trim() || 'TALENT';
+        const c2Name = document.getElementById('caster2-name')?.value.trim() || '';
+        const c2Handle = document.getElementById('caster2-handle')?.value.trim() || '';
+        const c2Role = document.getElementById('caster2-role')?.value.trim() || 'ANALYST';
 
         let showLowerThird = false;
         if (toggleLowerThird) {
@@ -823,14 +845,14 @@ class LiveStreamOperator {
         }
 
         const formData = new FormData();
-        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle }));
-        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle }));
+        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role }));
+        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role }));
         formData.append('show_lower_third', showLowerThird);
 
         try {
             await fetch('../set_casters', { method: 'POST', body: formData });
             if (typeof successAlertLowerBottom === 'function') {
-                successAlertLowerBottom(toggleLowerThird ? `Caster Desk Overlay: ${showLowerThird ? 'SHOWN' : 'HIDDEN'}` : 'Casters Updated!');
+                successAlertLowerBottom(toggleLowerThird ? `Caster Desk Overlay: ${showLowerThird ? 'SHOWN' : 'HIDDEN'}` : 'Casters Updated & Saved!');
             }
         } catch (e) {}
     }

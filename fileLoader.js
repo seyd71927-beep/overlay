@@ -139,6 +139,16 @@ class fileLoader {
                 matches: []
             });
 
+            // Read Casters
+            this.config.casters = safeReadJson('casters.json', {
+                caster_1: { name: "Ailyrr", handle: "@ailyrr", role: "Caster" },
+                caster_2: { name: "Vanguard", handle: "@vanguard_val", role: "Analyst" },
+                show_lower_third: false,
+                auto_loop: false,
+                duration: 6000,
+                interval: 30000
+            });
+
             // Read Admin Password & App Config
             const appConfig = safeReadJson('appConfig.json', {
                 admin_key: "zenx",
@@ -382,6 +392,7 @@ class fileLoader {
         if (typeof autoLoop === 'boolean') this.config.casters.auto_loop = autoLoop;
         if (typeof duration === 'number') this.config.casters.duration = duration;
         if (typeof interval === 'number') this.config.casters.interval = interval;
+        this.saveStateToFile('casters.json', this.config.casters);
         return this.config.casters;
     }
 

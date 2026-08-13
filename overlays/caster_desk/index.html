@@ -88,7 +88,7 @@
 
     <div id="caster-container" class="caster-banner-container">
         <div class="caster-card">
-            <div class="caster-badge">TALENT</div>
+            <div id="c1-role" class="caster-badge">TALENT</div>
             <div class="caster-info">
                 <span id="c1-name" class="caster-name">AILYRR</span>
                 <span id="c1-handle" class="caster-handle">@ailyrr</span>
@@ -96,7 +96,7 @@
         </div>
 
         <div class="caster-card" style="border-left-color: #00f2fe; border-right-color: #ff4655;">
-            <div class="caster-badge" style="background: linear-gradient(135deg, #00f2fe, #00b4d8); color: #000;">ANALYST</div>
+            <div id="c2-role" class="caster-badge" style="background: linear-gradient(135deg, #00f2fe, #00b4d8); color: #000;">ANALYST</div>
             <div class="caster-info">
                 <span id="c2-name" class="caster-name">VANGUARD</span>
                 <span id="c2-handle" class="caster-handle">@vanguard_val</span>
@@ -151,16 +151,20 @@
             const container = document.getElementById('caster-container');
             const c1Name = document.getElementById('c1-name');
             const c1Handle = document.getElementById('c1-handle');
+            const c1Role = document.getElementById('c1-role');
             const c2Name = document.getElementById('c2-name');
             const c2Handle = document.getElementById('c2-handle');
+            const c2Role = document.getElementById('c2-role');
 
             if (data.caster_1) {
                 if (c1Name) c1Name.textContent = (data.caster_1.name || 'CASTER 1').toUpperCase();
                 if (c1Handle) c1Handle.textContent = data.caster_1.handle || '';
+                if (c1Role) c1Role.textContent = (data.caster_1.role || 'TALENT').toUpperCase();
             }
             if (data.caster_2) {
                 if (c2Name) c2Name.textContent = (data.caster_2.name || 'CASTER 2').toUpperCase();
                 if (c2Handle) c2Handle.textContent = data.caster_2.handle || '';
+                if (c2Role) c2Role.textContent = (data.caster_2.role || 'ANALYST').toUpperCase();
             }
 
             const dur = data.duration || 6000;

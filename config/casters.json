@@ -1,0 +1,16 @@
+{
+    "caster_1": {
+        "name": "Shubham",
+        "handle": "@shubham_val",
+        "role": "Caster"
+    },
+    "caster_2": {
+        "name": "Aryan",
+        "handle": "@aryan_casts",
+        "role": "Analyst"
+    },
+    "show_lower_third": true,
+    "auto_loop": false,
+    "duration": 6000,
+    "interval": 30000
+}
