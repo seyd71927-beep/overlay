@@ -17,6 +17,9 @@ class LiveStreamOperator {
         this.team1Count = 5;
         this.team2Count = 5;
         this.operatingMode = 'manual';
+        this.caster1Enabled = true;
+        this.caster2Enabled = true;
+        this.caster3Enabled = false;
 
         this.agentsList = [
             'Jett', 'Reyna', 'Raze', 'Viper', 'Omen', 'Brimstone', 'Phoenix', 'Sova',
@@ -349,11 +352,19 @@ class LiveStreamOperator {
                     if (document.getElementById('caster1-name')) document.getElementById('caster1-name').value = casters.caster_1.name || '';
                     if (document.getElementById('caster1-handle')) document.getElementById('caster1-handle').value = casters.caster_1.handle || '';
                     if (document.getElementById('caster1-role')) document.getElementById('caster1-role').value = casters.caster_1.role || 'TALENT';
+                    this.caster1Enabled = (casters.caster_1.enabled !== false);
                 }
                 if (casters.caster_2) {
                     if (document.getElementById('caster2-name')) document.getElementById('caster2-name').value = casters.caster_2.name || '';
                     if (document.getElementById('caster2-handle')) document.getElementById('caster2-handle').value = casters.caster_2.handle || '';
                     if (document.getElementById('caster2-role')) document.getElementById('caster2-role').value = casters.caster_2.role || 'ANALYST';
+                    this.caster2Enabled = (casters.caster_2.enabled !== false);
+                }
+                if (casters.caster_3) {
+                    if (document.getElementById('caster3-name')) document.getElementById('caster3-name').value = casters.caster_3.name || '';
+                    if (document.getElementById('caster3-handle')) document.getElementById('caster3-handle').value = casters.caster_3.handle || '';
+                    if (document.getElementById('caster3-role')) document.getElementById('caster3-role').value = casters.caster_3.role || 'HOST';
+                    this.caster3Enabled = !!casters.caster_3.enabled;
                 }
                 if (casters.duration && document.getElementById('caster-duration-select')) {
                     document.getElementById('caster-duration-select').value = casters.duration;
@@ -363,6 +374,7 @@ class LiveStreamOperator {
                 }
                 this.casterAutoLoop = !!casters.auto_loop;
                 this.updateCasterLoopButton();
+                this.updateCasterSlotToggleButtons();
             }
         } catch (e) {}
     }
@@ -620,8 +632,24 @@ class LiveStreamOperator {
         document.getElementById('save-casters-btn')?.addEventListener('click', () => this.saveCasters(false));
         document.getElementById('toggle-lower-third-btn')?.addEventListener('click', () => this.saveCasters(true));
 
+        document.getElementById('caster1-toggle-btn')?.addEventListener('click', () => {
+            this.caster1Enabled = !this.caster1Enabled;
+            this.updateCasterSlotToggleButtons();
+            this.saveCasters(false);
+        });
+        document.getElementById('caster2-toggle-btn')?.addEventListener('click', () => {
+            this.caster2Enabled = !this.caster2Enabled;
+            this.updateCasterSlotToggleButtons();
+            this.saveCasters(false);
+        });
+        document.getElementById('caster3-toggle-btn')?.addEventListener('click', () => {
+            this.caster3Enabled = !this.caster3Enabled;
+            this.updateCasterSlotToggleButtons();
+            this.saveCasters(false);
+        });
+
         let casterAutoSaveTimer = null;
-        ['caster1-name', 'caster1-handle', 'caster1-role', 'caster2-name', 'caster2-handle', 'caster2-role'].forEach(id => {
+        ['caster1-name', 'caster1-handle', 'caster1-role', 'caster2-name', 'caster2-handle', 'caster2-role', 'caster3-name', 'caster3-handle', 'caster3-role'].forEach(id => {
             document.getElementById(id)?.addEventListener('input', () => {
                 if (casterAutoSaveTimer) clearTimeout(casterAutoSaveTimer);
                 casterAutoSaveTimer = setTimeout(() => {
@@ -648,92 +676,58 @@ class LiveStreamOperator {
 
     async adjustScore(team, delta) {
         if (team === 'team_1') {
-            this.gameState.team_1_score = Math.max(0, this.gameState.team_1_score + delta);
+            this.gameState.team_1_score = Math.max(0, (this.gameState.team_1_score || 0) + delta);
         } else {
-            this.gameState.team_2_score = Math.max(0, this.gameState.team_2_score + delta);
+            this.gameState.team_2_score = Math.max(0, (this.gameState.team_2_score || 0) + delta);
         }
-        await this.postGameState();
+        await this.syncGameState();
     }
 
     async adjustRound(delta) {
         this.gameState.round_number = Math.max(1, (this.gameState.round_number || 1) + delta);
-        await this.postGameState();
+        await this.syncGameState();
     }
 
-    async toggleSides() {
+    async switchSides() {
         this.gameState.switch_sides = !this.gameState.switch_sides;
-        await this.postGameState();
+        await this.syncGameState();
     }
 
     async setSpike(isDown) {
         this.gameState.spike_down = isDown;
-        await this.postGameState();
-        if (typeof successAlertLowerBottom === 'function') {
-            successAlertLowerBottom(isDown ? 'Spike Planted! (45s Timer)' : 'Spike Cleared / Defused');
-        }
+        await this.syncGameState();
     }
 
-    async triggerWinBanner(winningTeam) {
-        const formData = new FormData();
-        formData.append('winningTeam', winningTeam);
-
+    async triggerWinBanner(team) {
         try {
-            const res = await fetch('../trigger_win_banner', {
-                method: 'POST',
-                body: formData
-            });
-            if (res.status === 200) {
-                if (typeof successAlertLowerBottom === 'function') {
-                    const teamName = winningTeam === 'team_1' ? (this.team1Data.abbreviation || 'Team 1') : (this.team2Data.abbreviation || 'Team 2');
-                    successAlertLowerBottom(`Triggered Round Win for ${teamName}!`);
-                }
-            }
-        } catch (e) {
-            console.error('Error triggering win banner:', e);
-        }
+            const formData = new FormData();
+            formData.append('team', team);
+            await fetch('../trigger_win_banner', { method: 'POST', body: formData });
+        } catch (e) {}
     }
 
     async resetMatch() {
-        if (!confirm('Are you sure you want to reset match scores to 0-0 and round to 1?')) return;
+        if (!confirm('Are you sure you want to reset the match state to 0-0?')) return;
         try {
             await fetch('../reset_match_state', { method: 'POST' });
             if (typeof successAlertLowerBottom === 'function') {
-                successAlertLowerBottom('Match Reset to 0 - 0!');
+                successAlertLowerBottom('Match State Reset to 0-0 (Round 1)');
             }
         } catch (e) {}
     }
 
-    async postGameState() {
-        const formData = new FormData();
-        formData.append('round_number', this.gameState.round_number);
-        formData.append('team_1_score', this.gameState.team_1_score);
-        formData.append('team_2_score', this.gameState.team_2_score);
-        formData.append('spike', this.gameState.spike_down ? 'down' : 'up');
-        formData.append('switch_sides', this.gameState.switch_sides);
-
-        try {
-            await fetch('../change_game_state', {
-                method: 'POST',
-                body: formData
-            });
-        } catch (e) {
-            console.error('Error posting game state:', e);
-        }
-    }
-
     async startTimer() {
-        const desc = document.getElementById('timer-desc-input').value.trim() || 'MATCH BREAK';
-        const mins = parseInt(document.getElementById('timer-mins-input').value) || 5;
-        const ms = mins * 60 * 1000;
-
-        const formData = new FormData();
-        formData.append('timeMiliseconds', ms);
-        formData.append('description', desc);
+        const timeInput = document.getElementById('timer-time-input')?.value.trim();
+        const descInput = document.getElementById('timer-desc-input')?.value.trim() || 'STREAM STARTING SOON';
+        if (!timeInput) return;
 
         try {
+            const formData = new FormData();
+            formData.append('time', timeInput);
+            formData.append('description', descInput);
             await fetch('../set_timer', { method: 'POST', body: formData });
             if (typeof successAlertLowerBottom === 'function') {
-                successAlertLowerBottom(`Timer Started: ${mins} Mins - ${desc}`);
+                successAlertLowerBottom(`Timer Started (${timeInput})`);
             }
         } catch (e) {}
     }
@@ -747,6 +741,26 @@ class LiveStreamOperator {
         } catch (e) {}
     }
 
+    updateCasterSlotToggleButtons() {
+        const updateBtn = (btnId, boxId, isEnabled) => {
+            const btn = document.getElementById(btnId);
+            const box = document.getElementById(boxId);
+            if (btn) {
+                btn.innerHTML = isEnabled ? '🟢 ON' : '⚪ OFF';
+                btn.style.background = isEnabled ? 'rgba(0, 230, 118, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+                btn.style.color = isEnabled ? '#00e676' : '#94a3b8';
+                btn.style.borderColor = isEnabled ? 'rgba(0, 230, 118, 0.4)' : 'rgba(255, 255, 255, 0.2)';
+            }
+            if (box) {
+                box.style.opacity = isEnabled ? '1' : '0.45';
+            }
+        };
+
+        updateBtn('caster1-toggle-btn', 'caster1-card-box', this.caster1Enabled);
+        updateBtn('caster2-toggle-btn', 'caster2-card-box', this.caster2Enabled);
+        updateBtn('caster3-toggle-btn', 'caster3-card-box', this.caster3Enabled);
+    }
+
     async toggleCasterLoop() {
         this.casterAutoLoop = !this.casterAutoLoop;
         const c1Name = document.getElementById('caster1-name')?.value.trim() || '';
@@ -755,6 +769,10 @@ class LiveStreamOperator {
         const c2Name = document.getElementById('caster2-name')?.value.trim() || '';
         const c2Handle = document.getElementById('caster2-handle')?.value.trim() || '';
         const c2Role = document.getElementById('caster2-role')?.value.trim() || 'ANALYST';
+        const c3Name = document.getElementById('caster3-name')?.value.trim() || '';
+        const c3Handle = document.getElementById('caster3-handle')?.value.trim() || '';
+        const c3Role = document.getElementById('caster3-role')?.value.trim() || 'HOST';
+
         const durSelect = document.getElementById('caster-duration-select');
         const dur = durSelect ? parseInt(durSelect.value) : 6000;
         const intvSelect = document.getElementById('caster-interval-select');
@@ -764,8 +782,9 @@ class LiveStreamOperator {
         const intvSec = Math.round(intv / 1000);
 
         const formData = new FormData();
-        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role }));
-        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role }));
+        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role, enabled: this.caster1Enabled }));
+        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role, enabled: this.caster2Enabled }));
+        formData.append('caster_3', JSON.stringify({ name: c3Name, handle: c3Handle, role: c3Role, enabled: this.caster3Enabled }));
         formData.append('show_lower_third', this.casterAutoLoop);
         formData.append('auto_loop', this.casterAutoLoop);
         formData.append('duration', dur);
@@ -805,13 +824,18 @@ class LiveStreamOperator {
         const c2Name = document.getElementById('caster2-name')?.value.trim() || '';
         const c2Handle = document.getElementById('caster2-handle')?.value.trim() || '';
         const c2Role = document.getElementById('caster2-role')?.value.trim() || 'ANALYST';
+        const c3Name = document.getElementById('caster3-name')?.value.trim() || '';
+        const c3Handle = document.getElementById('caster3-handle')?.value.trim() || '';
+        const c3Role = document.getElementById('caster3-role')?.value.trim() || 'HOST';
+
         const durSelect = document.getElementById('caster-duration-select');
         const dur = durSelect ? parseInt(durSelect.value) : 6000;
         const durSec = Math.round(dur / 1000);
 
         const formData = new FormData();
-        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role }));
-        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role }));
+        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role, enabled: this.caster1Enabled }));
+        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role, enabled: this.caster2Enabled }));
+        formData.append('caster_3', JSON.stringify({ name: c3Name, handle: c3Handle, role: c3Role, enabled: this.caster3Enabled }));
         formData.append('show_lower_third', true);
         formData.append('auto_loop', false);
         formData.append('duration', dur);
@@ -837,6 +861,9 @@ class LiveStreamOperator {
         const c2Name = document.getElementById('caster2-name')?.value.trim() || '';
         const c2Handle = document.getElementById('caster2-handle')?.value.trim() || '';
         const c2Role = document.getElementById('caster2-role')?.value.trim() || 'ANALYST';
+        const c3Name = document.getElementById('caster3-name')?.value.trim() || '';
+        const c3Handle = document.getElementById('caster3-handle')?.value.trim() || '';
+        const c3Role = document.getElementById('caster3-role')?.value.trim() || 'HOST';
 
         let showLowerThird = false;
         if (toggleLowerThird) {
@@ -845,8 +872,9 @@ class LiveStreamOperator {
         }
 
         const formData = new FormData();
-        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role }));
-        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role }));
+        formData.append('caster_1', JSON.stringify({ name: c1Name, handle: c1Handle, role: c1Role, enabled: this.caster1Enabled }));
+        formData.append('caster_2', JSON.stringify({ name: c2Name, handle: c2Handle, role: c2Role, enabled: this.caster2Enabled }));
+        formData.append('caster_3', JSON.stringify({ name: c3Name, handle: c3Handle, role: c3Role, enabled: this.caster3Enabled }));
         formData.append('show_lower_third', showLowerThird);
 
         try {

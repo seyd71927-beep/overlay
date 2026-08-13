@@ -277,10 +277,10 @@
                         </div>
                     </div>
 
-                    <!-- Caster Desk Box -->
+                    <!-- Caster Desk Box (3 Customizable Slots with Individual ON/OFF Toggles) -->
                     <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <h5 style="color: var(--text-muted); font-size: 0.8rem;">CASTERS / TALENT LOWER THIRD</h5>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                            <h5 style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 0.5px;">CASTERS / TALENT LOWER THIRD (3 SLOTS)</h5>
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="display: flex; align-items: center; gap: 4px;">
                                     <label style="font-size: 0.72rem; color: var(--text-muted);">Show:</label>
@@ -303,22 +303,56 @@
                                 </div>
                             </div>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-                            <div>
-                                <input id="caster1-name" type="text" class="input-field" placeholder="Caster 1 Name (e.g. Ailyrr)">
-                                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 4px; margin-top: 4px;">
-                                    <input id="caster1-handle" type="text" class="input-field" placeholder="Handle (e.g. @ailyrr)">
-                                    <input id="caster1-role" type="text" class="input-field" placeholder="Role (e.g. TALENT)">
+
+                        <!-- 3 Caster Slots with Individual ON / OFF Toggles -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                            <!-- Caster 1 Slot -->
+                            <div id="caster1-card-box" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #ff4655;">🎙️ CASTER 1</span>
+                                    <button type="button" id="caster1-toggle-btn" class="btn" style="padding: 2px 8px; font-size: 0.68rem; font-weight: 800; background: rgba(0, 230, 118, 0.2); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.4);">
+                                        🟢 ON
+                                    </button>
+                                </div>
+                                <input id="caster1-name" type="text" class="input-field" placeholder="Name (e.g. Ailyrr)">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;">
+                                    <input id="caster1-handle" type="text" class="input-field" placeholder="Handle (@ailyrr)">
+                                    <input id="caster1-role" type="text" class="input-field" placeholder="Role (TALENT)">
                                 </div>
                             </div>
-                            <div>
-                                <input id="caster2-name" type="text" class="input-field" placeholder="Caster 2 Name (e.g. Vanguard)">
-                                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 4px; margin-top: 4px;">
-                                    <input id="caster2-handle" type="text" class="input-field" placeholder="Handle (e.g. @vanguard)">
-                                    <input id="caster2-role" type="text" class="input-field" placeholder="Role (e.g. ANALYST)">
+
+                            <!-- Caster 2 Slot -->
+                            <div id="caster2-card-box" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #00f2fe;">🎙️ CASTER 2</span>
+                                    <button type="button" id="caster2-toggle-btn" class="btn" style="padding: 2px 8px; font-size: 0.68rem; font-weight: 800; background: rgba(0, 230, 118, 0.2); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.4);">
+                                        🟢 ON
+                                    </button>
+                                </div>
+                                <input id="caster2-name" type="text" class="input-field" placeholder="Name (e.g. Vanguard)">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;">
+                                    <input id="caster2-handle" type="text" class="input-field" placeholder="Handle (@vanguard)">
+                                    <input id="caster2-role" type="text" class="input-field" placeholder="Role (ANALYST)">
+                                </div>
+                            </div>
+
+                            <!-- Caster 3 Slot (Host / Observer / Guest) -->
+                            <div id="caster3-card-box" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px; border-radius: 6px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                    <span style="font-size: 0.75rem; font-weight: 700; color: #fde047;">🎙️ CASTER 3</span>
+                                    <button type="button" id="caster3-toggle-btn" class="btn" style="padding: 2px 8px; font-size: 0.68rem; font-weight: 800; background: rgba(255, 255, 255, 0.1); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.2);">
+                                        ⚪ OFF
+                                    </button>
+                                </div>
+                                <input id="caster3-name" type="text" class="input-field" placeholder="Name (e.g. Host)">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px;">
+                                    <input id="caster3-handle" type="text" class="input-field" placeholder="Handle (@host)">
+                                    <input id="caster3-role" type="text" class="input-field" placeholder="Role (HOST)">
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Action Buttons -->
                         <div style="display: grid; grid-template-columns: 1.3fr 1fr 0.9fr 0.9fr; gap: 6px;">
                             <button id="loop-casters-btn" class="btn" style="font-weight: 700; background: rgba(0, 242, 254, 0.15); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.3);">
                                 <i class="fa-solid fa-repeat"></i> Loop: OFF

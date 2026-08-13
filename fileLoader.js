@@ -141,13 +141,19 @@ class fileLoader {
 
             // Read Casters
             this.config.casters = safeReadJson('casters.json', {
-                caster_1: { name: "Ailyrr", handle: "@ailyrr", role: "Caster" },
-                caster_2: { name: "Vanguard", handle: "@vanguard_val", role: "Analyst" },
+                caster_1: { name: "Ailyrr", handle: "@ailyrr", role: "Caster", enabled: true },
+                caster_2: { name: "Vanguard", handle: "@vanguard_val", role: "Analyst", enabled: true },
+                caster_3: { name: "", handle: "", role: "Host", enabled: false },
                 show_lower_third: false,
                 auto_loop: false,
                 duration: 6000,
                 interval: 30000
             });
+            if (!this.config.casters.caster_3) {
+                this.config.casters.caster_3 = { name: "", handle: "", role: "Host", enabled: false };
+            }
+            if (typeof this.config.casters.caster_1.enabled === 'undefined') this.config.casters.caster_1.enabled = true;
+            if (typeof this.config.casters.caster_2.enabled === 'undefined') this.config.casters.caster_2.enabled = true;
 
             // Read Admin Password & App Config
             const appConfig = safeReadJson('appConfig.json', {
@@ -375,19 +381,24 @@ class fileLoader {
     }
 
     // --- Caster Lower Third Logic ---
-    updateCasters(caster1, caster2, showLowerThird, autoLoop, duration, interval) {
+    updateCasters(caster1, caster2, caster3, showLowerThird, autoLoop, duration, interval) {
         if (!this.config.casters) {
             this.config.casters = {
-                caster_1: { name: 'Ailyrr', handle: '@ailyrr' },
-                caster_2: { name: 'Vanguard', handle: '@vanguard_val' },
+                caster_1: { name: 'Ailyrr', handle: '@ailyrr', role: 'Caster', enabled: true },
+                caster_2: { name: 'Vanguard', handle: '@vanguard_val', role: 'Analyst', enabled: true },
+                caster_3: { name: '', handle: '', role: 'Host', enabled: false },
                 show_lower_third: false,
                 auto_loop: false,
                 duration: 6000,
                 interval: 30000
             };
         }
+        if (!this.config.casters.caster_3) {
+            this.config.casters.caster_3 = { name: '', handle: '', role: 'Host', enabled: false };
+        }
         if (caster1) this.config.casters.caster_1 = { ...this.config.casters.caster_1, ...caster1 };
         if (caster2) this.config.casters.caster_2 = { ...this.config.casters.caster_2, ...caster2 };
+        if (caster3) this.config.casters.caster_3 = { ...this.config.casters.caster_3, ...caster3 };
         if (typeof showLowerThird === 'boolean') this.config.casters.show_lower_third = showLowerThird;
         if (typeof autoLoop === 'boolean') this.config.casters.auto_loop = autoLoop;
         if (typeof duration === 'number') this.config.casters.duration = duration;

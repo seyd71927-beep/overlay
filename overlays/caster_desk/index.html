@@ -87,21 +87,7 @@
 <body>
 
     <div id="caster-container" class="caster-banner-container">
-        <div class="caster-card">
-            <div id="c1-role" class="caster-badge">TALENT</div>
-            <div class="caster-info">
-                <span id="c1-name" class="caster-name">AILYRR</span>
-                <span id="c1-handle" class="caster-handle">@ailyrr</span>
-            </div>
-        </div>
-
-        <div class="caster-card" style="border-left-color: #00f2fe; border-right-color: #ff4655;">
-            <div id="c2-role" class="caster-badge" style="background: linear-gradient(135deg, #00f2fe, #00b4d8); color: #000;">ANALYST</div>
-            <div class="caster-info">
-                <span id="c2-name" class="caster-name">VANGUARD</span>
-                <span id="c2-handle" class="caster-handle">@vanguard_val</span>
-            </div>
-        </div>
+        <!-- Dynamically populated based on enabled caster slots -->
     </div>
 
     <script>
@@ -147,25 +133,46 @@
             } catch(e) {}
         }
 
+        function buildCasterCardHTML(caster, index) {
+            const themes = [
+                { borderL: '#ff4655', borderR: '#00f2fe', badgeBg: 'linear-gradient(135deg, #ff4655, #d62828)', badgeColor: '#fff', handleColor: '#00f2fe' },
+                { borderL: '#00f2fe', borderR: '#ff4655', badgeBg: 'linear-gradient(135deg, #00f2fe, #00b4d8)', badgeColor: '#000', handleColor: '#00f2fe' },
+                { borderL: '#fde047', borderR: '#ff4655', badgeBg: 'linear-gradient(135deg, #fde047, #f59e0b)', badgeColor: '#000', handleColor: '#fde047' }
+            ];
+            const t = themes[index % themes.length];
+            const name = (caster.name || `CASTER ${index + 1}`).toUpperCase();
+            const handle = caster.handle || '';
+            const role = (caster.role || (index === 0 ? 'TALENT' : (index === 1 ? 'ANALYST' : 'HOST'))).toUpperCase();
+
+            return `
+            <div class="caster-card" style="border-left-color: ${t.borderL}; border-right-color: ${t.borderR};">
+                <div class="caster-badge" style="background: ${t.badgeBg}; color: ${t.badgeColor};">${role}</div>
+                <div class="caster-info">
+                    <span class="caster-name">${name}</span>
+                    ${handle ? `<span class="caster-handle" style="color: ${t.handleColor};">${handle}</span>` : ''}
+                </div>
+            </div>`;
+        }
+
         function updateCasterDisplay(data) {
             const container = document.getElementById('caster-container');
-            const c1Name = document.getElementById('c1-name');
-            const c1Handle = document.getElementById('c1-handle');
-            const c1Role = document.getElementById('c1-role');
-            const c2Name = document.getElementById('c2-name');
-            const c2Handle = document.getElementById('c2-handle');
-            const c2Role = document.getElementById('c2-role');
+            if (!container || !data) return;
 
-            if (data.caster_1) {
-                if (c1Name) c1Name.textContent = (data.caster_1.name || 'CASTER 1').toUpperCase();
-                if (c1Handle) c1Handle.textContent = data.caster_1.handle || '';
-                if (c1Role) c1Role.textContent = (data.caster_1.role || 'TALENT').toUpperCase();
+            let html = '';
+            const slots = [data.caster_1, data.caster_2, data.caster_3];
+            
+            slots.forEach((c, idx) => {
+                if (c && c.enabled !== false && (c.name || c.handle)) {
+                    html += buildCasterCardHTML(c, idx);
+                }
+            });
+
+            // Fallback if none explicitly enabled but caster_1 exists
+            if (!html && data.caster_1 && data.caster_1.name) {
+                html += buildCasterCardHTML(data.caster_1, 0);
             }
-            if (data.caster_2) {
-                if (c2Name) c2Name.textContent = (data.caster_2.name || 'CASTER 2').toUpperCase();
-                if (c2Handle) c2Handle.textContent = data.caster_2.handle || '';
-                if (c2Role) c2Role.textContent = (data.caster_2.role || 'ANALYST').toUpperCase();
-            }
+
+            container.innerHTML = html;
 
             const dur = data.duration || 6000;
             const intv = data.interval || 30000;
