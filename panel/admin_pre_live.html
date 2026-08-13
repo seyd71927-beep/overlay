@@ -168,71 +168,8 @@
                     </div>
                 </div>
 
-                <!-- Team Setup Card -->
-                <div class="card" style="grid-column: span 7;">
-                    <div class="card-header">
-                        <span><i class="fa-solid fa-users"></i> Team Setup & Matchup Config</span>
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <label style="font-size: 0.8rem; color: var(--accent-secondary); cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                                <input type="checkbox" id="lock-manual-teams-toggle" style="accent-color: var(--accent-secondary); width: 16px; height: 16px;">
-                                🔒 Lock Custom Names & Logos
-                            </label>
-                            <button id="save-teams-btn" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Team Settings</button>
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px;">
-
-                        
-                        <!-- Team 1 -->
-                        <div style="background: rgba(0, 230, 118, 0.04); border: 1px solid rgba(0, 230, 118, 0.2); border-radius: var(--radius-md); padding: 16px;">
-                            <h4 style="color: var(--green-team); margin-bottom: 12px; font-family: var(--font-display); font-size: 1.2rem;">
-                                <i class="fa-solid fa-shield"></i> TEAM 1 (Green/Attacker Init)
-                            </h4>
-                            
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">TAG / Abbreviation (3-4 chars)</label>
-                                    <input id="team1-abbr" type="text" class="input-field" value="FNC">
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seed / Subtitle Info</label>
-                                    <input id="team1-info" type="text" class="input-field" value="#1 Seed">
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Team Logo URL</label>
-                                    <input id="team1-icon" type="text" class="input-field" placeholder="../visual_assets/blueTeamPlaceholder.jpg">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Team 2 -->
-                        <div style="background: rgba(255, 42, 95, 0.04); border: 1px solid rgba(255, 42, 95, 0.2); border-radius: var(--radius-md); padding: 16px;">
-                            <h4 style="color: var(--red-team); margin-bottom: 12px; font-family: var(--font-display); font-size: 1.2rem;">
-                                <i class="fa-solid fa-shield"></i> TEAM 2 (Red/Defender Init)
-                            </h4>
-                            
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">TAG / Abbreviation (3-4 chars)</label>
-                                    <input id="team2-abbr" type="text" class="input-field" value="HLV">
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Seed / Subtitle Info</label>
-                                    <input id="team2-info" type="text" class="input-field" value="#2 Seed">
-                                </div>
-                                <div>
-                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Team Logo URL</label>
-                                    <input id="team2-icon" type="text" class="input-field" placeholder="../visual_assets/redTeamPlaceholder.jpg">
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Map Veto Picks Card -->
-                <div class="card" style="grid-column: span 5;">
+                <!-- Map Pick & Ban Veto Card -->
+                <div class="card" style="grid-column: span 12;">
                     <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 8px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span><i class="fa-solid fa-map-location-dot"></i> Map Pick & Ban Veto</span>
@@ -284,9 +221,10 @@
                     <div id="map-pick-holder" style="display: flex; flex-direction: column; gap: 10px; margin-top: 12px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
                         <!-- Dynamically populated map veto slots -->
                     </div>
-                </div>
-
             </div>
+        </div>
+    </div>
+
     <!-- Add / Edit Team Modal -->
     <div id="team-modal" class="custom-modal">
         <div class="modal-content">
