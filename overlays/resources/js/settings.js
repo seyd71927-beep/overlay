@@ -211,7 +211,7 @@ function copyAdminUrl() {
 
 function copyBridgeCmd() {
     const origin = window.location.origin;
-    const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -Command "irm ${origin}/bridge.ps1 | iex"`;
+    const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -Command "$f='$env:TEMP\\zenx_bridge.ps1'; (New-Object Net.WebClient).DownloadFile('${origin}/bridge.ps1',$f); & $f; Remove-Item $f -ErrorAction SilentlyContinue"`;
     navigator.clipboard.writeText(cmd);
     if (typeof successAlertLowerBottom === 'function') {
         successAlertLowerBottom('Copied Streamer 1-Line PowerShell Command!');

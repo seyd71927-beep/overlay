@@ -21,33 +21,12 @@ if ($TargetServer -ne "") {
 # Ensure modern TLS protocols
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]'Tls,Tls11,Tls12'
 
-# Clear any broken PowerShell scriptblock callbacks
-[System.Net.ServicePointManager]::ServerCertificateValidationCallback = $null
-
-# Trust 127.0.0.1 self-signed Riot API certificate using thread-safe compiled C# delegates
+# Allow local Riot Client self-signed certificate (127.0.0.1 only)
 try {
-    if (-not ([System.Management.Automation.PSTypeName]'ZenxSslBypass').Type) {
-        Add-Type -TypeDefinition @"
-            using System.Net;
-            using System.Net.Security;
-            using System.Security.Cryptography.X509Certificates;
-            public class ZenxSslBypass {
-                public static bool ValidateAll(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) {
-                    return true;
-                }
-                public static void Enable() {
-                    ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback(ValidateAll);
-                }
-            }
-            public class ZenxTrustAllPolicy : ICertificatePolicy {
-                public bool CheckValidationResult(ServicePoint srvPoint, X509Certificate certificate, WebRequest request, int problem) {
-                    return true;
-                }
-            }
-"@ -ErrorAction SilentlyContinue
+    [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {
+        param($sender, $cert, $chain, $errors)
+        return $true
     }
-    [ZenxSslBypass]::Enable()
-    [System.Net.ServicePointManager]::CertificatePolicy = New-Object ZenxTrustAllPolicy
 } catch {}
 
 Write-Host "[Bridge] Target Overlay Server: $OverlayServer" -ForegroundColor Cyan
