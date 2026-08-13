@@ -113,6 +113,10 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
         const t2Players = Array.isArray(payload.team_2_players) ? payload.team_2_players : null;
         const totalPlayers = (t1Players ? t1Players.length : 0) + (t2Players ? t2Players.length : 0);
 
+        const isCustomMatch = (payload.isCustom === true || payload.isCustom === 'true' || payload.is_custom === true || payload.is_custom === 'true' || payload.is_custom_match === true || payload.is_custom_match === 'true');
+        const isTournament = (payload.isTournamentMode === true || payload.isTournamentMode === 'true' || payload.is_tournament_mode === true || payload.is_tournament_mode === 'true');
+        const matchType = payload.match_type || payload.matchType || (isTournament ? 'CUSTOM_TOURNAMENT' : (isCustomMatch ? 'CUSTOM_MATCH' : 'STANDARD'));
+
         bridgeStatus = {
             connected: true,
             online: true,
@@ -120,6 +124,12 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             lastPing: now,
             phase: payload.phase || (inGame ? 'INGAME' : 'MENUS'),
             inGame: inGame,
+            isCustom: isCustomMatch,
+            is_custom_match: isCustomMatch,
+            isTournamentMode: isTournament,
+            is_tournament_mode: isTournament,
+            matchType: matchType,
+            match_type: matchType,
             map: mapName,
             round: roundNum,
             round_number: roundNum,
@@ -159,6 +169,12 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
         }
         if (payload.map && dataBus.config.gameState.map !== mapName) {
             dataBus.config.gameState.map = mapName;
+            stateChanged = true;
+        }
+        if (typeof payload.isCustom !== 'undefined' || typeof payload.is_custom_match !== 'undefined') {
+            dataBus.config.gameState.is_custom_match = isCustomMatch;
+            dataBus.config.gameState.is_tournament_mode = isTournament;
+            dataBus.config.gameState.match_type = matchType;
             stateChanged = true;
         }
 

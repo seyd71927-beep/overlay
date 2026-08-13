@@ -436,12 +436,21 @@ while ($true) {
             continue
         }
 
-        # 5. Build Telemetry Payload with dynamic team size from Lockfile
+        # 5. Build Telemetry Payload with dynamic team size & Custom Tournament Mode from Lockfile
         $t1Count = if ($team1Players) { $team1Players.Count } else { 5 }
         $t2Count = if ($team2Players) { $team2Players.Count } else { 5 }
+        $isCustomMatch = ($priv.provisioningFlow -eq "CustomGame" -or ($priv.matchPresenceData -and $priv.matchPresenceData.provisioningFlow -eq "CustomGame") -or ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerProvisioningFlow -eq "CustomGame") -or $priv.queueId -eq "custom")
+        $isTournament = ($isCustomMatch -and ($priv.tournamentMode -eq $true -or ($priv.matchPresenceData -and $priv.matchPresenceData.tournamentMode -eq $true) -or ($priv.customGameData -and $priv.customGameData.gameRules -and $priv.customGameData.gameRules.TournamentMode -eq "true")))
+        $matchType = if ($isTournament) { "CUSTOM_TOURNAMENT" } elseif ($isCustomMatch) { "CUSTOM_MATCH" } else { "STANDARD" }
+
         $payload = @{
             phase = $loopState
             inGame = ($loopState -eq "INGAME")
+            isCustom = $isCustomMatch
+            is_custom_match = $isCustomMatch
+            isTournamentMode = $isTournament
+            is_tournament_mode = $isTournament
+            match_type = $matchType
             map = $detectedMap
             round_number = $roundNum
             team_1_score = $t1Score
@@ -460,14 +469,15 @@ while ($true) {
             $res = Invoke-RestMethod -Uri $syncUrl -Method POST -Body $jsonPayload -ContentType "application/json" -TimeoutSec 4 -ErrorAction SilentlyContinue
         } catch {}
 
+        $typeBadge = if ($isTournament) { "[CUSTOM TOURNAMENT]" } elseif ($isCustomMatch) { "[CUSTOM MATCH]" } else { "[STANDARD MATCH]" }
         if ($loopState -eq "INGAME") {
             $accountLabel = if ($localGameName) { " ($localGameName)" } else { "" }
-            Show-Status "[LIVE SYNC ACTIVE]$accountLabel Map: $($detectedMap.ToUpper()) | Round $roundNum ($t1Score-$t2Score) | Streaming to $OverlayServer" "Green"
+            Show-Status "$typeBadge [LIVE SYNC]$accountLabel Map: $($detectedMap.ToUpper()) | Round $roundNum ($t1Score-$t2Score) | Streaming to $OverlayServer" "Green"
         } elseif ($loopState -eq "PREGAME") {
-            Show-Status "[AGENT SELECT] In Match Agent Select Lobby | Connected to $OverlayServer" "Magenta"
+            Show-Status "$typeBadge [AGENT SELECT] In Match Agent Select Lobby | Connected to $OverlayServer" "Magenta"
         } else {
             $accountLabel = if ($localGameName) { " ($localGameName)" } else { "" }
-            Show-Status "[CONNECTED] VALORANT Online$accountLabel (In Menus/Lobby) | Connected to $OverlayServer" "Cyan"
+            Show-Status "$typeBadge [CONNECTED] VALORANT Online$accountLabel (In Menus/Lobby) | Connected to $OverlayServer" "Cyan"
         }
 
     } catch {

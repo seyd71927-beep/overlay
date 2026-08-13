@@ -234,10 +234,14 @@ class LiveStreamOperator {
             const mapName = (status.map || 'MAP').toUpperCase();
             const t1 = status.team_1_score !== undefined ? status.team_1_score : 0;
             const t2 = status.team_2_score !== undefined ? status.team_2_score : 0;
-            badge.innerHTML = `<i class="fa-solid fa-circle" style="color: #00e676; font-size: 0.65rem;"></i> INDIA BRIDGE: ONLINE (${mapName} | ${t1}-${t2})`;
-            badge.style.background = 'rgba(0, 230, 118, 0.15)';
-            badge.style.color = '#00e676';
-            badge.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+            const isTourney = status.is_tournament_mode || status.isTournamentMode;
+            const isCustom = status.is_custom_match || status.isCustom;
+            const typeText = isTourney ? '🏆 TOURNAMENT' : (isCustom ? '🎮 CUSTOM' : '⚡ LIVE');
+
+            badge.innerHTML = `<i class="fa-solid fa-circle" style="color: #00e676; font-size: 0.65rem;"></i> INDIA BRIDGE: ${typeText} (${mapName} | ${t1}-${t2})`;
+            badge.style.background = isTourney ? 'rgba(155, 89, 182, 0.2)' : 'rgba(0, 230, 118, 0.15)';
+            badge.style.color = isTourney ? '#d29bfe' : '#00e676';
+            badge.style.borderColor = isTourney ? 'rgba(155, 89, 182, 0.5)' : 'rgba(0, 230, 118, 0.4)';
         } else {
             badge.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> INDIA BRIDGE: WAITING FOR CLIENT`;
             badge.style.background = 'rgba(255, 170, 0, 0.15)';

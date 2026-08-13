@@ -507,18 +507,40 @@ async function pollLoop() {
                             else team2Players.push(pObj);
                         }
                     }
-                }
-            }
-        }
+        // Detect Custom Game and Tournament Mode
+        const isCustomMatch = !!(
+            isCustom || 
+            matchData?.ProvisioningFlowID === 'CustomGame' ||
+            matchData?.MatchmakingData?.IsCustomGame === true ||
+            pregameData?.ProvisioningFlowID === 'CustomGame' ||
+            priv.queueId === 'custom'
+        );
+
+        const isTournamentMode = !!(
+            matchData?.CustomGameData?.Settings?.GameRules?.TournamentMode === 'true' ||
+            matchData?.MatchmakingData?.IsTournamentMode === true ||
+            pregameData?.CustomGameData?.Settings?.GameRules?.TournamentMode === 'true' ||
+            priv.customGameData?.gameRules?.TournamentMode === 'true' ||
+            priv.matchPresenceData?.tournamentMode === true ||
+            priv.tournamentMode === true
+        );
+
+        const matchType = isTournamentMode 
+            ? 'CUSTOM_TOURNAMENT' 
+            : (isCustomMatch ? 'CUSTOM_MATCH' : 'STANDARD');
 
         // Auto-deduce teams if available
         const deducedTeams = deduceTeamsFromRosters(team1Players, team2Players);
 
-        // Build Payload with dynamic team counts from Lockfile
+        // Build Payload with dynamic team counts & match type from Lockfile
         const payload = {
             phase: loopState,
             inGame: (loopState === 'INGAME'),
-            isCustom: isCustom,
+            isCustom: isCustomMatch,
+            is_custom_match: isCustomMatch,
+            isTournamentMode: isTournamentMode,
+            is_tournament_mode: isTournamentMode,
+            match_type: matchType,
             map: detectedMap,
             round_number: roundNum,
             team_1_score: t1Score,
@@ -545,12 +567,16 @@ async function pollLoop() {
             ? ` | Roster: ${team1Players.length}v${team2Players.length}`
             : '';
 
+        const typeBadge = isTournamentMode 
+            ? '\x1b[35m[CUSTOM TOURNAMENT]\x1b[0m' 
+            : (isCustomMatch ? '\x1b[36m[CUSTOM MATCH]\x1b[0m' : '\x1b[34m[STANDARD MATCH]\x1b[0m');
+
         if (loopState === 'INGAME') {
-            process.stdout.write(`\r\x1b[32m[LIVE GAME SYNC]\x1b[0m Map: ${detectedMap.toUpperCase()} | Score: ${t1Score}-${t2Score} | Rnd: ${roundNum}${playerCountStr} | Sync OK    `);
+            process.stdout.write(`\r${typeBadge} \x1b[32m[LIVE GAME SYNC]\x1b[0m Map: ${detectedMap.toUpperCase()} | Score: ${t1Score}-${t2Score} | Rnd: ${roundNum}${playerCountStr} | Sync OK    `);
         } else if (loopState === 'PREGAME') {
-            process.stdout.write(`\r\x1b[36m[AGENT SELECT]\x1b[0m Map: ${detectedMap.toUpperCase()} | In Custom Agent Selection Lobby${playerCountStr}               `);
+            process.stdout.write(`\r${typeBadge} \x1b[36m[AGENT SELECT]\x1b[0m Map: ${detectedMap.toUpperCase()} | Agent Selection Lobby${playerCountStr}               `);
         } else {
-            process.stdout.write(`\r\x1b[37m[IN MENUS]\x1b[0m In Valorant Menus / Custom Lobby (Ready)                                        `);
+            process.stdout.write(`\r${typeBadge} \x1b[37m[IN MENUS]\x1b[0m Custom Lobby / Menus (Ready for Match)                                        `);
         }
 
     } catch (err) {
