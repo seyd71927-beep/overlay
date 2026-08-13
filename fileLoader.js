@@ -157,7 +157,7 @@ class fileLoader {
             if (this.config.gameState?.team_1?.abbreviation === 'T1' && this.config.gameState?.team_2?.abbreviation === 'T2') {
                 const tourney = this.getTournamentData();
                 if (tourney && tourney.matches && tourney.matches.length > 0) {
-                    this.loadMatch(tourney.matches[0].id);
+                    this.loadTournamentMatch(tourney.matches[0].id);
                 } else if (tourney && tourney.teams && tourney.teams.length >= 2) {
                     this.setActiveTeamSlot(1, tourney.teams[0]);
                     this.setActiveTeamSlot(2, tourney.teams[1]);

@@ -108,11 +108,7 @@ function renderPlayerHUD(json) {
 
     // Render Team 1 (Left HUD)
     const t1IsAtk = !switchTeams;
-    let leftHTML = `
-    <div class="team-side-hud-header ${t1IsAtk ? 'hud-side-atk' : 'hud-side-def'}">
-        ${t1IsAtk ? '🗡️ ATTACKERS' : '🛡️ DEFENDERS'}
-    </div>
-    <div class="team-column ${t1IsAtk ? 'team-red' : 'team-green'}">`;
+    let leftHTML = `<div class="team-column ${t1IsAtk ? 'team-red' : 'team-green'}">`;
     for (let i = 0; i < team1Players.length; i++) {
         leftHTML += buildVCTPlayerCard(team1Players[i], false);
     }
@@ -120,11 +116,7 @@ function renderPlayerHUD(json) {
 
     // Render Team 2 (Right HUD)
     const t2IsAtk = switchTeams;
-    let rightHTML = `
-    <div class="team-side-hud-header ${t2IsAtk ? 'hud-side-atk' : 'hud-side-def'}" style="margin-left: auto;">
-        ${t2IsAtk ? '🗡️ ATTACKERS' : '🛡️ DEFENDERS'}
-    </div>
-    <div class="team-column ${t2IsAtk ? 'team-red' : 'team-green'}">`;
+    let rightHTML = `<div class="team-column ${t2IsAtk ? 'team-red' : 'team-green'}">`;
     for (let i = 0; i < team2Players.length; i++) {
         rightHTML += buildVCTPlayerCard(team2Players[i], true);
     }
