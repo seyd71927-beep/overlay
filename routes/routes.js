@@ -225,9 +225,9 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
         const t1Abbr = dataBus.config.gameState.team_1?.abbreviation;
         const t2Abbr = dataBus.config.gameState.team_2?.abbreviation;
         if (tourney && tourney.matches && t1Abbr && t2Abbr) {
-            const liveMatch = tourney.matches.find(m => 
-                ((m.team_1_tag === t1Abbr && m.team_2_tag === t2Abbr) || 
-                 (m.team_1_tag === t2Abbr && m.team_2_tag === t1Abbr))
+            const liveMatch = tourney.matches.find(m =>
+            ((m.team_1_tag === t1Abbr && m.team_2_tag === t2Abbr) ||
+                (m.team_1_tag === t2Abbr && m.team_2_tag === t1Abbr))
             );
             if (liveMatch) {
                 liveMatch.status = 'LIVE';
@@ -309,7 +309,7 @@ router.get('/get_game_state', (req, res) => {
 
 router.post('/change_game_state', upload.none(), (req, res) => {
     const { round_number, team_1_score, team_2_score, spike, switch_sides, round_over, tournament_stage } = req.body;
-    
+
     if (typeof round_number !== 'undefined') dataBus.config.gameState.round_number = parseInt(round_number);
     if (typeof team_1_score !== 'undefined') dataBus.config.gameState.team_1_score = parseInt(team_1_score);
     if (typeof team_2_score !== 'undefined') dataBus.config.gameState.team_2_score = parseInt(team_2_score);
@@ -494,9 +494,9 @@ async function resolveMapBanData(input) {
                     if (parsed && (parsed.bans || parsed.maps || parsed.game)) {
                         return parsed;
                     }
-                } catch (e) {}
+                } catch (e) { }
             }
-        } catch (e) {}
+        } catch (e) { }
         return null;
     };
 
@@ -513,12 +513,12 @@ async function resolveMapBanData(input) {
             if (res.ok) {
                 const html = await res.text();
                 const m = html.match(/viewID\s*=\s*["']([a-zA-Z0-9]+)["']/i) ||
-                          html.match(/\/ban\/view\/([a-zA-Z0-9]+)/i) ||
-                          html.match(/\/bandata\/([a-zA-Z0-9]+)/i) ||
-                          html.match(/id="view"[^>]*>https?:\/\/[^\/]+\/ban\/view\/([a-zA-Z0-9]+)/i);
+                    html.match(/\/ban\/view\/([a-zA-Z0-9]+)/i) ||
+                    html.match(/\/bandata\/([a-zA-Z0-9]+)/i) ||
+                    html.match(/id="view"[^>]*>https?:\/\/[^\/]+\/ban\/view\/([a-zA-Z0-9]+)/i);
                 if (m) return m[1];
             }
-        } catch (e) {}
+        } catch (e) { }
         return null;
     };
 
@@ -561,9 +561,9 @@ router.post('/sync_mapban', upload.none(), async (req, res) => {
             const updated = dataBus.applyMapBanData(parsed);
             emitEvent(req, 'mapPicksUpdate', updated);
             emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
-            return res.status(200).json({ 
-                status: true, 
-                message: 'Imported MapBan.gg data successfully', 
+            return res.status(200).json({
+                status: true,
+                message: 'Imported MapBan.gg data successfully',
                 mapPicks: updated,
                 gameConfig: dataBus.getGameConfiguration()
             });
@@ -582,15 +582,15 @@ router.post('/sync_mapban', upload.none(), async (req, res) => {
         const updated = dataBus.applyMapBanData(resolved.data);
         emitEvent(req, 'mapPicksUpdate', updated);
         emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
-        return res.status(200).json({ 
-            status: true, 
-            message: `Synced from MapBan.gg (${resolved.viewId})!`, 
+        return res.status(200).json({
+            status: true,
+            message: `Synced from MapBan.gg (${resolved.viewId})!`,
             mapPicks: updated,
             gameConfig: dataBus.getGameConfiguration()
         });
     } else {
-        return res.status(400).json({ 
-            status: false, 
+        return res.status(400).json({
+            status: false,
             message: 'MapBan.gg lobby/view ID was not found or has expired. Please copy the "Link for viewers" or "Link for lobby" from an active MapBan room.'
         });
     }
@@ -699,7 +699,7 @@ router.post('/reset_match_state', upload.none(), (req, res) => {
     dataBus.config.gameState.spike_down = false;
     dataBus.config.gameState.switch_sides = false;
     dataBus.saveStateToFile('gameState.json', dataBus.config.gameState);
-    
+
     emitEvent(req, 'stateUpdate', dataBus.getGameState());
     emitEvent(req, 'configUpdate', dataBus.getGameConfiguration());
     return res.status(200).send({ status: true });
@@ -748,7 +748,7 @@ router.get('/api/tournament/sample_data', (req, res) => {
             const data = JSON.parse(raw);
             return res.status(200).json(data);
         }
-    } catch (e) {}
+    } catch (e) { }
     return res.status(200).json(dataBus.getTournamentData());
 });
 
@@ -765,7 +765,7 @@ router.post('/api/tournament/save_config', upload.none(), (req, res) => {
     if (typeof autoSync !== 'undefined') current.autoSync = (autoSync === 'true' || autoSync === true);
     if (typeof syncInterval !== 'undefined') current.syncInterval = parseInt(syncInterval) || 60;
     if (typeof tournamentName !== 'undefined') current.tournamentName = tournamentName.trim();
-    
+
     dataBus.saveTournamentData(current);
     emitEvent(req, 'tournamentUpdate', current);
     return res.status(200).json({ status: true, tournamentData: current });
@@ -815,8 +815,8 @@ router.post('/api/tournament/set_active_team', upload.none(), (req, res) => {
     }
 
     const tournament = dataBus.getTournamentData();
-    const teamObj = tournament.teams.find(t => 
-        (t.tag && t.tag.toUpperCase() === teamTag.toUpperCase()) || 
+    const teamObj = tournament.teams.find(t =>
+        (t.tag && t.tag.toUpperCase() === teamTag.toUpperCase()) ||
         (t.name && t.name.toUpperCase() === teamTag.toUpperCase())
     );
 
@@ -977,8 +977,8 @@ router.post('/api/tournament/upload_team_logo', logoUpload.single('logoFile'), (
     const relativeLogoPath = `../visual_assets/teams/${req.file.filename}`;
 
     const tournament = dataBus.getTournamentData();
-    const teamObj = tournament.teams.find(t => 
-        (t.tag && t.tag.toUpperCase() === cleanTag) || 
+    const teamObj = tournament.teams.find(t =>
+        (t.tag && t.tag.toUpperCase() === cleanTag) ||
         (t.name && t.name.toUpperCase() === cleanTag)
     );
 

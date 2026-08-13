@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -65,6 +66,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="admin-header">
@@ -89,49 +91,63 @@
             <div class="grid-container" style="width: 100%;">
 
                 <!-- Google Spreadsheet Teams & Rosters Importer Card (Multi-Sheet Intelligent Sync) -->
-                <div class="card" style="grid-column: span 12; border-color: rgba(0, 242, 254, 0.4); background: linear-gradient(180deg, rgba(14, 28, 38, 0.95), rgba(10, 20, 30, 0.95));">
+                <div class="card"
+                    style="grid-column: span 12; border-color: rgba(0, 242, 254, 0.4); background: linear-gradient(180deg, rgba(14, 28, 38, 0.95), rgba(10, 20, 30, 0.95));">
                     <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">
-                                <i class="fa-solid fa-table-cells" style="color: var(--accent-secondary);"></i> Google Spreadsheet Teams & Rosters Sync (Multi-Sheet Auto-Fetcher)
+                                <i class="fa-solid fa-table-cells" style="color: var(--accent-secondary);"></i> Google
+                                Spreadsheet Teams & Rosters Sync (Multi-Sheet Auto-Fetcher)
                             </span>
-                            <span id="teams-count-badge" class="status-badge" style="background: rgba(0, 242, 254, 0.12); color: #00f2fe; border-color: rgba(0, 242, 254, 0.3);">
+                            <span id="teams-count-badge" class="status-badge"
+                                style="background: rgba(0, 242, 254, 0.12); color: #00f2fe; border-color: rgba(0, 242, 254, 0.3);">
                                 0 TEAMS LOADED
                             </span>
                         </div>
                         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                             <input type="file" id="teams-csv-input" accept=".csv,.html,.tsv" style="display: none;">
-                            <button id="upload-csv-btn" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">
+                            <button id="upload-csv-btn" class="btn"
+                                style="padding: 5px 12px; font-size: 0.75rem; background: rgba(0, 230, 118, 0.15); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">
                                 <i class="fa-solid fa-file-arrow-up"></i> Upload CSV Directly
                             </button>
-                            <button id="add-team-btn" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
+                            <button id="add-team-btn" class="btn"
+                                style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
                                 <i class="fa-solid fa-plus"></i> Add Team Manually
                             </button>
-                            <button id="load-sample-teams-btn" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
+                            <button id="load-sample-teams-btn" class="btn"
+                                style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
                                 <i class="fa-solid fa-folder-open"></i> Load Sample Teams
                             </button>
                         </div>
                     </div>
 
                     <!-- Sync URL & Controls -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
                         <div style="grid-column: span 2;">
-                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                            <label
+                                style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
                                 GOOGLE SPREADSHEET URL (ALL SHEETS & TABS PARSED AUTOMATICALLY):
                             </label>
                             <div style="display: flex; gap: 8px;">
-                                <input id="sheet-url-input" type="text" class="input-field" placeholder="Paste link: https://docs.google.com/spreadsheets/d/1BxiMVs.../edit" style="flex-grow: 1; font-size: 0.85rem;">
-                                <button id="sync-sheet-btn" class="btn btn-accent" style="padding: 8px 18px; white-space: nowrap; font-weight: 700;">
+                                <input id="sheet-url-input" type="text" class="input-field"
+                                    placeholder="Paste link: https://docs.google.com/spreadsheets/d/1BxiMVs.../edit"
+                                    style="flex-grow: 1; font-size: 0.85rem;">
+                                <button id="sync-sheet-btn" class="btn btn-accent"
+                                    style="padding: 8px 18px; white-space: nowrap; font-weight: 700;">
                                     <i class="fa-solid fa-cloud-arrow-down"></i> Sync with Google Sheet
                                 </button>
                             </div>
-                            <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
-                                *Supports multi-tab Google Spreadsheets, Drive logo thumbnail links, team seeds, and player rosters. Ensure Link Sharing is set to <b>"Anyone with the link can view"</b>.
+                            <span
+                                style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
+                                *Supports multi-tab Google Spreadsheets, Drive logo thumbnail links, team seeds, and
+                                player rosters. Ensure Link Sharing is set to <b>"Anyone with the link can view"</b>.
                             </span>
                         </div>
 
                         <div>
-                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
+                            <label
+                                style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 6px;">
                                 AUTO-SYNC FREQUENCY:
                             </label>
                             <div style="display: flex; gap: 8px;">
@@ -150,57 +166,75 @@
                     </div>
 
                     <!-- Search Filter & Teams Grid -->
-                    <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div
+                        style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                             <div style="display: flex; align-items: center; gap: 8px; flex-grow: 1; max-width: 400px;">
-                                <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted); font-size: 0.85rem;"></i>
-                                <input id="team-search-input" type="text" class="input-field" placeholder="Search team by name, tag, seed, or player..." style="padding: 5px 10px; font-size: 0.8rem;">
+                                <i class="fa-solid fa-magnifying-glass"
+                                    style="color: var(--text-muted); font-size: 0.85rem;"></i>
+                                <input id="team-search-input" type="text" class="input-field"
+                                    placeholder="Search team by name, tag, seed, or player..."
+                                    style="padding: 5px 10px; font-size: 0.8rem;">
                             </div>
                             <span style="font-size: 0.75rem; color: var(--text-muted);">
-                                Click <b>"Set as Team 1"</b> or <b>"Set as Team 2"</b> to immediately load a team into the matchup!
+                                Click <b>"Set as Team 1"</b> or <b>"Set as Team 2"</b> to immediately load a team into
+                                the matchup!
                             </span>
                         </div>
 
                         <!-- Dynamic Teams Grid -->
-                        <div id="teams-grid-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; max-height: 460px; overflow-y: auto; padding-right: 4px;">
+                        <div id="teams-grid-container"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; max-height: 460px; overflow-y: auto; padding-right: 4px;">
                             <!-- Populated dynamically by pre_stream.js -->
                         </div>
                     </div>
                 </div>
 
                 <!-- Map Pick & Ban Veto Card (Fully Automated via MapBan.gg) -->
-                <div class="card" style="grid-column: span 12; border-color: rgba(123, 44, 191, 0.4); background: linear-gradient(180deg, rgba(20, 16, 36, 0.95), rgba(14, 12, 28, 0.95));">
-                    <div class="card-header" style="flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
+                <div class="card"
+                    style="grid-column: span 12; border-color: rgba(123, 44, 191, 0.4); background: linear-gradient(180deg, rgba(20, 16, 36, 0.95), rgba(14, 12, 28, 0.95));">
+                    <div class="card-header"
+                        style="flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">
-                                <i class="fa-solid fa-map-location-dot" style="color: #b388f5;"></i> Map Pick & Ban Veto (Automated MapBan.gg Live Sync)
+                                <i class="fa-solid fa-map-location-dot" style="color: #b388f5;"></i> Map Pick & Ban Veto
+                                (Automated MapBan.gg Live Sync)
                             </span>
-                            <span id="current-series-badge" class="status-badge" style="background: rgba(0, 242, 254, 0.15); color: var(--accent-secondary); border-color: rgba(0, 242, 254, 0.3);">
+                            <span id="current-series-badge" class="status-badge"
+                                style="background: rgba(0, 242, 254, 0.15); color: var(--accent-secondary); border-color: rgba(0, 242, 254, 0.3);">
                                 BO3 (3 GAMES)
                             </span>
-                            <span id="veto-status-badge" class="status-badge" style="background: rgba(123, 44, 191, 0.15); color: #b388f5; border-color: rgba(123, 44, 191, 0.3);">
+                            <span id="veto-status-badge" class="status-badge"
+                                style="background: rgba(123, 44, 191, 0.15); color: #b388f5; border-color: rgba(123, 44, 191, 0.3);">
                                 AUTOMATIC MODE
                             </span>
                         </div>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <a href="../map_picks/" target="_blank" class="btn btn-accent" style="padding: 5px 12px; font-size: 0.75rem; text-decoration: none;">
+                            <a href="../map_picks/" target="_blank" class="btn btn-accent"
+                                style="padding: 5px 12px; font-size: 0.75rem; text-decoration: none;">
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Veto Overlay
                             </a>
-                            <a href="../upcomming_maps/" target="_blank" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08); text-decoration: none;">
+                            <a href="../upcomming_maps/" target="_blank" class="btn"
+                                style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08); text-decoration: none;">
                                 <i class="fa-solid fa-calendar-days" style="color: #7ed6df;"></i> Schedule Overlay
                             </a>
                         </div>
                     </div>
 
                     <!-- MapBan.gg Live Importer Controls (Full Width) -->
-                    <div style="background: rgba(123, 44, 191, 0.08); border: 1px solid rgba(123, 44, 191, 0.3); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+                    <div
+                        style="background: rgba(123, 44, 191, 0.08); border: 1px solid rgba(123, 44, 191, 0.3); border-radius: var(--radius-md); padding: 14px; margin-bottom: 14px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
                             <span style="font-size: 0.82rem; font-weight: 800; color: #b388f5;">
-                                <i class="fa-solid fa-cloud-arrow-down"></i> MAPBAN.GG VIEWER URL / ROOM ID (FORMAT, MAPS & SIDES AUTO-DETECTED):
+                                <i class="fa-solid fa-cloud-arrow-down"></i> MAPBAN.GG VIEWER URL / ROOM ID (FORMAT,
+                                MAPS & SIDES AUTO-DETECTED):
                             </span>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <label style="font-size: 0.72rem; color: var(--text-muted);">Auto-Sync:</label>
-                                <select id="mapban-autosync-select" class="input-field" style="padding: 2px 6px; font-size: 0.72rem; width: 110px;">
+                                <select id="mapban-autosync-select" class="input-field"
+                                    style="padding: 2px 6px; font-size: 0.72rem; width: 110px;">
                                     <option value="false">Manual Sync</option>
                                     <option value="5" selected>Every 5s (Live)</option>
                                     <option value="10">Every 10s</option>
@@ -209,19 +243,25 @@
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                            <input id="mapban-url-input" type="text" class="input-field" placeholder="Paste link: https://mapban.gg/en/ban/1LzBFUAJA6bdst16 or Room ID" style="font-size: 0.85rem; flex-grow: 1;">
-                            <button type="button" id="sync-mapban-btn" class="btn btn-accent" style="padding: 8px 18px; font-size: 0.8rem; white-space: nowrap; font-weight: 700;">
+                            <input id="mapban-url-input" type="text" class="input-field"
+                                placeholder="Paste link: https://mapban.gg/en/ban/1LzBFUAJA6bdst16 or Room ID"
+                                style="font-size: 0.85rem; flex-grow: 1;">
+                            <button type="button" id="sync-mapban-btn" class="btn btn-accent"
+                                style="padding: 8px 18px; font-size: 0.8rem; white-space: nowrap; font-weight: 700;">
                                 <i class="fa-solid fa-arrows-rotate"></i> Sync MapBan
                             </button>
                         </div>
                         <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">
-                            *Paste your viewer link. Format (BO1/BO3/BO5), picks, bans, and sides are automatically detected and synced live.
+                            *Paste your viewer link. Format (BO1/BO3/BO5), picks, bans, and sides are automatically
+                            detected and synced live.
                         </span>
                     </div>
 
                     <!-- Automated Visual Veto Feed -->
-                    <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div
+                        style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">
                                 <i class="fa-solid fa-layer-group"></i> LIVE VETO SEQUENCE (AUTOMATICALLY POPULATED):
                             </span>
@@ -230,7 +270,8 @@
                             </span>
                         </div>
 
-                        <div id="map-pick-holder" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+                        <div id="map-pick-holder"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
                             <!-- Populated dynamically by pre_stream.js -->
                         </div>
                     </div>
@@ -242,40 +283,58 @@
     <!-- Add / Edit Team Modal -->
     <div id="team-modal" class="custom-modal">
         <div class="modal-content">
-            <h4 id="team-modal-title" style="color: #fff; margin-bottom: 14px; font-family: var(--font-display); font-size: 1.2rem;">
+            <h4 id="team-modal-title"
+                style="color: #fff; margin-bottom: 14px; font-family: var(--font-display); font-size: 1.2rem;">
                 <i class="fa-solid fa-users"></i> Add / Edit Team
             </h4>
             <input type="hidden" id="modal-team-id">
             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
                 <div>
-                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Team Full Name</label>
+                    <label
+                        style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Team
+                        Full Name</label>
                     <input id="modal-team-name" type="text" class="input-field" placeholder="e.g. Sentinels">
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div>
-                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Tag / Abbr (2-4 chars)</label>
+                        <label
+                            style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Tag
+                            / Abbr (2-4 chars)</label>
                         <input id="modal-team-tag" type="text" class="input-field" placeholder="e.g. SEN">
                     </div>
                     <div>
-                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Seed / Group</label>
-                        <input id="modal-team-seed" type="text" class="input-field" placeholder="e.g. #1 Seed / Group A">
+                        <label
+                            style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Seed
+                            / Group</label>
+                        <input id="modal-team-seed" type="text" class="input-field"
+                            placeholder="e.g. #1 Seed / Group A">
                     </div>
                 </div>
                 <div>
-                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Logo Image URL or Drive Link</label>
-                    <input id="modal-team-logo" type="text" class="input-field" placeholder="https://... or Google Drive link">
+                    <label
+                        style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Logo
+                        Image URL or Drive Link</label>
+                    <input id="modal-team-logo" type="text" class="input-field"
+                        placeholder="https://... or Google Drive link">
                 </div>
                 <div>
-                    <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">5-Player Roster (Comma or Line Separated)</label>
-                    <textarea id="modal-team-roster" class="input-field" rows="3" placeholder="TenZ, zekken, Sacy, pANcda, johnqt" style="resize: vertical; font-family: inherit; font-size: 0.8rem;"></textarea>
+                    <label
+                        style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">5-Player
+                        Roster (Comma or Line Separated)</label>
+                    <textarea id="modal-team-roster" class="input-field" rows="3"
+                        placeholder="TenZ, zekken, Sacy, pANcda, johnqt"
+                        style="resize: vertical; font-family: inherit; font-size: 0.8rem;"></textarea>
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button type="button" class="btn" onclick="document.getElementById('team-modal').style.display='none'">Cancel</button>
-                <button type="button" id="save-modal-team-btn" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Team</button>
+                <button type="button" class="btn"
+                    onclick="document.getElementById('team-modal').style.display='none'">Cancel</button>
+                <button type="button" id="save-modal-team-btn" class="btn btn-primary"><i
+                        class="fa-solid fa-floppy-disk"></i> Save Team</button>
             </div>
         </div>
     </div>
 
 </body>
+
 </html>

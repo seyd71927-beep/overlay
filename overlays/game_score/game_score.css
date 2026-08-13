@@ -104,6 +104,34 @@ body::before {
     font-size: small;
 }
 
+.team-side-indicator {
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+}
+
+.side-atk {
+    background: rgba(235, 83, 93, 0.3);
+    color: #ff4655;
+    border: 1px solid rgba(235, 83, 93, 0.7);
+    box-shadow: 0 0 10px rgba(235, 83, 93, 0.5);
+}
+
+.side-def {
+    background: rgba(113, 237, 192, 0.25);
+    color: #71edc0;
+    border: 1px solid rgba(113, 237, 192, 0.6);
+    box-shadow: 0 0 10px rgba(113, 237, 192, 0.45);
+}
+
 .team-container .color-separator-bar {
     background-color: var(--color);
     width: 4px;

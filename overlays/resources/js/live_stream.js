@@ -255,12 +255,28 @@ class LiveStreamOperator {
         const t1Score = document.getElementById('display-team1-score');
         const t2Score = document.getElementById('display-team2-score');
         const roundNum = document.getElementById('display-round-num');
+        const t1Side = document.getElementById('display-team1-side');
+        const t2Side = document.getElementById('display-team2-side');
 
         if (t1Name) t1Name.textContent = (this.team1Data.abbreviation || 'TEAM 1').toUpperCase();
         if (t2Name) t2Name.textContent = (this.team2Data.abbreviation || 'TEAM 2').toUpperCase();
         if (t1Score) t1Score.textContent = this.gameState.team_1_score;
         if (t2Score) t2Score.textContent = this.gameState.team_2_score;
         if (roundNum) roundNum.textContent = `ROUND ${this.gameState.round_number || 1}`;
+
+        const isSwapped = !!this.gameState.switch_sides;
+        if (t1Side) {
+            t1Side.textContent = isSwapped ? '🗡️ ATTACKING' : '🛡️ DEFENDING';
+            t1Side.style.color = isSwapped ? '#ff4655' : '#00e676';
+            t1Side.style.background = isSwapped ? 'rgba(255, 70, 85, 0.15)' : 'rgba(0, 230, 118, 0.15)';
+            t1Side.style.borderColor = isSwapped ? 'rgba(255, 70, 85, 0.4)' : 'rgba(0, 230, 118, 0.4)';
+        }
+        if (t2Side) {
+            t2Side.textContent = isSwapped ? '🛡️ DEFENDING' : '🗡️ ATTACKING';
+            t2Side.style.color = isSwapped ? '#00e676' : '#ff4655';
+            t2Side.style.background = isSwapped ? 'rgba(0, 230, 118, 0.15)' : 'rgba(255, 70, 85, 0.15)';
+            t2Side.style.borderColor = isSwapped ? 'rgba(0, 230, 118, 0.4)' : 'rgba(255, 70, 85, 0.4)';
+        }
     }
 
     bindEvents() {

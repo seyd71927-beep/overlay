@@ -91,8 +91,8 @@ class helValorantGameScore {
                 this.leftTeamIcon = (!json.team_1 || json.team_1.icon_link === '') ? '../visual_assets/blueTeamPlaceholder.jpg' : json.team_1.icon_link;
                 this.rightTeamIcon = (!json.team_2 || json.team_2.icon_link === '') ? '../visual_assets/redTeamPlaceholder.jpg' : json.team_2.icon_link;
 
-                this.leftTeamContainer.innerHTML = this.formatTeamDisplay(json.team_1 ? json.team_1.abbreviation : 'T1', json.team_1 ? json.team_1.team_info : '', this.leftTeamIcon);
-                this.rightTeamContainer.innerHTML = this.formatTeamDisplay(json.team_2 ? json.team_2.abbreviation : 'T2', json.team_2 ? json.team_2.team_info : '', this.rightTeamIcon);
+                this.leftTeamContainer.innerHTML = this.formatTeamDisplay(json.team_1 ? json.team_1.abbreviation : 'T1', json.team_1 ? json.team_1.team_info : '', this.leftTeamIcon, !!this._switchSides);
+                this.rightTeamContainer.innerHTML = this.formatTeamDisplay(json.team_2 ? json.team_2.abbreviation : 'T2', json.team_2 ? json.team_2.team_info : '', this.rightTeamIcon, !this._switchSides);
 
                 this.leftTeamGamesWon.innerHTML = '';
                 this.rightTeamGamesWon.innerHTML = '';
@@ -170,14 +170,19 @@ class helValorantGameScore {
         }
     }
 
-    formatTeamDisplay(teamAbbr, teamInfo, teamImgLink) {
+    formatTeamDisplay(teamAbbr, teamInfo, teamImgLink, isAtk) {
         const hasImg = teamImgLink && teamImgLink.trim() !== '';
         const imgTag = hasImg ? `<img class="team-icon" src="${teamImgLink}" alt="${teamAbbr}" onerror="if (!this.dataset.triedProxy && '${teamImgLink}'.startsWith('http')) { this.dataset.triedProxy='true'; this.src='../api/tournament/proxy_image?url=' + encodeURIComponent('${teamImgLink}'); } else { this.onerror=null; this.style.display='none'; }">` : '';
+        const sideClass = isAtk ? 'side-atk' : 'side-def';
+        const sideText = isAtk ? 'ATK' : 'DEF';
         return `<div class="team-information-container">
                     ${imgTag}
                     <span class="team-name-and-seed">
                         <span class="name">${teamAbbr}</span>
-                        <span class="seed">${teamInfo}</span>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <span class="seed">${teamInfo}</span>
+                            <span class="team-side-indicator ${sideClass}">${sideText}</span>
+                        </div>
                     </span>
                 </div>
                 <div class="color-separator-bar"></div>
@@ -232,20 +237,40 @@ class helValorantGameScore {
     }
 
     switchSides() {
-        if (this._switchSides) {
+        const leftIsAtk = !!this._switchSides;
+        const rightIsAtk = !this._switchSides;
+
+        if (leftIsAtk) {
             this.leftTeamContainer.classList.remove('green-team');
             this.leftTeamContainer.classList.add('red-team');
             this.rightTeamContainer.classList.remove('red-team');
             this.rightTeamContainer.classList.add('green-team');
-            if (!this.spikeDown && this.leftAttackIndicator) this.leftAttackIndicator.classList.remove('hidden');
-            if (!this.spikeDown && this.rightAttackIndicator) this.rightAttackIndicator.classList.add('hidden');
         } else {
             this.leftTeamContainer.classList.remove('red-team');
             this.leftTeamContainer.classList.add('green-team');
             this.rightTeamContainer.classList.remove('green-team');
             this.rightTeamContainer.classList.add('red-team');
-            if (!this.spikeDown && this.leftAttackIndicator) this.leftAttackIndicator.classList.add('hidden');
-            if (!this.spikeDown && this.rightAttackIndicator) this.rightAttackIndicator.classList.remove('hidden');
+        }
+
+        const leftSideEl = this.leftTeamContainer.querySelector('.team-side-indicator');
+        if (leftSideEl) {
+            leftSideEl.className = `team-side-indicator ${leftIsAtk ? 'side-atk' : 'side-def'}`;
+            leftSideEl.textContent = leftIsAtk ? 'ATK' : 'DEF';
+        }
+
+        const rightSideEl = this.rightTeamContainer.querySelector('.team-side-indicator');
+        if (rightSideEl) {
+            rightSideEl.className = `team-side-indicator ${rightIsAtk ? 'side-atk' : 'side-def'}`;
+            rightSideEl.textContent = rightIsAtk ? 'ATK' : 'DEF';
+        }
+
+        if (!this.spikeDown && this.leftAttackIndicator) {
+            if (leftIsAtk) this.leftAttackIndicator.classList.remove('hidden');
+            else this.leftAttackIndicator.classList.add('hidden');
+        }
+        if (!this.spikeDown && this.rightAttackIndicator) {
+            if (rightIsAtk) this.rightAttackIndicator.classList.remove('hidden');
+            else this.rightAttackIndicator.classList.add('hidden');
         }
     }
 

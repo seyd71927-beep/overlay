@@ -2,12 +2,6 @@ class adminPreStreamInterface {
     constructor() {
         // Map Picks & Veto Controls
         this.mapPicksDiv = document.getElementById('map-pick-holder');
-        this.seriesBadge = document.getElementById('current-series-badge');
-        this.bo1Btn = document.getElementById('set-bo1-btn');
-        this.bo3Btn = document.getElementById('set-bo3-btn');
-        this.bo5Btn = document.getElementById('set-bo5-btn');
-
-        // MapBan.gg Automated Sync
         this.mapbanInput = document.getElementById('mapban-url-input');
         this.syncMapbanBtn = document.getElementById('sync-mapban-btn');
         this.mapbanAutoSyncSelect = document.getElementById('mapban-autosync-select');
@@ -39,18 +33,31 @@ class adminPreStreamInterface {
         this.modalTeamRoster = document.getElementById('modal-team-roster');
         this.saveModalTeamBtn = document.getElementById('save-modal-team-btn');
 
+        // Match Scheduler Controls & Modal
+        this.matchesGridContainer = document.getElementById('matches-grid-container');
+        this.matchesCountBadge = document.getElementById('matches-count-badge');
+        this.addMatchBtn = document.getElementById('add-match-btn');
+        this.matchModal = document.getElementById('match-modal');
+        this.modalMatchTitle = document.getElementById('match-modal-title');
+        this.modalMatchId = document.getElementById('modal-match-id');
+        this.modalMatchT1 = document.getElementById('modal-match-t1');
+        this.modalMatchT2 = document.getElementById('modal-match-t2');
+        this.modalMatchStage = document.getElementById('modal-match-stage');
+        this.modalMatchFormat = document.getElementById('modal-match-format');
+        this.modalMatchDate = document.getElementById('modal-match-date');
+        this.modalMatchTime = document.getElementById('modal-match-time');
+        this.modalMatchStatus = document.getElementById('modal-match-status');
+        this.modalMatchScore = document.getElementById('modal-match-score');
+        this.saveModalMatchBtn = document.getElementById('save-modal-match-btn');
+
         this.teams = [];
+        this.matches = [];
         this.autoSyncTimer = null;
     }
 
     async init() {
         await this.constructMapPickInterface();
-        await this.loadTournamentTeams();
-
-        // Series presets (BO1, BO3, BO5)
-        if (this.bo1Btn) this.bo1Btn.addEventListener('click', () => this.setSeriesFormat('bo1'));
-        if (this.bo3Btn) this.bo3Btn.addEventListener('click', () => this.setSeriesFormat('bo3'));
-        if (this.bo5Btn) this.bo5Btn.addEventListener('click', () => this.setSeriesFormat('bo5'));
+        await this.loadTournamentData();
 
         // MapBan Automated Sync
         if (this.syncMapbanBtn) this.syncMapbanBtn.addEventListener('click', () => this.syncMapBan());
@@ -112,6 +119,14 @@ class adminPreStreamInterface {
         }
         if (this.saveModalTeamBtn) {
             this.saveModalTeamBtn.addEventListener('click', () => this.saveModalTeam());
+        }
+
+        // Add Match Modal
+        if (this.addMatchBtn) {
+            this.addMatchBtn.addEventListener('click', () => this.openMatchModal());
+        }
+        if (this.saveModalMatchBtn) {
+            this.saveModalMatchBtn.addEventListener('click', () => this.saveModalMatch());
         }
 
         // Load Sample Teams
@@ -215,28 +230,6 @@ class adminPreStreamInterface {
         }
     }
 
-    async setSeriesFormat(format) {
-        const formData = new FormData();
-        formData.append('format', format);
-
-        try {
-            const res = await fetch('../set_series_format', {
-                method: 'POST',
-                body: formData
-            });
-            if (res.status === 200) {
-                const label = format.toUpperCase() === 'BO1' ? 'BO1 (1 GAME)' : (format.toUpperCase() === 'BO5' ? 'BO5 (5 GAMES)' : 'BO3 (3 GAMES)');
-                if (this.seriesBadge) this.seriesBadge.textContent = label;
-                if (typeof successAlertLowerBottom === 'function') {
-                    successAlertLowerBottom(`Match Format set to ${label}!`);
-                }
-                await this.constructMapPickInterface();
-            }
-        } catch (e) {
-            console.error('Error setting series format:', e);
-        }
-    }
-
     async constructMapPickInterface() {
         if (!this.mapPicksDiv) return;
 
@@ -244,10 +237,6 @@ class adminPreStreamInterface {
             const res = await fetch('../get_map_picks');
             const json = await res.json();
             if (res.status === 200 && json.picks) {
-                const seriesType = (json.series_type || 'bo3').toUpperCase();
-                const label = seriesType === 'BO1' ? 'BO1 (1 GAME)' : (seriesType === 'BO5' ? 'BO5 (5 GAMES)' : 'BO3 (3 GAMES)');
-                if (this.seriesBadge) this.seriesBadge.textContent = label;
-
                 if (!json.picks || json.picks.length === 0) {
                     this.mapPicksDiv.innerHTML = `
                         <div style="grid-column: 1 / -1; text-align: center; padding: 28px; color: var(--text-muted); font-size: 0.85rem;">
@@ -339,12 +328,14 @@ class adminPreStreamInterface {
     // GOOGLE SHEETS & TEAMS DIRECTORY ENGINE
     // ==========================================
 
-    async loadTournamentTeams() {
+    async loadTournamentData() {
         try {
             const res = await fetch('/api/tournament/data');
             if (res.status === 200) {
                 const data = await res.json();
                 this.teams = data.teams || [];
+                this.matches = data.matches || [];
+
                 if (this.sheetUrlInput && data.spreadsheetUrl) {
                     this.sheetUrlInput.value = data.spreadsheetUrl;
                 }
@@ -356,10 +347,11 @@ class adminPreStreamInterface {
                 }
 
                 this.renderTeamsGrid(this.teams);
+                this.renderMatchesGrid(this.matches);
                 this.manageAutoSyncTimer();
             }
         } catch (err) {
-            console.error('Error loading tournament teams:', err);
+            console.error('Error loading tournament data:', err);
         }
     }
 
@@ -471,7 +463,6 @@ class adminPreStreamInterface {
 
         if (!team) return;
 
-        // Call backend to update gameState & player rosters
         const formData = new FormData();
         formData.append('slot', slot);
         formData.append('teamTag', team.tag || team.name);
@@ -483,7 +474,7 @@ class adminPreStreamInterface {
             });
             const data = await res.json();
             if (data.status) {
-                const slotLabel = slot === 'team_1' ? 'Team 1 (Green/Left)' : 'Team 2 (Red/Right)';
+                const slotLabel = slot === 'team_1' ? 'Team 1 (Left)' : 'Team 2 (Right)';
                 if (typeof successAlertLowerBottom === 'function') {
                     successAlertLowerBottom(`Loaded ${team.name || team.tag} as ${slotLabel}!`);
                 } else {
@@ -544,7 +535,7 @@ class adminPreStreamInterface {
                 } else {
                     alert(data.message || 'Google Sheet Synchronized!');
                 }
-                await this.loadTournamentTeams();
+                await this.loadTournamentData();
             } else {
                 if (typeof errorAlertLowerBottom === 'function') {
                     errorAlertLowerBottom(data.message || 'Failed to sync Google Sheet');
@@ -583,7 +574,7 @@ class adminPreStreamInterface {
                 } else {
                     alert(data.message || 'CSV file loaded successfully!');
                 }
-                await this.loadTournamentTeams();
+                await this.loadTournamentData();
             } else {
                 if (typeof errorAlertLowerBottom === 'function') {
                     errorAlertLowerBottom(data.message || 'Failed to parse CSV file');
@@ -602,9 +593,11 @@ class adminPreStreamInterface {
             const data = await res.json();
             if (data && data.teams && data.teams.length > 0) {
                 this.teams = data.teams;
+                this.matches = data.matches || [];
                 this.renderTeamsGrid(this.teams);
+                this.renderMatchesGrid(this.matches);
                 if (typeof successAlertLowerBottom === 'function') {
-                    successAlertLowerBottom(`Loaded ${this.teams.length} sample tournament teams!`);
+                    successAlertLowerBottom(`Loaded ${this.teams.length} sample tournament teams & fixtures!`);
                 }
             }
         } catch (err) {
@@ -696,7 +689,7 @@ class adminPreStreamInterface {
                 if (typeof successAlertLowerBottom === 'function') {
                     successAlertLowerBottom(`Saved team ${name}!`);
                 }
-                await this.loadTournamentTeams();
+                await this.loadTournamentData();
             }
         } catch (err) {
             console.error('Error saving modal team:', err);
@@ -719,10 +712,259 @@ class adminPreStreamInterface {
                 if (typeof successAlertLowerBottom === 'function') {
                     successAlertLowerBottom('Team deleted');
                 }
-                await this.loadTournamentTeams();
+                await this.loadTournamentData();
             }
         } catch (err) {
             console.error('Error deleting team:', err);
+        }
+    }
+
+    // ==========================================
+    // MATCH SCHEDULER & FIXTURES ENGINE
+    // ==========================================
+
+    renderMatchesGrid(matchesList) {
+        if (!this.matchesGridContainer) return;
+
+        if (this.matchesCountBadge) {
+            this.matchesCountBadge.textContent = `${matchesList.length} MATCHES SCHEDULED`;
+        }
+
+        if (!matchesList || matchesList.length === 0) {
+            this.matchesGridContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 28px; color: var(--text-muted); font-size: 0.85rem;">
+                    <i class="fa-solid fa-calendar-plus" style="font-size: 2rem; color: #ffb703; margin-bottom: 8px; display: block; opacity: 0.6;"></i>
+                    No matches scheduled yet. Click <b>"Schedule New Match"</b> above or sync with your Google Sheet!
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        matchesList.forEach((match) => {
+            const findLogo = (tag) => {
+                const t = this.teams.find(tm => (tm.tag && tm.tag.toUpperCase() === (tag || '').toUpperCase()) || (tm.name && tm.name.toUpperCase() === (tag || '').toUpperCase()));
+                return t ? t.logo : '../visual_assets/blueTeamPlaceholder.jpg';
+            };
+
+            const t1Logo = findLogo(match.team_1_tag);
+            const t2Logo = findLogo(match.team_2_tag);
+            const statusClass = match.status === 'LIVE' ? 'color: #00e676; border-color: rgba(0,230,118,0.4); background: rgba(0,230,118,0.15);' : 'color: #ffaa00; border-color: rgba(255,170,0,0.4); background: rgba(255,170,0,0.12);';
+            const dateStr = match.scheduled_date ? `📅 ${match.scheduled_date}` : '';
+            const timeStr = match.scheduled_time ? `⏰ ${match.scheduled_time}` : '';
+            const dateTimeDisplay = (dateStr || timeStr) ? `${dateStr} ${timeStr}`.trim() : (match.scheduled_datetime || match.scheduled_time || '📅 Schedule: TBD');
+
+            html += `
+            <div class="team-card" style="border-color: rgba(255, 183, 3, 0.25);" data-match-id="${match.id || ''}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 0.72rem; font-weight: 800; color: #ffb703;">
+                        ${match.stage || 'TOURNAMENT MATCH'} (${match.format || 'BO3'})
+                    </span>
+                    <span class="status-badge" style="font-size: 0.68rem; padding: 2px 6px; ${statusClass}">
+                        ${match.status || 'UPCOMING'}
+                    </span>
+                </div>
+
+                <!-- Matchup Preview -->
+                <div style="display: flex; align-items: center; justify-content: space-around; background: rgba(0,0,0,0.4); padding: 10px; border-radius: var(--radius-sm); margin-bottom: 10px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 90px; text-align: center;">
+                        <img src="${t1Logo}" style="width: 38px; height: 38px; object-fit: contain; border-radius: 6px;" onerror="this.src='../visual_assets/blueTeamPlaceholder.jpg'">
+                        <span style="font-weight: 800; font-size: 0.85rem; color: #fff;">${match.team_1_tag || 'T1'}</span>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <span style="font-size: 0.75rem; font-weight: 800; color: var(--accent-secondary);">VS</span>
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #d0d7de; margin-top: 2px;">${match.score || '0 - 0'}</span>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 90px; text-align: center;">
+                        <img src="${t2Logo}" style="width: 38px; height: 38px; object-fit: contain; border-radius: 6px;" onerror="this.src='../visual_assets/redTeamPlaceholder.jpg'">
+                        <span style="font-weight: 800; font-size: 0.85rem; color: #fff;">${match.team_2_tag || 'T2'}</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 10px; font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-clock" style="color: #ffb703;"></i>
+                    <span>${dateTimeDisplay}</span>
+                </div>
+
+                <div style="display: flex; gap: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+                    <button class="btn btn-primary load-match-btn" style="flex: 1; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; background: #ffb703; color: #000;" data-id="${match.id}">
+                        <i class="fa-solid fa-play"></i> Load into Live Stream
+                    </button>
+                    <button class="btn edit-match-btn" style="padding: 5px 8px; font-size: 0.72rem; background: rgba(255,255,255,0.08);" data-id="${match.id}">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button class="btn delete-match-btn" style="padding: 5px 8px; font-size: 0.72rem; background: rgba(255, 42, 95, 0.12); color: #ff2a5f;" data-id="${match.id}">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>`;
+        });
+
+        this.matchesGridContainer.innerHTML = html;
+
+        // Attach listeners
+        const loadBtns = this.matchesGridContainer.getElementsByClassName('load-match-btn');
+        const editBtns = this.matchesGridContainer.getElementsByClassName('edit-match-btn');
+        const delBtns = this.matchesGridContainer.getElementsByClassName('delete-match-btn');
+
+        for (const btn of loadBtns) {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                this.loadMatchIntoLive(id);
+            });
+        }
+
+        for (const btn of editBtns) {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                const m = this.matches.find(match => match.id === id);
+                if (m) this.openMatchModal(m);
+            });
+        }
+
+        for (const btn of delBtns) {
+            btn.addEventListener('click', () => {
+                const id = btn.getAttribute('data-id');
+                this.deleteMatch(id);
+            });
+        }
+    }
+
+    openMatchModal(match = null) {
+        if (!this.matchModal) return;
+
+        // Populate Team options
+        const populateSelect = (selectEl, selectedVal) => {
+            if (!selectEl) return;
+            let optHtml = '';
+            if (this.teams.length === 0) {
+                optHtml = `<option value="T1">TEAM 1</option><option value="T2">TEAM 2</option>`;
+            } else {
+                this.teams.forEach(t => {
+                    const tag = t.tag || t.name;
+                    const sel = (selectedVal && selectedVal.toUpperCase() === tag.toUpperCase()) ? 'selected' : '';
+                    optHtml += `<option value="${tag}" ${sel}>${tag} - ${t.name || tag}</option>`;
+                });
+            }
+            selectEl.innerHTML = optHtml;
+        };
+
+        if (match) {
+            if (this.modalMatchTitle) this.modalMatchTitle.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Scheduled Match';
+            if (this.modalMatchId) this.modalMatchId.value = match.id || '';
+            populateSelect(this.modalMatchT1, match.team_1_tag);
+            populateSelect(this.modalMatchT2, match.team_2_tag);
+            if (this.modalMatchStage) this.modalMatchStage.value = match.stage || '';
+            if (this.modalMatchFormat) this.modalMatchFormat.value = match.format || 'BO3';
+            if (this.modalMatchDate) this.modalMatchDate.value = match.scheduled_date || '';
+            if (this.modalMatchTime) this.modalMatchTime.value = match.scheduled_time || '';
+            if (this.modalMatchStatus) this.modalMatchStatus.value = match.status || 'UPCOMING';
+            if (this.modalMatchScore) this.modalMatchScore.value = match.score || '0 - 0';
+        } else {
+            if (this.modalMatchTitle) this.modalMatchTitle.innerHTML = '<i class="fa-solid fa-calendar-plus"></i> Schedule New Match';
+            if (this.modalMatchId) this.modalMatchId.value = '';
+            populateSelect(this.modalMatchT1, this.teams[0]?.tag || 'T1');
+            populateSelect(this.modalMatchT2, this.teams[1]?.tag || 'T2');
+            if (this.modalMatchStage) this.modalMatchStage.value = 'UPPER BRACKET MATCH';
+            if (this.modalMatchFormat) this.modalMatchFormat.value = 'BO3';
+            
+            // Default to today's date
+            const today = new Date().toISOString().split('T')[0];
+            if (this.modalMatchDate) this.modalMatchDate.value = today;
+            if (this.modalMatchTime) this.modalMatchTime.value = '18:00';
+            if (this.modalMatchStatus) this.modalMatchStatus.value = 'UPCOMING';
+            if (this.modalMatchScore) this.modalMatchScore.value = '0 - 0';
+        }
+
+        this.matchModal.style.display = 'flex';
+    }
+
+    async saveModalMatch() {
+        const t1 = this.modalMatchT1 ? this.modalMatchT1.value : '';
+        const t2 = this.modalMatchT2 ? this.modalMatchT2.value : '';
+        if (!t1 || !t2) {
+            alert('Please select both Team 1 and Team 2');
+            return;
+        }
+
+        const formData = new FormData();
+        if (this.modalMatchId && this.modalMatchId.value) formData.append('id', this.modalMatchId.value);
+        formData.append('team_1_tag', t1);
+        formData.append('team_2_tag', t2);
+        if (this.modalMatchStage) formData.append('stage', this.modalMatchStage.value.trim());
+        if (this.modalMatchFormat) formData.append('format', this.modalMatchFormat.value);
+        if (this.modalMatchDate) formData.append('scheduled_date', this.modalMatchDate.value);
+        if (this.modalMatchTime) formData.append('scheduled_time', this.modalMatchTime.value);
+        if (this.modalMatchStatus) formData.append('status', this.modalMatchStatus.value);
+        if (this.modalMatchScore) formData.append('score', this.modalMatchScore.value.trim());
+
+        try {
+            const res = await fetch('/api/tournament/save_match', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.status) {
+                if (this.matchModal) this.matchModal.style.display = 'none';
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom(`Saved scheduled match ${t1} vs ${t2}!`);
+                }
+                await this.loadTournamentData();
+            }
+        } catch (err) {
+            console.error('Error saving modal match:', err);
+        }
+    }
+
+    async deleteMatch(matchId) {
+        if (!confirm('Are you sure you want to delete this scheduled match?')) return;
+
+        const formData = new FormData();
+        formData.append('matchId', matchId);
+
+        try {
+            const res = await fetch('/api/tournament/delete_match', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.status) {
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom('Scheduled match deleted');
+                }
+                await this.loadTournamentData();
+            }
+        } catch (err) {
+            console.error('Error deleting match:', err);
+        }
+    }
+
+    async loadMatchIntoLive(matchId) {
+        const formData = new FormData();
+        formData.append('matchId', matchId);
+
+        try {
+            const res = await fetch('/api/tournament/load_match', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.status) {
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom(data.message || 'Match loaded into live stream overlay!');
+                } else {
+                    alert(data.message || 'Match loaded into live stream overlay!');
+                }
+                await this.constructMapPickInterface();
+            } else {
+                if (typeof errorAlertLowerBottom === 'function') {
+                    errorAlertLowerBottom(data.message || 'Failed to load match');
+                }
+            }
+        } catch (err) {
+            console.error('Error loading match into live:', err);
         }
     }
 }

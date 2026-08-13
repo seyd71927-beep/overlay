@@ -48,6 +48,34 @@ body {
     right: 20px;
 }
 
+.team-side-hud-header {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+}
+
+.hud-side-atk {
+    background: rgba(255, 70, 85, 0.2);
+    color: #ff4655;
+    border: 1px solid rgba(255, 70, 85, 0.5);
+    box-shadow: 0 0 10px rgba(255, 70, 85, 0.35);
+}
+
+.hud-side-def {
+    background: rgba(0, 245, 196, 0.2);
+    color: #00f5c4;
+    border: 1px solid rgba(0, 245, 196, 0.5);
+    box-shadow: 0 0 10px rgba(0, 245, 196, 0.35);
+}
+
 .team-column {
     display: flex;
     flex-direction: column;
