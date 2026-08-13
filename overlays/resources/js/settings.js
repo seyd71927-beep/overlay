@@ -196,28 +196,20 @@ class AdminSettingsManager {
     startDemoSimulation() {
         if (this.simInterval) clearInterval(this.simInterval);
         if (typeof successAlertLowerBottom === 'function') {
-            successAlertLowerBottom('Started Demo Match Simulation Loop (Scores, Pause, Ghost Mode & Cheats)!');
+            successAlertLowerBottom('Started Demo Match Simulation Loop!');
         }
 
         let round = 1;
         let t1Score = 0;
         let t2Score = 0;
-        let tick = 0;
 
         this.simInterval = setInterval(async () => {
-            tick++;
             const spikeDown = (Math.random() < 0.4);
             if (Math.random() < 0.3) {
                 if (Math.random() < 0.5) t1Score++;
                 else t2Score++;
                 round++;
             }
-
-            // Simulate tactical pause every 8 ticks
-            const isPaused = (tick % 8 === 0 || tick % 8 === 1);
-            const pauseTimer = isPaused ? (tick % 8 === 0 ? 45 : 30) : 0;
-            const ghostMode = (tick % 4 === 0);
-            const cheatsOn = (tick % 6 === 0);
 
             // Sync via Bridge Telemetry endpoint
             try {
@@ -236,10 +228,6 @@ class AdminSettingsManager {
                         is_custom_match: true,
                         is_tournament_mode: true,
                         match_type: 'CUSTOM_TOURNAMENT',
-                        is_paused: isPaused,
-                        pause_timer: pauseTimer,
-                        ghost_mode: ghostMode,
-                        allow_cheats: cheatsOn,
                         team_1_players: [
                             { slot: 0, name: 'Player 1', character: 'Jett', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'vandal', is_dead: false },
                             { slot: 1, name: 'Player 2', character: 'Reyna', health: Math.floor(Math.random() * 100) + 1, armor: 50, weapon: 'phantom', is_dead: false },

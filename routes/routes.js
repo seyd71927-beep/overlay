@@ -117,19 +117,6 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
         const isTournament = (payload.isTournamentMode === true || payload.isTournamentMode === 'true' || payload.is_tournament_mode === true || payload.is_tournament_mode === 'true');
         const matchType = payload.match_type || payload.matchType || (isTournament ? 'CUSTOM_TOURNAMENT' : (isCustomMatch ? 'CUSTOM_MATCH' : 'STANDARD'));
 
-        const isPaused = (payload.is_paused === true || payload.is_paused === 'true' || payload.isPaused === true || payload.isPaused === 'true');
-        const pauseTimer = typeof payload.pause_timer !== 'undefined' ? parseInt(payload.pause_timer) : (typeof payload.pauseTimer !== 'undefined' ? parseInt(payload.pauseTimer) : 0);
-        const isGhostMode = (payload.ghost_mode === true || payload.ghost_mode === 'true' || payload.isGhostMode === true || payload.isGhostMode === 'true');
-        const allowCheats = (payload.allow_cheats === true || payload.allow_cheats === 'true' || payload.allowCheats === true || payload.allowCheats === 'true');
-        const customAttributes = payload.custom_attributes || {
-            is_paused: isPaused,
-            pause_timer: pauseTimer,
-            ghost_mode: isGhostMode,
-            allow_cheats: allowCheats,
-            tournament_mode: isTournament,
-            is_custom_match: isCustomMatch
-        };
-
         bridgeStatus = {
             connected: true,
             online: true,
@@ -141,12 +128,6 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             is_custom_match: isCustomMatch,
             isTournamentMode: isTournament,
             is_tournament_mode: isTournament,
-            is_paused: isPaused,
-            isPaused: isPaused,
-            pause_timer: pauseTimer,
-            ghost_mode: isGhostMode,
-            allow_cheats: allowCheats,
-            custom_attributes: customAttributes,
             matchType: matchType,
             match_type: matchType,
             map: mapName,
@@ -160,21 +141,19 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             source: 'Remote India Bridge'
         };
 
+        // 1. Update Game State
         let stateChanged = false;
         let configChanged = false;
-        if (!dataBus.config.gameState) dataBus.config.gameState = {};
-        if (!dataBus.config.gameConfiguration) dataBus.config.gameConfiguration = {};
 
-        // 1. Update Game State
-        if (typeof payload.round_number !== 'undefined') {
+        if (payload.round_number && dataBus.config.gameState.round_number !== roundNum) {
             dataBus.config.gameState.round_number = roundNum;
             stateChanged = true;
         }
-        if (typeof payload.team_1_score !== 'undefined') {
+        if (typeof payload.team_1_score !== 'undefined' && dataBus.config.gameState.team_1_score !== t1Score) {
             dataBus.config.gameState.team_1_score = t1Score;
             stateChanged = true;
         }
-        if (typeof payload.team_2_score !== 'undefined') {
+        if (typeof payload.team_2_score !== 'undefined' && dataBus.config.gameState.team_2_score !== t2Score) {
             dataBus.config.gameState.team_2_score = t2Score;
             stateChanged = true;
         }
@@ -194,11 +173,6 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             dataBus.config.gameState.is_custom_match = isCustomMatch;
             dataBus.config.gameState.is_tournament_mode = isTournament;
             dataBus.config.gameState.match_type = matchType;
-            dataBus.config.gameState.is_paused = isPaused;
-            dataBus.config.gameState.pause_timer = pauseTimer;
-            dataBus.config.gameState.ghost_mode = isGhostMode;
-            dataBus.config.gameState.allow_cheats = allowCheats;
-            dataBus.config.gameState.custom_attributes = customAttributes;
             stateChanged = true;
         }
 
