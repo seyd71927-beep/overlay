@@ -914,9 +914,26 @@ class fileLoader {
                 team_1_score: 0,
                 team_2_score: 0,
                 map_pick: chosenMaps[i][2],
+                side: chosenMaps[i][1] || 'attack',
                 map: chosenMaps[i][0]
             };
         }
+
+        // Synchronize starting sides for Map 1 from the MapBan.gg configuration
+        if (chosenMaps.length > 0) {
+            const map1Side = (chosenMaps[0][1] || 'attack').toLowerCase(); // 'attack' or 'defense'
+            const map1Picker = chosenMaps[0][2]; // 'team_1' or 'team_2' or ''
+
+            // If map 1 action is defense:
+            if (map1Side === 'defense') {
+                // Team 1 is Defense (switch_sides = false) if map1Picker is team_1, else Attack (switch_sides = true)
+                this.config.gameState.switch_sides = (map1Picker === 'team_2');
+            } else {
+                // Team 1 is Attack (switch_sides = true) if map1Picker is team_1 or decider, else Defense (switch_sides = false)
+                this.config.gameState.switch_sides = (map1Picker === 'team_1' || map1Picker === '');
+            }
+        }
+
         this.saveStateToFile('gameState.json', this.config.gameState);
     }
 
