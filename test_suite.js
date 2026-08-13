@@ -401,7 +401,7 @@ async function runAllTests() {
                 { username: '[SEN] johnqt', agent: 'cypher', health: 100, shield: 50, weapon: 'vandal', ult_points_gained: 6, credits: 4100, is_dead: false },
                 { username: '[SEN] Zellsis', agent: 'kayo', health: 0, shield: 0, weapon: 'vandal', ult_points_gained: 1, credits: 2100, is_dead: true }
             ]
-        }, true);
+        }, false);
 
         const bridgeStatus = await request('GET', '/api/bridge/status');
         assert('GET /api/bridge/status reports bridge connected & online', bridgeStatus.status === 200 && bridgeStatus.body.online === true && bridgeStatus.body.map === 'ascent');

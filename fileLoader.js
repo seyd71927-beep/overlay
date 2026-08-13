@@ -411,6 +411,14 @@ class fileLoader {
         return this.config.casters;
     }
 
+    getGameState() {
+        return this.config.gameState || {};
+    }
+
+    getGameConfiguration() {
+        return this.config.gameConfiguration || {};
+    }
+
     // --- Player Logic ---
     setRosterConfig(team1Size, team2Size, rosterMode = 'auto') {
         if (!this.config.gameState) this.config.gameState = {};
@@ -475,11 +483,16 @@ class fileLoader {
                     : (pObj.name || pObj.username || `Player ${i + 1}`);
                 if (pName.includes('#')) pName = pName.split('#')[0].trim();
 
+                const isDead = (pObj.is_dead === true || pObj.is_dead === 'true') || (typeof pObj.health !== 'undefined' && Number(pObj.health) <= 0);
+                const health = typeof pObj.health !== 'undefined' ? Number(pObj.health) : (isDead ? 0 : 100);
+
                 this.config.players[key].data = {
                     ...this.config.players[key].data,
                     ...pObj, // Health, shields, weapon, agent, ult, abilities, dead/alive from Lockfile
                     name: pName,
                     username: pName,
+                    health: health,
+                    is_dead: isDead,
                     is_registered: true
                 };
                 this.config.players[key].is_registered = true;
@@ -508,11 +521,16 @@ class fileLoader {
                     : (pObj.name || pObj.username || `Player ${i + 6}`);
                 if (pName.includes('#')) pName = pName.split('#')[0].trim();
 
+                const isDead = (pObj.is_dead === true || pObj.is_dead === 'true') || (typeof pObj.health !== 'undefined' && Number(pObj.health) <= 0);
+                const health = typeof pObj.health !== 'undefined' ? Number(pObj.health) : (isDead ? 0 : 100);
+
                 this.config.players[key].data = {
                     ...this.config.players[key].data,
                     ...pObj, // Health, shields, weapon, agent, ult, abilities, dead/alive from Lockfile
                     name: pName,
                     username: pName,
+                    health: health,
+                    is_dead: isDead,
                     is_registered: true
                 };
                 this.config.players[key].is_registered = true;
@@ -1744,18 +1762,24 @@ class fileLoader {
 
         // Update Game State Team 1
         if (team1Obj) {
+            this.config.gameState.team_1.name = team1Obj.name || team1Obj.tag;
             this.config.gameState.team_1.abbreviation = team1Obj.tag || team1Obj.name;
+            if (team1Obj.seed) this.config.gameState.team_1.team_info = team1Obj.seed;
             if (team1Obj.logo) this.config.gameState.team_1.icon_link = this.cleanLogoUrl(team1Obj.logo);
         } else if (t1Tag) {
             this.config.gameState.team_1.abbreviation = t1Tag;
+            this.config.gameState.team_1.name = t1Tag;
         }
 
         // Update Game State Team 2
         if (team2Obj) {
+            this.config.gameState.team_2.name = team2Obj.name || team2Obj.tag;
             this.config.gameState.team_2.abbreviation = team2Obj.tag || team2Obj.name;
+            if (team2Obj.seed) this.config.gameState.team_2.team_info = team2Obj.seed;
             if (team2Obj.logo) this.config.gameState.team_2.icon_link = this.cleanLogoUrl(team2Obj.logo);
         } else if (t2Tag) {
             this.config.gameState.team_2.abbreviation = t2Tag;
+            this.config.gameState.team_2.name = t2Tag;
         }
 
         // Update Tournament Stage Header & Format

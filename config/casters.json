@@ -2,13 +2,13 @@
     "caster_1": {
         "name": "Shubham",
         "handle": "@shubham_val",
-        "role": "Caster",
+        "role": "CASTER",
         "enabled": true
     },
     "caster_2": {
         "name": "Aryan",
         "handle": "@aryan_casts",
-        "role": "Analyst",
+        "role": "ANALYST",
         "enabled": true
     },
     "show_lower_third": true,
@@ -16,9 +16,9 @@
     "duration": 6000,
     "interval": 30000,
     "caster_3": {
-        "name": "",
-        "handle": "",
-        "role": "Host",
-        "enabled": false
+        "name": "Special Guest",
+        "handle": "@guest",
+        "role": "HOST",
+        "enabled": true
     }
 }

@@ -165,7 +165,7 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             dataBus.config.gameState.switch_sides = (payload.switch_sides === true || payload.switch_sides === 'true');
             stateChanged = true;
         }
-        if (payload.map && dataBus.config.gameState.map !== mapName) {
+        if (payload.map) {
             dataBus.config.gameState.map = mapName;
             stateChanged = true;
         }
@@ -191,16 +191,7 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             }
         }
 
-        // 3. Update Dynamic Team Rosters & Exact Team Size from Lockfile
-        if (t1Players && t2Players && (t1Players.length > 0 || t2Players.length > 0)) {
-            dataBus.updateDynamicRoster(t1Players, t2Players);
-            configChanged = true;
-        } else if (typeof payload.team_1_count === 'number' && typeof payload.team_2_count === 'number') {
-            dataBus.setRosterConfig(payload.team_1_count, payload.team_2_count, 'auto');
-            configChanged = true;
-        }
-
-        // 4. Update Team Info if provided and not locked
+        // 3. Update Team Info if provided and not locked
         const liveService = req.app.get('liveService');
         const lockManual = liveService ? liveService.lockManualTeamInfo : false;
         const tournamentTeams = dataBus.getTournamentData()?.teams || [];
@@ -236,6 +227,15 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
                 }
                 stateChanged = true;
             }
+        }
+
+        // 4. Update Dynamic Team Rosters & Exact Team Size from Lockfile
+        if (t1Players && t2Players && (t1Players.length > 0 || t2Players.length > 0)) {
+            dataBus.updateDynamicRoster(t1Players, t2Players);
+            configChanged = true;
+        } else if (typeof payload.team_1_count === 'number' && typeof payload.team_2_count === 'number') {
+            dataBus.setRosterConfig(payload.team_1_count, payload.team_2_count, 'auto');
+            configChanged = true;
         }
 
         // 5. Update Tournament Match Schedule
