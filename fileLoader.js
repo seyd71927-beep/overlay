@@ -394,14 +394,21 @@ class fileLoader {
     }
 
     updateDynamicRoster(team1Players = [], team2Players = []) {
-        const t1Count = team1Players.length;
-        const t2Count = team2Players.length;
+        const t1Count = Math.max(1, Math.min(5, team1Players.length || 5));
+        const t2Count = Math.max(1, Math.min(5, team2Players.length || 5));
 
         if (!this.config.gameState) this.config.gameState = {};
         this.config.gameState.team_1_count = t1Count;
         this.config.gameState.team_2_count = t2Count;
+        this.config.gameState.roster_mode = 'auto';
         this.config.gameState.team_1_roster = team1Players;
         this.config.gameState.team_2_roster = team2Players;
+
+        if (!this.config.gameConfiguration) this.config.gameConfiguration = {};
+        this.config.gameConfiguration.team_1_count = t1Count;
+        this.config.gameConfiguration.team_2_count = t2Count;
+        this.config.gameConfiguration.roster_mode = 'auto';
+        this.saveStateToFile('gameConfiguration.json', this.config.gameConfiguration);
 
         const tournament = this.getTournamentData();
         const findTourneyTeam = (abbrOrName) => {

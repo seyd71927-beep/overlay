@@ -193,7 +193,7 @@ class LiveStreamOperator {
             't1-score-plus', 't1-score-minus', 't2-score-plus', 't2-score-minus',
             'round-plus', 'round-minus', 'toggle-sides-btn', 'reset-match-btn',
             'win-team1-btn', 'win-team2-btn', 'plant-spike-btn', 'defuse-spike-btn',
-            'quick-sim-btn'
+            'quick-sim-btn', 'roster-size-select'
         ];
 
         manualControlIds.forEach(id => {

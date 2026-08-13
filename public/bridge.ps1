@@ -436,7 +436,9 @@ while ($true) {
             continue
         }
 
-        # 5. Build Telemetry Payload
+        # 5. Build Telemetry Payload with dynamic team size from Lockfile
+        $t1Count = if ($team1Players) { $team1Players.Count } else { 5 }
+        $t2Count = if ($team2Players) { $team2Players.Count } else { 5 }
         $payload = @{
             phase = $loopState
             inGame = ($loopState -eq "INGAME")
@@ -444,6 +446,8 @@ while ($true) {
             round_number = $roundNum
             team_1_score = $t1Score
             team_2_score = $t2Score
+            team_1_count = $t1Count
+            team_2_count = $t2Count
             switch_sides = (($roundNum -gt 12 -and $roundNum -le 24) -or ($roundNum -gt 24 -and ($roundNum % 2) -eq 0))
             team_1_players = $team1Players
             team_2_players = $team2Players

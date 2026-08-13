@@ -177,9 +177,13 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             }
         }
 
-        // 3. Update Dynamic Team Rosters & Players
+        // 3. Update Dynamic Team Rosters & Exact Team Size from Lockfile
         if (t1Players && t2Players && (t1Players.length > 0 || t2Players.length > 0)) {
             dataBus.updateDynamicRoster(t1Players, t2Players);
+            configChanged = true;
+        } else if (typeof payload.team_1_count === 'number' && typeof payload.team_2_count === 'number') {
+            dataBus.setRosterConfig(payload.team_1_count, payload.team_2_count, 'auto');
+            configChanged = true;
         }
 
         // 4. Update Team Info if provided and not locked

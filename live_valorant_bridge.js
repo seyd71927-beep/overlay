@@ -514,7 +514,7 @@ async function pollLoop() {
         // Auto-deduce teams if available
         const deducedTeams = deduceTeamsFromRosters(team1Players, team2Players);
 
-        // Build Payload
+        // Build Payload with dynamic team counts from Lockfile
         const payload = {
             phase: loopState,
             inGame: (loopState === 'INGAME'),
@@ -523,6 +523,8 @@ async function pollLoop() {
             round_number: roundNum,
             team_1_score: t1Score,
             team_2_score: t2Score,
+            team_1_count: team1Players.length || undefined,
+            team_2_count: team2Players.length || undefined,
             switch_sides: (roundNum > 12 && roundNum <= 24) || (roundNum > 24 && roundNum % 2 === 0),
             team_1: deducedTeams.team_1,
             team_2: deducedTeams.team_2
@@ -532,6 +534,8 @@ async function pollLoop() {
         if (team1Players.length > 0 || team2Players.length > 0) {
             payload.team_1_players = team1Players;
             payload.team_2_players = team2Players;
+            payload.team_1_count = team1Players.length;
+            payload.team_2_count = team2Players.length;
         }
 
         // Send live sync to overlay server
