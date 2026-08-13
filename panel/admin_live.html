@@ -119,6 +119,63 @@
                     </div>
                 </div>
 
+                <!-- Active Pre-Stream Match & Tournament Session Connector -->
+                <div class="card" style="grid-column: span 12; border-color: rgba(255, 183, 3, 0.4); background: linear-gradient(180deg, rgba(22, 18, 12, 0.95), rgba(16, 12, 8, 0.95)); margin-bottom: 2px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="font-size: 1.05rem; font-weight: 800; color: #fff;">
+                                <i class="fa-solid fa-link" style="color: #ffb703;"></i> ACTIVE PRE-STREAM MATCH & TOURNAMENT SESSION
+                            </span>
+                            <span id="active-match-status-badge" class="status-badge" style="background: rgba(255, 183, 3, 0.15); color: #ffb703; border-color: rgba(255, 183, 3, 0.3); font-size: 0.72rem;">
+                                📅 CONNECTED TO PRE-STREAM
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <a href="?page=prestream" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255, 183, 3, 0.15); color: #ffb703; border: 1px solid rgba(255, 183, 3, 0.3); text-decoration: none;">
+                                <i class="fa-solid fa-sliders"></i> Open Pre-Stream Studio
+                            </a>
+                            <button type="button" id="refresh-prestream-data-btn" class="btn" style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08);">
+                                <i class="fa-solid fa-arrows-rotate"></i> Sync Pre-Stream
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: center; background: rgba(0,0,0,0.35); padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid var(--panel-border);">
+                        <div>
+                            <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 3px; font-weight: 700;">
+                                SELECT SCHEDULED MATCH FROM PRE-STREAM:
+                            </label>
+                            <select id="prestream-match-select" class="input-field" style="padding: 6px 10px; font-size: 0.82rem; font-weight: 700;">
+                                <option value="">Loading scheduled matches from Pre-Stream...</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.72rem; color: var(--green-team); display: block; margin-bottom: 3px; font-weight: 700;">
+                                QUICK SET TEAM 1:
+                            </label>
+                            <select id="team1-preset-select" class="input-field" style="padding: 6px 10px; font-size: 0.82rem; font-weight: 600;">
+                                <option value="">Select Team 1...</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.72rem; color: var(--red-team); display: block; margin-bottom: 3px; font-weight: 700;">
+                                QUICK SET TEAM 2:
+                            </label>
+                            <select id="team2-preset-select" class="input-field" style="padding: 6px 10px; font-size: 0.82rem; font-weight: 600;">
+                                <option value="">Select Team 2...</option>
+                            </select>
+                        </div>
+
+                        <div style="padding-top: 18px;">
+                            <button type="button" id="load-match-to-live-btn" class="btn btn-primary" style="padding: 7px 16px; font-size: 0.8rem; font-weight: 800; background: #ffb703; color: #000; white-space: nowrap;">
+                                <i class="fa-solid fa-bolt"></i> Load Match into Live
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Match Score & Spike Controller Card -->
                 <div class="card" style="grid-column: span 6;">
                     <div class="card-header">

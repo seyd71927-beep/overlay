@@ -35,10 +35,11 @@ class LiveStreamOperator {
         this.bindEvents();
         await this.fetchOperatingMode();
         await this.fetchInitialState();
+        await this.fetchPreStreamData();
         await this.fetchCasters();
         await this.fetchBridgeStatus();
 
-        // Background poller for bridge health
+        // Background poller for bridge health & prestream updates
         setInterval(() => this.fetchBridgeStatus(), 3000);
     }
 
@@ -96,6 +97,10 @@ class LiveStreamOperator {
                 if (data && data.mode) {
                     this.applyModeUI(data.mode);
                 }
+            });
+
+            this.socket.on('tournamentUpdate', () => {
+                this.fetchPreStreamData();
             });
         }
     }
@@ -319,6 +324,53 @@ class LiveStreamOperator {
         }
     }
 
+    async fetchPreStreamData() {
+        try {
+            const res = await fetch('../api/tournament/data');
+            if (res.status !== 200) return;
+            const tourney = await res.json();
+            
+            const matchSelect = document.getElementById('prestream-match-select');
+            const t1Select = document.getElementById('team1-preset-select');
+            const t2Select = document.getElementById('team2-preset-select');
+            const badge = document.getElementById('active-match-status-badge');
+
+            // 1. Populate Scheduled Matches Dropdown
+            if (matchSelect && tourney.matches && Array.isArray(tourney.matches)) {
+                let mHtml = '<option value="">-- Select a Scheduled Match from Pre-Stream --</option>';
+                tourney.matches.forEach(m => {
+                    const statusIcon = m.status === 'LIVE' ? '🟢 [LIVE]' : '⏳ [UPCOMING]';
+                    const timeInfo = m.scheduled_time ? ` (${m.scheduled_time})` : '';
+                    mHtml += `<option value="${m.id}">${statusIcon} ${m.team_1_tag || 'T1'} vs ${m.team_2_tag || 'T2'} - ${m.stage || 'Match'} [${m.format || 'BO3'}]${timeInfo}</option>`;
+                });
+                matchSelect.innerHTML = mHtml;
+            }
+
+            // 2. Populate Quick Teams Dropdown
+            if (tourney.teams && Array.isArray(tourney.teams)) {
+                let t1Html = '<option value="">-- Choose Team 1 --</option>';
+                let t2Html = '<option value="">-- Choose Team 2 --</option>';
+                tourney.teams.forEach(t => {
+                    const label = `${t.name} (${t.tag || 'TAG'})${t.seed ? ' [' + t.seed + ']' : ''}`;
+                    const isT1 = (this.team1Data?.abbreviation === t.tag || this.team1Data?.name === t.name);
+                    const isT2 = (this.team2Data?.abbreviation === t.tag || this.team2Data?.name === t.name);
+                    t1Html += `<option value="${t.tag || t.name}" ${isT1 ? 'selected' : ''}>${label}</option>`;
+                    t2Html += `<option value="${t.tag || t.name}" ${isT2 ? 'selected' : ''}>${label}</option>`;
+                });
+                if (t1Select) t1Select.innerHTML = t1Html;
+                if (t2Select) t2Select.innerHTML = t2Html;
+            }
+
+            // 3. Update Badge
+            if (badge) {
+                const count = tourney.matches ? tourney.matches.length : 0;
+                badge.textContent = `📅 ${count} MATCHES IN SCHEDULE (${(tourney.teams || []).length} TEAMS)`;
+            }
+        } catch (e) {
+            console.error('Error loading Pre-Stream tournament data in Live Operator:', e);
+        }
+    }
+
     updateRosterBadges() {
         const badge = document.getElementById('active-roster-count-badge');
         if (badge) {
@@ -446,6 +498,89 @@ class LiveStreamOperator {
     }
 
     bindEvents() {
+        // Pre-Stream Match Loader
+        document.getElementById('load-match-to-live-btn')?.addEventListener('click', async () => {
+            const matchSelect = document.getElementById('prestream-match-select');
+            const matchId = matchSelect ? matchSelect.value : '';
+            if (!matchId) {
+                if (typeof errorAlertLowerBottom === 'function') {
+                    errorAlertLowerBottom('Please select a scheduled match from the dropdown first');
+                } else {
+                    alert('Please select a scheduled match from the dropdown first');
+                }
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('matchId', matchId);
+
+            try {
+                const res = await fetch('/api/tournament/load_match', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.status) {
+                    if (typeof successAlertLowerBottom === 'function') {
+                        successAlertLowerBottom(data.message || 'Match loaded into Live Stream!');
+                    }
+                    await this.fetchInitialState();
+                    await this.fetchPreStreamData();
+                } else {
+                    if (typeof errorAlertLowerBottom === 'function') {
+                        errorAlertLowerBottom(data.message || 'Failed to load match');
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading match into live stream:', err);
+            }
+        });
+
+        // Quick Set Team 1 & Team 2 directly from dropdown
+        document.getElementById('team1-preset-select')?.addEventListener('change', async (e) => {
+            const tag = e.target.value;
+            if (!tag) return;
+            const formData = new FormData();
+            formData.append('slot', 'team_1');
+            formData.append('teamTag', tag);
+            try {
+                const res = await fetch('/api/tournament/set_active_team', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status) {
+                    if (typeof successAlertLowerBottom === 'function') {
+                        successAlertLowerBottom(`Loaded ${tag} as Team 1 (Left)!`);
+                    }
+                    await this.fetchInitialState();
+                }
+            } catch (err) {}
+        });
+
+        document.getElementById('team2-preset-select')?.addEventListener('change', async (e) => {
+            const tag = e.target.value;
+            if (!tag) return;
+            const formData = new FormData();
+            formData.append('slot', 'team_2');
+            formData.append('teamTag', tag);
+            try {
+                const res = await fetch('/api/tournament/set_active_team', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.status) {
+                    if (typeof successAlertLowerBottom === 'function') {
+                        successAlertLowerBottom(`Loaded ${tag} as Team 2 (Right)!`);
+                    }
+                    await this.fetchInitialState();
+                }
+            } catch (err) {}
+        });
+
+        // Refresh Pre-Stream data button
+        document.getElementById('refresh-prestream-data-btn')?.addEventListener('click', async () => {
+            await this.fetchPreStreamData();
+            if (typeof successAlertLowerBottom === 'function') {
+                successAlertLowerBottom('Synchronized with Pre-Stream tournament data!');
+            }
+        });
+
         // Operating Mode toggles
         document.getElementById('mode-manual-btn')?.addEventListener('click', () => this.setOperatingMode('manual'));
         document.getElementById('mode-auto-btn')?.addEventListener('click', () => this.setOperatingMode('automatic'));

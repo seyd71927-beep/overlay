@@ -191,6 +191,40 @@
                     </div>
                 </div>
 
+                <!-- Match Scheduler & Upcoming Fixtures Card -->
+                <div class="card"
+                    style="grid-column: span 12; border-color: rgba(255, 183, 3, 0.4); background: linear-gradient(180deg, rgba(28, 22, 14, 0.95), rgba(20, 16, 10, 0.95));">
+                    <div class="card-header" style="flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span style="font-size: 1.15rem; font-weight: 700; color: #fff;">
+                                <i class="fa-solid fa-calendar-days" style="color: #ffb703;"></i> Tournament Match Scheduler (Date & Time)
+                            </span>
+                            <span id="matches-count-badge" class="status-badge"
+                                style="background: rgba(255, 183, 3, 0.15); color: #ffb703; border-color: rgba(255, 183, 3, 0.3);">
+                                0 MATCHES SCHEDULED
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button id="add-match-btn" class="btn"
+                                style="padding: 6px 14px; font-size: 0.78rem; font-weight: 700; background: #ffb703; color: #000;">
+                                <i class="fa-solid fa-plus"></i> Schedule New Match
+                            </button>
+                            <a href="../upcomming_maps/" target="_blank" class="btn"
+                                style="padding: 6px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.08); text-decoration: none;">
+                                <i class="fa-solid fa-calendar-check" style="color: #ffb703;"></i> Schedule Overlay
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Matches Grid -->
+                    <div style="background: rgba(0,0,0,0.3); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+                        <div id="matches-grid-container"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+                            <!-- Populated dynamically by pre_stream.js -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Map Pick & Ban Veto Card (Fully Automated via MapBan.gg) -->
                 <div class="card"
                     style="grid-column: span 12; border-color: rgba(123, 44, 191, 0.4); background: linear-gradient(180deg, rgba(20, 16, 36, 0.95), rgba(14, 12, 28, 0.95));">
@@ -331,6 +365,73 @@
                     onclick="document.getElementById('team-modal').style.display='none'">Cancel</button>
                 <button type="button" id="save-modal-team-btn" class="btn btn-primary"><i
                         class="fa-solid fa-floppy-disk"></i> Save Team</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Match Modal -->
+    <div id="match-modal" class="custom-modal">
+        <div class="modal-content">
+            <h4 id="match-modal-title"
+                style="color: #fff; margin-bottom: 14px; font-family: var(--font-display); font-size: 1.2rem;">
+                <i class="fa-solid fa-calendar-plus" style="color: #ffb703;"></i> Schedule Match
+            </h4>
+            <input type="hidden" id="modal-match-id">
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Team 1 (Left / Defending)</label>
+                        <select id="modal-match-t1" class="input-field"></select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Team 2 (Right / Attacking)</label>
+                        <select id="modal-match-t2" class="input-field"></select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Stage / Round Name</label>
+                        <input id="modal-match-stage" type="text" class="input-field" placeholder="e.g. UPPER BRACKET SEMI-FINALS">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Format</label>
+                        <select id="modal-match-format" class="input-field">
+                            <option value="BO1">BO1 (1 Map)</option>
+                            <option value="BO3" selected>BO3 (3 Maps)</option>
+                            <option value="BO5">BO5 (5 Maps)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Date</label>
+                        <input id="modal-match-date" type="date" class="input-field">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Time (e.g. 18:00 IST)</label>
+                        <input id="modal-match-time" type="text" class="input-field" placeholder="e.g. 18:00 IST / 15:30 AST">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Match Status</label>
+                        <select id="modal-match-status" class="input-field">
+                            <option value="UPCOMING" selected>UPCOMING</option>
+                            <option value="LIVE">LIVE</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">Score (e.g. 0 - 0)</label>
+                        <input id="modal-match-score" type="text" class="input-field" placeholder="0 - 0" value="0 - 0">
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn"
+                    onclick="document.getElementById('match-modal').style.display='none'">Cancel</button>
+                <button type="button" id="save-modal-match-btn" class="btn btn-primary" style="background: #ffb703; color: #000;"><i
+                        class="fa-solid fa-floppy-disk"></i> Save Match</button>
             </div>
         </div>
     </div>
