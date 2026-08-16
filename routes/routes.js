@@ -141,39 +141,42 @@ router.post('/api/bridge/sync_match', upload.none(), (req, res) => {
             source: 'Remote India Bridge'
         };
 
-        // 1. Update Game State
+        // 1. Update Game State (Only overwrite game state when in Automatic Mode)
         let stateChanged = false;
         let configChanged = false;
+        const isAutoMode = (dataBus.getOperatorMode ? dataBus.getOperatorMode() : 'manual') === 'automatic';
 
-        if (payload.round_number && dataBus.config.gameState.round_number !== roundNum) {
-            dataBus.config.gameState.round_number = roundNum;
-            stateChanged = true;
-        }
-        if (typeof payload.team_1_score !== 'undefined' && dataBus.config.gameState.team_1_score !== t1Score) {
-            dataBus.config.gameState.team_1_score = t1Score;
-            stateChanged = true;
-        }
-        if (typeof payload.team_2_score !== 'undefined' && dataBus.config.gameState.team_2_score !== t2Score) {
-            dataBus.config.gameState.team_2_score = t2Score;
-            stateChanged = true;
-        }
-        if (typeof payload.spike !== 'undefined' || typeof payload.spike_down !== 'undefined') {
-            dataBus.config.gameState.spike_down = (payload.spike === 'down' || payload.spike === true || payload.spike_down === true);
-            stateChanged = true;
-        }
-        if (typeof payload.switch_sides !== 'undefined') {
-            dataBus.config.gameState.switch_sides = (payload.switch_sides === true || payload.switch_sides === 'true');
-            stateChanged = true;
-        }
-        if (payload.map) {
-            dataBus.config.gameState.map = mapName;
-            stateChanged = true;
-        }
-        if (typeof payload.isCustom !== 'undefined' || typeof payload.is_custom_match !== 'undefined') {
-            dataBus.config.gameState.is_custom_match = isCustomMatch;
-            dataBus.config.gameState.is_tournament_mode = isTournament;
-            dataBus.config.gameState.match_type = matchType;
-            stateChanged = true;
+        if (isAutoMode) {
+            if (payload.round_number && dataBus.config.gameState.round_number !== roundNum) {
+                dataBus.config.gameState.round_number = roundNum;
+                stateChanged = true;
+            }
+            if (typeof payload.team_1_score !== 'undefined' && dataBus.config.gameState.team_1_score !== t1Score) {
+                dataBus.config.gameState.team_1_score = t1Score;
+                stateChanged = true;
+            }
+            if (typeof payload.team_2_score !== 'undefined' && dataBus.config.gameState.team_2_score !== t2Score) {
+                dataBus.config.gameState.team_2_score = t2Score;
+                stateChanged = true;
+            }
+            if (typeof payload.spike !== 'undefined' || typeof payload.spike_down !== 'undefined') {
+                dataBus.config.gameState.spike_down = (payload.spike === 'down' || payload.spike === true || payload.spike_down === true);
+                stateChanged = true;
+            }
+            if (typeof payload.switch_sides !== 'undefined') {
+                dataBus.config.gameState.switch_sides = (payload.switch_sides === true || payload.switch_sides === 'true');
+                stateChanged = true;
+            }
+            if (payload.map) {
+                dataBus.config.gameState.map = mapName;
+                stateChanged = true;
+            }
+            if (typeof payload.isCustom !== 'undefined' || typeof payload.is_custom_match !== 'undefined') {
+                dataBus.config.gameState.is_custom_match = isCustomMatch;
+                dataBus.config.gameState.is_tournament_mode = isTournament;
+                dataBus.config.gameState.match_type = matchType;
+                stateChanged = true;
+            }
         }
 
         // 2. Update Map Flow (Veto / Upcoming Maps)

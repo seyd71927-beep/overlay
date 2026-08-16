@@ -674,6 +674,72 @@ class LiveStreamOperator {
         document.getElementById('quick-sim-btn')?.addEventListener('click', () => this.runQuickSimulation());
     }
 
+    async syncGameState() {
+        const formData = new FormData();
+        formData.append('round_number', this.gameState.round_number || 1);
+        formData.append('team_1_score', this.gameState.team_1_score || 0);
+        formData.append('team_2_score', this.gameState.team_2_score || 0);
+        formData.append('spike', this.gameState.spike_down ? 'true' : 'false');
+        formData.append('switch_sides', this.gameState.switch_sides ? 'true' : 'false');
+
+        try {
+            const res = await fetch('../change_game_state', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.status && data.state) {
+                this.updateLocalGameState(data.state);
+            }
+        } catch (e) {
+            console.error('Error syncing game state:', e);
+        }
+    }
+
+    async setOperatingMode(mode) {
+        const formData = new FormData();
+        formData.append('mode', mode);
+        try {
+            const res = await fetch('../api/operator/mode', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.status) {
+                this.isAutomaticMode = data.isAutomatic;
+                this.updateOperatingModeUI(data.mode);
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom(data.message || `Switched to ${data.mode.toUpperCase()} mode`);
+                }
+            }
+        } catch (e) {
+            console.error('Error setting operator mode:', e);
+        }
+    }
+
+    updateOperatingModeUI(mode) {
+        const manualBtn = document.getElementById('mode-manual-btn');
+        const autoBtn = document.getElementById('mode-auto-btn');
+        const manualBanner = document.getElementById('mode-manual-banner');
+        const autoBanner = document.getElementById('mode-auto-banner');
+        const modeBadge = document.getElementById('scoreboard-mode-badge');
+
+        const isAuto = mode === 'automatic';
+        if (manualBtn) {
+            manualBtn.style.background = isAuto ? 'transparent' : 'rgba(0, 242, 254, 0.2)';
+            manualBtn.style.color = isAuto ? 'var(--text-muted)' : '#00f2fe';
+            manualBtn.style.borderColor = isAuto ? 'transparent' : 'rgba(0, 242, 254, 0.5)';
+            manualBtn.style.boxShadow = isAuto ? 'none' : '0 0 10px rgba(0, 242, 254, 0.2)';
+        }
+        if (autoBtn) {
+            autoBtn.style.background = isAuto ? 'rgba(0, 230, 118, 0.2)' : 'transparent';
+            autoBtn.style.color = isAuto ? '#00e676' : 'var(--text-muted)';
+            autoBtn.style.borderColor = isAuto ? 'rgba(0, 230, 118, 0.5)' : 'transparent';
+            autoBtn.style.boxShadow = isAuto ? '0 0 10px rgba(0, 230, 118, 0.2)' : 'none';
+        }
+        if (manualBanner) manualBanner.style.display = isAuto ? 'none' : 'block';
+        if (autoBanner) autoBanner.style.display = isAuto ? 'block' : 'none';
+        if (modeBadge) {
+            modeBadge.innerHTML = isAuto ? '⚡ AUTOMATIC MODE' : '🕹️ MANUAL CONTROLS';
+            modeBadge.style.color = isAuto ? '#00e676' : '#00f2fe';
+            modeBadge.style.borderColor = isAuto ? 'rgba(0, 230, 118, 0.3)' : 'rgba(0, 242, 254, 0.3)';
+        }
+    }
+
     async adjustScore(team, delta) {
         if (team === 'team_1') {
             this.gameState.team_1_score = Math.max(0, (this.gameState.team_1_score || 0) + delta);
@@ -688,9 +754,13 @@ class LiveStreamOperator {
         await this.syncGameState();
     }
 
-    async switchSides() {
+    async toggleSides() {
         this.gameState.switch_sides = !this.gameState.switch_sides;
         await this.syncGameState();
+    }
+
+    async switchSides() {
+        return this.toggleSides();
     }
 
     async setSpike(isDown) {

@@ -356,6 +356,7 @@ async function runAllTests() {
 
         // --- 8. IN-GAME BRIDGE TELEMETRY SYNC ---
         console.log('\n\x1b[36m=== 8. In-Game Remote Bridge Telemetry Sync ===\x1b[0m');
+        await request('POST', '/api/operator/mode', { mode: 'automatic' }, true);
         const bridgeSync = await request('POST', '/api/bridge/sync_match', {
             phase: 'INGAME',
             inGame: true,
