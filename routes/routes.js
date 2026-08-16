@@ -540,24 +540,44 @@ async function resolveMapBanData(input) {
         return null;
     };
 
-    // 1. Direct regex match
-    let match = input.match(/\/ban\/(?:view|log|lobby|team\/\d+|editteam\/\d+)\/([a-zA-Z0-9]+)/i) || input.match(/\/bandata\/([a-zA-Z0-9]+)/i);
-    let potentialId = match ? match[1] : (input.match(/^[a-zA-Z0-9]{10,32}$/) ? input : null);
+    // 1. Check if input is a JSON string directly
+    if (input.startsWith('{') && input.endsWith('}')) {
+        try {
+            const parsedJson = JSON.parse(input);
+            if (parsedJson && (parsedJson.bans || parsedJson.maps || parsedJson.game || parsedJson.log)) {
+                return { viewId: 'json_payload', data: parsedJson };
+            }
+        } catch (e) {}
+    }
+
+    // 2. Extract potential ID using flexible regex matching for all MapBan URL formats
+    let match = input.match(/\/ban\/(?:view\/|log\/|lobby\/|team\/\d+\/|editteam\/\d+\/)?([a-zA-Z0-9_-]{10,40})/i) ||
+                input.match(/\/bandata\/([a-zA-Z0-9_-]{10,40})/i) ||
+                input.match(/\/room\/([a-zA-Z0-9_-]{10,40})/i) ||
+                input.match(/([a-zA-Z0-9_-]{12,36})/i);
+                
+    let potentialId = match ? match[1] : (input.match(/^[a-zA-Z0-9_-]{10,36}$/) ? input : null);
 
     if (potentialId) {
-        // Try directly as bandata
+        // Try directly as bandata endpoint
         let json = await tryFetchJson(`https://www.mapban.gg/bandata/${potentialId}`);
         if (json) return { viewId: potentialId, data: json };
 
-        // Try scraping lobby page
-        let extractedId = await scrapeHtmlForViewId(`https://www.mapban.gg/en/ban/lobby/${potentialId}`);
+        // Try scraping view or lobby page
+        let extractedId = await scrapeHtmlForViewId(`https://www.mapban.gg/en/ban/view/${potentialId}`);
         if (extractedId) {
             let json2 = await tryFetchJson(`https://www.mapban.gg/bandata/${extractedId}`);
             if (json2) return { viewId: extractedId, data: json2 };
         }
+
+        let extractedId2 = await scrapeHtmlForViewId(`https://www.mapban.gg/en/ban/lobby/${potentialId}`);
+        if (extractedId2) {
+            let json3 = await tryFetchJson(`https://www.mapban.gg/bandata/${extractedId2}`);
+            if (json3) return { viewId: extractedId2, data: json3 };
+        }
     }
 
-    // 2. Full URL scrape
+    // 3. Full URL scrape fallback
     if (input.startsWith('http://') || input.startsWith('https://') || input.includes('mapban.gg')) {
         let fullUrl = input.startsWith('http') ? input : `https://${input}`;
         let extractedId = await scrapeHtmlForViewId(fullUrl);

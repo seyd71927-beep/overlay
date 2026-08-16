@@ -84,10 +84,14 @@ class MapPickVetoOverlay {
                 cardTypeClass = 'pick-card';
                 headerText = `${teamName} PICK`;
                 sideBadgeHtml = `<div class="map-picked-by-side defense-side"><i class="fa-solid fa-shield-halved" style="margin-right: 6px;"></i> ${teamName} DEF</div>`;
-            } else {
+            } else if (action === 'pick' || action === 'picked') {
                 cardTypeClass = 'pick-card';
                 headerText = `${teamName} PICK`;
                 sideBadgeHtml = `<div class="map-picked-by-side"><i class="fa-solid fa-check" style="margin-right: 6px;"></i> PICKED</div>`;
+            } else {
+                cardTypeClass = 'pending-card';
+                headerText = `${teamName} (PENDING)`;
+                sideBadgeHtml = `<div class="map-picked-by-side pending-side"><i class="fa-solid fa-clock" style="margin-right: 6px;"></i> PENDING</div>`;
             }
 
             html += `

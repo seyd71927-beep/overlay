@@ -889,42 +889,46 @@ class fileLoader {
             rawItems = mapBanData.picks;
         } else if (Array.isArray(mapBanData.events) && mapBanData.events.length > 0) {
             rawItems = mapBanData.events;
+        } else if (Array.isArray(mapBanData)) {
+            rawItems = mapBanData;
         }
 
         if (rawItems.length > 0) {
             let parsedPicks = [];
+            const mapPool = ['ascent', 'bind', 'breeze', 'haven', 'lotus', 'split', 'sunset', 'abyss', 'pearl'];
+            const usedMaps = new Set();
+
             for (let i = 0; i < rawItems.length; i++) {
                 const item = rawItems[i];
                 if (!item) continue;
 
                 let mapName = '';
-                let action = 'ban';
+                let action = 'pending';
 
                 if (Array.isArray(item)) {
-                    mapName = (item[0] || 'ascent').toLowerCase();
-                    action = (item[1] || 'ban').toLowerCase();
+                    mapName = typeof item[0] === 'string' ? item[0].toLowerCase() : (item[0] && typeof item[0] === 'object' ? (item[0].name || item[0].id || '') : '');
+                    action = typeof item[1] === 'string' ? item[1].toLowerCase() : 'pending';
                 } else if (typeof item === 'object') {
-                    mapName = (item.map || item.mapName || item.mapId || item.name || '').toLowerCase();
+                    if (typeof item.map === 'object' && item.map !== null) {
+                        mapName = (item.map.name || item.map.id || item.map.mapName || '').toLowerCase();
+                    } else {
+                        mapName = (item.map || item.mapName || item.mapId || item.map_name || item.map_id || item.name || '').toLowerCase();
+                    }
 
-                    let votetype = (item.votetype || item.type || item.action || '').toLowerCase();
+                    let votetype = (item.votetype || item.type || item.action || item.vote_type || item.event || '').toLowerCase();
                     let status = Number(item.status);
-                    let side = (item.side || item.selectedSide || '').toLowerCase();
+                    let side = (item.side || item.selectedSide || item.picked_side || item.side_picked || '').toLowerCase();
                     let teamPickedSide = item.teamPickedSide;
                     let teamSides = item.teamSides;
 
-                    // If map is not yet selected in MapBan, fallback to existing slot or default
-                    if (!mapName) {
-                        if (this.config.mapPicks.picks && this.config.mapPicks.picks[i] && this.config.mapPicks.picks[i][0]) {
-                            mapName = this.config.mapPicks.picks[i][0].toLowerCase();
-                        } else {
-                            const defaultMaps = ['ascent', 'bind', 'haven', 'split', 'breeze', 'lotus', 'sunset'];
-                            mapName = defaultMaps[i % defaultMaps.length];
-                        }
+                    let isExecuted = (item.executed === true || item.done === true || item.completed === true || item.isVoted === true || item.status > 0);
+                    if (typeof item.executed === 'undefined' && typeof item.done === 'undefined' && typeof item.completed === 'undefined' && typeof item.status === 'undefined') {
+                        isExecuted = true;
                     }
 
                     if (votetype.includes('ban') || status === 1 || status === 2 || status === 20) {
                         action = 'ban';
-                    } else if (votetype.includes('pick') || votetype.includes('decider') || status === 3 || status === 4 || status === 5) {
+                    } else if (votetype.includes('pick') || votetype.includes('decider') || votetype.includes('select') || status === 3 || status === 4 || status === 5) {
                         if (side.includes('def') || side.includes('defense')) {
                             action = 'defense';
                         } else if (side.includes('atk') || side.includes('attack')) {
@@ -936,14 +940,22 @@ class fileLoader {
                         } else {
                             action = 'attack';
                         }
+                    } else if (!isExecuted) {
+                        action = 'pending';
                     } else {
-                        action = 'ban';
+                        action = 'pending';
                     }
                 }
 
-                if (mapName) {
-                    parsedPicks.push([mapName, action]);
+                // Clean map name & ensure uniqueness
+                mapName = mapName.replace(/[^a-z0-9]/g, '');
+                if (!mapName || usedMaps.has(mapName)) {
+                    const availableMap = mapPool.find(m => !usedMaps.has(m)) || 'sunset';
+                    mapName = availableMap;
                 }
+                usedMaps.add(mapName);
+
+                parsedPicks.push([mapName, action]);
             }
 
             if (parsedPicks.length > 0) {
@@ -971,9 +983,8 @@ class fileLoader {
         const picks = this.config.mapPicks.picks || [];
         for (let i = 0; i < picks.length; i++) {
             const item = picks[i];
-            if (item && item[1] !== 'ban') {
+            if (item && item[1] !== 'ban' && item[1] !== 'pending') {
                 let mapChosenByTeam = (i % 2 === 0) ? 'team_1' : 'team_2';
-                // If it's the last pick in the veto sequence, it's typically the Decider map
                 if (i === picks.length - 1) {
                     mapChosenByTeam = '';
                 }

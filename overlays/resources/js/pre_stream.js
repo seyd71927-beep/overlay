@@ -59,6 +59,15 @@ class adminPreStreamInterface {
         await this.constructMapPickInterface();
         await this.loadTournamentData();
 
+        // Series Format Switchers (BO1, BO3, BO5)
+        const formatBtns = document.querySelectorAll('.series-format-btn');
+        formatBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const fmt = e.target.getAttribute('data-format');
+                if (fmt) this.setSeriesFormat(fmt);
+            });
+        });
+
         // MapBan Automated Sync
         if (this.syncMapbanBtn) this.syncMapbanBtn.addEventListener('click', () => this.syncMapBan());
         if (this.mapbanInput) {
@@ -230,6 +239,28 @@ class adminPreStreamInterface {
         }
     }
 
+    async setSeriesFormat(format) {
+        const formData = new FormData();
+        formData.append('format', format);
+        try {
+            const res = await fetch('../set_series_format', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.status) {
+                if (typeof successAlertLowerBottom === 'function') {
+                    successAlertLowerBottom(`Updated Series Format to ${format.toUpperCase()}!`);
+                }
+                const badge = document.getElementById('current-series-badge');
+                if (badge) badge.textContent = `${format.toUpperCase()} (3 GAMES)`;
+                await this.constructMapPickInterface();
+            }
+        } catch (e) {
+            console.error('Error setting series format:', e);
+        }
+    }
+
     async constructMapPickInterface() {
         if (!this.mapPicksDiv) return;
 
@@ -284,11 +315,17 @@ class adminPreStreamInterface {
                             <span style="background: rgba(0, 242, 254, 0.2); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 800;">
                                 <i class="fa-solid fa-shield-halved"></i> ${teamName} (DEF)
                             </span>`;
-                    } else {
+                    } else if (currentAction === 'pick' || currentAction === 'picked') {
                         borderColor = 'rgba(0, 230, 118, 0.4)';
                         actionBadge = `
                             <span style="background: rgba(0, 230, 118, 0.2); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 800;">
                                 <i class="fa-solid fa-check"></i> ${teamName} PICK
+                            </span>`;
+                    } else {
+                        borderColor = 'rgba(255, 255, 255, 0.15)';
+                        actionBadge = `
+                            <span style="background: rgba(255, 255, 255, 0.08); color: #a0aec0; border: 1px solid rgba(255, 255, 255, 0.15); padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 800;">
+                                <i class="fa-solid fa-clock"></i> PENDING
                             </span>`;
                     }
 

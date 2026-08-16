@@ -256,17 +256,20 @@ async function runAllTests() {
                 bo: 3,
                 teams: ['FNC', 'SEN'],
                 bans: [
-                    ['haven', 'ban'],
                     ['ascent', 'ban'],
-                    ['lotus', 'attack'],
-                    ['breeze', 'defense'],
                     ['split', 'ban'],
-                    ['bind', 'ban'],
+                    ['breeze', 'pending'],
+                    ['haven', 'pending'],
+                    ['lotus', 'pending'],
+                    ['pearl', 'pending'],
                     ['sunset', 'attack']
                 ]
             })
         }, true);
         assert('POST /sync_mapban imports MapBan JSON payload', syncMapbanJson.status === 200 && syncMapbanJson.body.status === true);
+        const mapPicksRes = await request('GET', '/get_map_picks');
+        const countBanned = mapPicksRes.body.picks.filter(p => p[1] === 'ban').length;
+        assert('Map picks only marks voted maps as ban (2 banned)', countBanned === 2);
 
         // --- 6. DYNAMIC ROSTER SCALING (1v1, 2v2, 5v5) & PLAYER STATS ---
         console.log('\n\x1b[36m=== 6. Dynamic Roster Scaling & In-Game Player Stats ===\x1b[0m');

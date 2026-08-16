@@ -114,6 +114,11 @@ html, body {
     border-color: rgba(255, 209, 102, 0.55);
 }
 
+.map-pick-card.pending-card {
+    border-color: rgba(255, 255, 255, 0.15);
+    opacity: 0.65;
+}
+
 .map-pick-side {
     width: 100%;
     height: 38px;
@@ -226,6 +231,11 @@ html, body {
 .map-picked-by-side.decider-side {
     border-top-color: var(--overlay_gold);
     color: var(--overlay_gold);
+}
+
+.map-picked-by-side.pending-side {
+    border-top-color: rgba(255, 255, 255, 0.2);
+    color: #a0aec0;
 }
 
 .map-name-label {

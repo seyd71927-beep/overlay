@@ -265,8 +265,14 @@
                                 <i class="fa-solid fa-cloud-arrow-down"></i> MAPBAN.GG VIEWER URL / ROOM ID (FORMAT,
                                 MAPS & SIDES AUTO-DETECTED):
                             </span>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <label style="font-size: 0.72rem; color: var(--text-muted);">Auto-Sync:</label>
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <label style="font-size: 0.72rem; color: var(--text-muted);">Series Format:</label>
+                                <div style="display: flex; gap: 4px;">
+                                    <button type="button" class="btn series-format-btn" data-format="bo1" style="padding: 2px 8px; font-size: 0.72rem; background: rgba(255,255,255,0.08);">BO1</button>
+                                    <button type="button" class="btn series-format-btn" data-format="bo3" style="padding: 2px 8px; font-size: 0.72rem; background: rgba(0, 242, 254, 0.2); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.4);">BO3</button>
+                                    <button type="button" class="btn series-format-btn" data-format="bo5" style="padding: 2px 8px; font-size: 0.72rem; background: rgba(255,255,255,0.08);">BO5</button>
+                                </div>
+                                <label style="font-size: 0.72rem; color: var(--text-muted); margin-left: 6px;">Auto-Sync:</label>
                                 <select id="mapban-autosync-select" class="input-field"
                                     style="padding: 2px 6px; font-size: 0.72rem; width: 110px;">
                                     <option value="false">Manual Sync</option>
