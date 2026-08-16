@@ -1094,7 +1094,7 @@ echo =======================================================
 echo.
 echo Target Overlay Server: ${serverUrl}
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$f='%TEMP%\\zenx_bridge.ps1'; (New-Object Net.WebClient).DownloadFile('${serverUrl}/bridge.ps1',$f); & $f; Remove-Item $f -ErrorAction SilentlyContinue"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; irm '${serverUrl}/bridge.ps1' | iex"
 pause
 `;
     res.setHeader('Content-Type', 'application/x-bat');
