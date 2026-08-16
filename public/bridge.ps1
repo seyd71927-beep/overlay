@@ -18,15 +18,14 @@ if ($TargetServer -ne "") {
     $OverlayServer = $TargetServer
 }
 
-# Ensure modern TLS protocols
+# Ensure modern TLS protocols & bypass SSL certificate validation for 127.0.0.1
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]'Tls,Tls11,Tls12'
-
-# Allow local Riot Client self-signed certificate (127.0.0.1 only)
 try {
-    [System.Net.ServicePointManager]::ServerCertificateValidationCallback = {
-        param($sender, $cert, $chain, $errors)
-        return $true
-    }
+    [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+} catch {}
+try {
+    $PSDefaultParameterValues['Invoke-RestMethod:SkipCertificateCheck'] = $true
+    $PSDefaultParameterValues['Invoke-WebRequest:SkipCertificateCheck'] = $true
 } catch {}
 
 Write-Host "[Bridge] Target Overlay Server: $OverlayServer" -ForegroundColor Cyan
@@ -101,12 +100,15 @@ function Get-RiotClientCredentials {
     $localApp = [Environment]::GetFolderPath('LocalApplicationData')
     if ($localApp) {
         $pathsToCheck += (Join-Path $localApp 'Riot Games\Riot Client\Config\lockfile')
+        $pathsToCheck += (Join-Path $localApp 'VALORANT\Saved\Config\lockfile')
     }
     if ($env:LOCALAPPDATA) {
         $pathsToCheck += "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile"
+        $pathsToCheck += "$env:LOCALAPPDATA\VALORANT\Saved\Config\lockfile"
     }
     if ($env:USERPROFILE) {
         $pathsToCheck += "$env:USERPROFILE\AppData\Local\Riot Games\Riot Client\Config\lockfile"
+        $pathsToCheck += "$env:USERPROFILE\AppData\Local\VALORANT\Saved\Config\lockfile"
     }
     if ($env:PROGRAMDATA) {
         $pathsToCheck += "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
@@ -246,26 +248,9 @@ while ($true) {
         # 2. Query Local Riot Client Chat Presences
         $sessionUrl = "https://127.0.0.1:$port/chat/v4/presences"
         $presences = $null
-        $isLoggedOut = $false
-
         try {
-            $presences = Invoke-RestMethod -Uri $sessionUrl -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction Stop
-        } catch {
-            if ($_.Exception.Response -and ($_.Exception.Response.StatusCode.value__ -eq 404 -or $_.Exception.Response.StatusCode.value__ -eq 401 -or $_.Exception.Response.StatusCode.value__ -eq 503)) {
-                $isLoggedOut = $true
-            }
-        }
-
-        if ($isLoggedOut -or (-not $presences -or -not $presences.presences)) {
-            $valProc = Get-Process -Name "VALORANT-Win64-Shipping", "VALORANT" -ErrorAction SilentlyContinue
-            if ($valProc) {
-                Show-Status "[VALORANT Launching] Game is starting up. Loading player session..." "Yellow"
-            } else {
-                Show-Status "[Riot Client Open] Please SIGN IN to your Riot Account and launch VALORANT to begin sync..." "Yellow"
-            }
-            Start-Sleep -Seconds 2
-            continue
-        }
+            $presences = Invoke-RestMethod -Uri $sessionUrl -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
+        } catch {}
 
         $loopState = "MENUS"
         $detectedMap = "ascent"
@@ -409,8 +394,13 @@ while ($true) {
             }
         }
 
-        if (-not $foundValorantPresence) {
-            Show-Status "[Riot Connected] Signed in! Please launch VALORANT on this PC..." "Cyan"
+        if (-not $foundValorantPresence -and -not $localPuuid -and $loopState -eq "MENUS") {
+            $valProc = Get-Process -Name "VALORANT-Win64-Shipping", "VALORANT" -ErrorAction SilentlyContinue
+            if ($valProc) {
+                Show-Status "[VALORANT Launching] Game process found. Reading session data..." "Yellow"
+            } else {
+                Show-Status "[Riot Client Open] Please SIGN IN to your Riot Account and launch VALORANT to begin sync..." "Yellow"
+            }
             Start-Sleep -Seconds 2
             continue
         }
