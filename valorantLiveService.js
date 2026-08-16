@@ -251,13 +251,26 @@ class ValorantLiveService {
                         const rawPrivate = Buffer.from(p.private, 'base64').toString('utf8');
                         const priv = JSON.parse(rawPrivate);
 
-                        if (priv.sessionLoopState === 'INGAME') {
+                        const loopState = String(
+                            priv.sessionLoopState || 
+                            (priv.matchPresenceData && priv.matchPresenceData.sessionLoopState) || 
+                            (priv.partyPresenceData && priv.partyPresenceData.partyOwnerSessionLoopState) || 
+                            ''
+                        ).toUpperCase();
+
+                        if (loopState === 'INGAME' || loopState === 'IN_GAME' || loopState === 'SPECTATING' || loopState === 'OBSERVING') {
                             inGameMatch = true;
                             this.inGame = true;
 
-                            const t1Score = parseInt(priv.partyOwnerMatchScore) || 0;
-                            const t2Score = parseInt(priv.partyOwnerMatchScoreEnemy) || 0;
-                            const rawMap = (priv.matchMap || '').toLowerCase();
+                            const t1Score = parseInt(priv.partyOwnerMatchScoreAllyTeam) || parseInt(priv.partyOwnerMatchScore) || parseInt(priv.matchScoreTeam1) || (priv.partyPresenceData ? parseInt(priv.partyPresenceData.partyOwnerMatchScoreAllyTeam) : 0) || 0;
+                            const t2Score = parseInt(priv.partyOwnerMatchScoreEnemyTeam) || parseInt(priv.partyOwnerMatchScoreEnemy) || parseInt(priv.matchScoreTeam2) || (priv.partyPresenceData ? parseInt(priv.partyPresenceData.partyOwnerMatchScoreEnemyTeam) : 0) || 0;
+                            
+                            const rawMap = String(
+                                (priv.matchPresenceData && priv.matchPresenceData.matchMap) || 
+                                (priv.partyPresenceData && priv.partyPresenceData.partyOwnerMatchMap) || 
+                                priv.matchMap || 
+                                ''
+                            ).toLowerCase();
 
                             let detectedMap = 'sunset';
                             for (const key in MAP_PATH_MAP) {
@@ -268,9 +281,9 @@ class ValorantLiveService {
                             }
 
                             const roundNum = t1Score + t2Score + 1;
-                            const isTournament = (priv.provisioningFlow === 'CustomGame');
+                            const isTournament = (priv.provisioningFlow === 'CustomGame' || (priv.partyPresenceData && priv.partyPresenceData.partyOwnerProvisioningFlow === 'CustomGame'));
 
-                            this.currentStatusText = `LIVE ${isTournament ? 'TOURNAMENT' : 'MATCH'}: ${detectedMap.toUpperCase()} | Round ${roundNum} (${t1Score} - ${t2Score})`;
+                            this.currentStatusText = `LIVE ${isTournament ? 'SPECTATOR' : 'MATCH'}: ${detectedMap.toUpperCase()} | Round ${roundNum} (${t1Score} - ${t2Score})`;
 
                             // Update Game State in DataBus
                             if (this.dataBus && this.dataBus.config && this.dataBus.config.gameState) {
@@ -292,13 +305,13 @@ class ValorantLiveService {
                             // Extract 10-Player Names, Clan Tags, and Agents
                             await this.extractLivePlayersAndTeams();
                             break;
-                        } else if (priv.sessionLoopState === 'PREGAME') {
+                        } else if (loopState === 'PREGAME' || loopState === 'AGENT_SELECT') {
                             inGameMatch = true;
                             this.inGame = false;
                             this.currentStatusText = 'Tournament Lobby: Agent Selection Active (Pre-Game)';
                             await this.extractLivePlayersAndTeams();
                             break;
-                        } else if (priv.sessionLoopState === 'MENUS') {
+                        } else if (loopState === 'MENUS') {
                             this.inGame = false;
                             this.currentStatusText = 'VALORANT Online (In Menus / Custom Lobby)';
                         }
