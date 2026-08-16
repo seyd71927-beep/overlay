@@ -94,69 +94,9 @@ $mapMap = @{
 }
 
 function Get-RiotClientCredentials {
-    # 1. Direct environment and user profile paths
-    $pathsToCheck = @()
+    $candidates = @()
 
-    $localApp = [Environment]::GetFolderPath('LocalApplicationData')
-    if ($localApp) {
-        $pathsToCheck += (Join-Path $localApp 'Riot Games\Riot Client\Config\lockfile')
-        $pathsToCheck += (Join-Path $localApp 'VALORANT\Saved\Config\lockfile')
-    }
-    if ($env:LOCALAPPDATA) {
-        $pathsToCheck += "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile"
-        $pathsToCheck += "$env:LOCALAPPDATA\VALORANT\Saved\Config\lockfile"
-    }
-    if ($env:USERPROFILE) {
-        $pathsToCheck += "$env:USERPROFILE\AppData\Local\Riot Games\Riot Client\Config\lockfile"
-        $pathsToCheck += "$env:USERPROFILE\AppData\Local\VALORANT\Saved\Config\lockfile"
-    }
-    if ($env:PROGRAMDATA) {
-        $pathsToCheck += "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
-    }
-
-    # Search all user accounts on drives C, D, E, F
-    foreach ($drive in @("C", "D", "E", "F")) {
-        $usersDir = "$drive`:\Users"
-        if (Test-Path $usersDir) {
-            $userFolders = Get-ChildItem -Path $usersDir -Directory -ErrorAction SilentlyContinue
-            if ($userFolders) {
-                foreach ($u in $userFolders) {
-                    $candidate = Join-Path $u.FullName 'AppData\Local\Riot Games\Riot Client\Config\lockfile'
-                    $pathsToCheck += $candidate
-                }
-            }
-        }
-    }
-
-    foreach ($path in $pathsToCheck) {
-        if (Test-Path $path) {
-            $rawContent = $null
-            try {
-                $fileStream = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
-                $sr = New-Object System.IO.StreamReader($fileStream)
-                $rawContent = $sr.ReadToEnd().Trim()
-                $sr.Close()
-                $fileStream.Close()
-            } catch {
-                try {
-                    $rawContent = (Get-Content -Path $path -Raw -ErrorAction SilentlyContinue).Trim()
-                } catch {}
-            }
-
-            if ($rawContent) {
-                $parts = $rawContent -split ':'
-                if ($parts.Length -ge 5) {
-                    return @{
-                        Port = $parts[2]
-                        Password = $parts[3]
-                        Source = "Lockfile ($path)"
-                    }
-                }
-            }
-        }
-    }
-
-    # 2. Direct Process Inspection Fallback (WMI / CIM)
+    # 1. Direct Process Inspection (VALORANT & Riot Client)
     $procQuery = "SELECT Name, CommandLine FROM Win32_Process WHERE Name LIKE '%Riot%' OR Name LIKE '%VALORANT%'"
     $procs = @()
     try {
@@ -182,7 +122,7 @@ function Get-RiotClientCredentials {
                 }
 
                 if ($foundPort -and $foundToken) {
-                    return @{
+                    $candidates += @{
                         Port = $foundPort
                         Password = $foundToken
                         Source = "Process ($($proc.Name))"
@@ -190,6 +130,87 @@ function Get-RiotClientCredentials {
                 }
             }
         }
+    }
+
+    # 2. Lockfile paths (VALORANT lockfile prioritized, then Riot Client lockfile)
+    $localApp = [Environment]::GetFolderPath('LocalApplicationData')
+    $pathsToCheck = @()
+    if ($localApp) {
+        $pathsToCheck += (Join-Path $localApp 'VALORANT\Saved\Config\lockfile')
+        $pathsToCheck += (Join-Path $localApp 'Riot Games\Riot Client\Config\lockfile')
+    }
+    if ($env:LOCALAPPDATA) {
+        $pathsToCheck += "$env:LOCALAPPDATA\VALORANT\Saved\Config\lockfile"
+        $pathsToCheck += "$env:LOCALAPPDATA\Riot Games\Riot Client\Config\lockfile"
+    }
+    if ($env:USERPROFILE) {
+        $pathsToCheck += "$env:USERPROFILE\AppData\Local\VALORANT\Saved\Config\lockfile"
+        $pathsToCheck += "$env:USERPROFILE\AppData\Local\Riot Games\Riot Client\Config\lockfile"
+    }
+    if ($env:PROGRAMDATA) {
+        $pathsToCheck += "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
+    }
+
+    foreach ($drive in @("C", "D", "E", "F")) {
+        $usersDir = "$drive`:\Users"
+        if (Test-Path $usersDir) {
+            $userFolders = Get-ChildItem -Path $usersDir -Directory -ErrorAction SilentlyContinue
+            if ($userFolders) {
+                foreach ($u in $userFolders) {
+                    $candidateVal = Join-Path $u.FullName 'AppData\Local\VALORANT\Saved\Config\lockfile'
+                    $candidateRiot = Join-Path $u.FullName 'AppData\Local\Riot Games\Riot Client\Config\lockfile'
+                    $pathsToCheck += $candidateVal
+                    $pathsToCheck += $candidateRiot
+                }
+            }
+        }
+    }
+
+    foreach ($path in $pathsToCheck) {
+        if (Test-Path $path) {
+            $rawContent = $null
+            try {
+                $fileStream = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                $sr = New-Object System.IO.StreamReader($fileStream)
+                $rawContent = $sr.ReadToEnd().Trim()
+                $sr.Close()
+                $fileStream.Close()
+            } catch {
+                try {
+                    $rawContent = (Get-Content -Path $path -Raw -ErrorAction SilentlyContinue).Trim()
+                } catch {}
+            }
+
+            if ($rawContent) {
+                $parts = $rawContent -split ':'
+                if ($parts.Length -ge 5) {
+                    $candidates += @{
+                        Port = $parts[2]
+                        Password = $parts[3]
+                        Source = "Lockfile ($path)"
+                    }
+                }
+            }
+        }
+    }
+
+    # 3. Test each candidate to find the active responding session
+    foreach ($cand in $candidates) {
+        try {
+            $p = $cand.Port
+            $pw = $cand.Password
+            $auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("riot:$pw"))
+            $h = @{ "Authorization" = "Basic $auth" }
+            $session = Invoke-RestMethod -Uri "https://127.0.0.1:$p/chat/v1/session" -Method GET -Headers $h -TimeoutSec 2 -ErrorAction SilentlyContinue
+            if ($session -and $session.puuid) {
+                return $cand
+            }
+        } catch {}
+    }
+
+    # Fallback to first candidate if active check had timeout
+    if ($candidates.Count -gt 0) {
+        return $candidates[0]
     }
 
     return $null
