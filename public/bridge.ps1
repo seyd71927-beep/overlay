@@ -282,7 +282,7 @@ while ($true) {
         $team2Players = @()
         $foundValorantPresence = $false
 
-        # 3. Direct Core-Game Check (Live In-Game Match Inspection)
+        # 3. Direct Core-Game & Pregame Check (Live Match & Agent Select Inspection)
         if ($localPuuid) {
             try {
                 $corePlayer = Invoke-RestMethod -Uri "https://127.0.0.1:$port/core-game/v1/players/$localPuuid" -Method GET -Headers $headers -TimeoutSec 2 -ErrorAction SilentlyContinue
@@ -342,6 +342,24 @@ while ($true) {
                                     is_dead = $false
                                 }
                                 if ($isBlue) { $team1Players += $pObj } else { $team2Players += $pObj }
+                            }
+                        }
+                    }
+                } else {
+                    # Check Pregame Lobby (Agent Selection / Map Pick)
+                    $pregamePlayer = Invoke-RestMethod -Uri "https://127.0.0.1:$port/pregame/v1/players/$localPuuid" -Method GET -Headers $headers -TimeoutSec 2 -ErrorAction SilentlyContinue
+                    if ($pregamePlayer -and $pregamePlayer.MatchID) {
+                        $loopState = "PREGAME"
+                        $pregameData = Invoke-RestMethod -Uri "https://127.0.0.1:$port/pregame/v1/matches/$($pregamePlayer.MatchID)" -Method GET -Headers $headers -TimeoutSec 3 -ErrorAction SilentlyContinue
+                        if ($pregameData) {
+                            if ($pregameData.MapID) {
+                                $rawMap = $pregameData.MapID.ToString().ToLower()
+                                foreach ($key in $mapMap.Keys) {
+                                    if ($rawMap.Contains($key)) {
+                                        $detectedMap = $mapMap[$key]
+                                        break
+                                    }
+                                }
                             }
                         }
                     }
