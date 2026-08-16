@@ -472,7 +472,10 @@ class ValorantLiveService {
                 resolve(null);
             });
 
-            req.on('error', () => resolve(null));
+            req.on('error', () => {
+                this.localLockfile = null;
+                resolve(null);
+            });
 
             if (body) {
                 req.write(typeof body === 'string' ? body : JSON.stringify(body));
