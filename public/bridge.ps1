@@ -151,20 +151,7 @@ function Get-RiotClientCredentials {
         $pathsToCheck += "$env:PROGRAMDATA\Riot Games\Metadata\valorant.live\lockfile"
     }
 
-    foreach ($drive in @("C", "D", "E", "F")) {
-        $usersDir = "$drive`:\Users"
-        if (Test-Path $usersDir) {
-            $userFolders = Get-ChildItem -Path $usersDir -Directory -ErrorAction SilentlyContinue
-            if ($userFolders) {
-                foreach ($u in $userFolders) {
-                    $candidateVal = Join-Path $u.FullName 'AppData\Local\VALORANT\Saved\Config\lockfile'
-                    $candidateRiot = Join-Path $u.FullName 'AppData\Local\Riot Games\Riot Client\Config\lockfile'
-                    $pathsToCheck += $candidateVal
-                    $pathsToCheck += $candidateRiot
-                }
-            }
-        }
-    }
+
 
     foreach ($path in $pathsToCheck) {
         if (Test-Path $path) {
@@ -393,22 +380,24 @@ while ($true) {
                             if ($loopState -ne "INGAME" -or $isSelf) {
                                 $loopState = "INGAME"
                                 
-                                if ($priv.partyOwnerMatchScoreAllyTeam -ne $null) {
+                                if ($priv.partyOwnerMatchScoreTeam -ne $null) {
+                                    $t1Score = [int]$priv.partyOwnerMatchScoreTeam
+                                } elseif ($priv.partyOwnerMatchScoreAllyTeam -ne $null) {
                                     $t1Score = [int]$priv.partyOwnerMatchScoreAllyTeam
-                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreAllyTeam -ne $null) {
-                                    $t1Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreAllyTeam
+                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreTeam -ne $null) {
+                                    $t1Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreTeam
                                 } elseif ($priv.partyOwnerMatchScore -ne $null) {
                                     $t1Score = [int]$priv.partyOwnerMatchScore
                                 } elseif ($priv.matchScoreTeam1 -ne $null) {
                                     $t1Score = [int]$priv.matchScoreTeam1
                                 }
 
-                                if ($priv.partyOwnerMatchScoreEnemyTeam -ne $null) {
-                                    $t2Score = [int]$priv.partyOwnerMatchScoreEnemyTeam
-                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreEnemyTeam -ne $null) {
-                                    $t2Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreEnemyTeam
-                                } elseif ($priv.partyOwnerMatchScoreEnemy -ne $null) {
+                                if ($priv.partyOwnerMatchScoreEnemy -ne $null) {
                                     $t2Score = [int]$priv.partyOwnerMatchScoreEnemy
+                                } elseif ($priv.partyOwnerMatchScoreEnemyTeam -ne $null) {
+                                    $t2Score = [int]$priv.partyOwnerMatchScoreEnemyTeam
+                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreEnemy -ne $null) {
+                                    $t2Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreEnemy
                                 } elseif ($priv.matchScoreTeam2 -ne $null) {
                                     $t2Score = [int]$priv.matchScoreTeam2
                                 }
@@ -416,7 +405,9 @@ while ($true) {
                                 $roundNum = $t1Score + $t2Score + 1
 
                                 $rawMap = ""
-                                if ($priv.matchPresenceData -and $priv.matchPresenceData.matchMap) {
+                                if ($priv.partyOwnerMatchMap) {
+                                    $rawMap = $priv.partyOwnerMatchMap.ToString().ToLower()
+                                } elseif ($priv.matchPresenceData -and $priv.matchPresenceData.matchMap) {
                                     $rawMap = $priv.matchPresenceData.matchMap.ToString().ToLower()
                                 } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchMap) {
                                     $rawMap = $priv.partyPresenceData.partyOwnerMatchMap.ToString().ToLower()
@@ -441,7 +432,7 @@ while ($true) {
             }
         }
 
-        if (-not $foundValorantPresence -and -not $localPuuid -and $loopState -eq "MENUS") {
+        if (-not $foundValorantPresence -and -not $localPuuid -and $loopState -eq "MENUS" -and -not $creds) {
             $valProc = Get-Process -Name "VALORANT-Win64-Shipping", "VALORANT" -ErrorAction SilentlyContinue
             if ($valProc) {
                 Show-Status "[VALORANT Launching] Game process found. Reading session data..." "Yellow"
