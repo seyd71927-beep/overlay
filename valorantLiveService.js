@@ -285,8 +285,9 @@ class ValorantLiveService {
 
                             this.currentStatusText = `LIVE ${isTournament ? 'SPECTATOR' : 'MATCH'}: ${detectedMap.toUpperCase()} | Round ${roundNum} (${t1Score} - ${t2Score})`;
 
-                            // Update Game State in DataBus
-                            if (this.dataBus && this.dataBus.config && this.dataBus.config.gameState) {
+                            // Update Game State in DataBus (Only in Automatic Mode)
+                            const isAutoMode = this.autoFetchEnabled && (this.dataBus.getOperatorMode ? this.dataBus.getOperatorMode() === 'automatic' : false);
+                            if (isAutoMode && this.dataBus && this.dataBus.config && this.dataBus.config.gameState) {
                                 this.dataBus.config.gameState.round_number = roundNum;
                                 this.dataBus.config.gameState.team_1_score = t1Score;
                                 this.dataBus.config.gameState.team_2_score = t2Score;
@@ -516,7 +517,8 @@ class ValorantLiveService {
                 this.inGame = true;
                 this.currentStatusText = `CLOUD API LIVE: ${mapName.toUpperCase()} | Round ${roundNum} (${t1Score}-${t2Score})`;
 
-                if (this.dataBus && this.dataBus.config && this.dataBus.config.gameState) {
+                const isAutoMode = this.autoFetchEnabled && (this.dataBus.getOperatorMode ? this.dataBus.getOperatorMode() === 'automatic' : false);
+                if (isAutoMode && this.dataBus && this.dataBus.config && this.dataBus.config.gameState) {
                     this.dataBus.config.gameState.round_number = roundNum;
                     this.dataBus.config.gameState.team_1_score = t1Score;
                     this.dataBus.config.gameState.team_2_score = t2Score;
