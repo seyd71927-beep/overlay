@@ -78,15 +78,25 @@ $agentMap = @{
 $mapMap = @{
     "ascent" = "ascent"
     "bonsai" = "split"
+    "split" = "split"
     "canyon" = "fracture"
+    "fracture" = "fracture"
     "duality" = "bind"
+    "bind" = "bind"
     "foxtrot" = "breeze"
+    "breeze" = "breeze"
     "triad" = "haven"
+    "haven" = "haven"
     "port" = "icebox"
+    "icebox" = "icebox"
     "jam" = "lotus"
+    "lotus" = "lotus"
     "pitt" = "pearl"
+    "pearl" = "pearl"
     "juliett" = "sunset"
+    "sunset" = "sunset"
     "infinity" = "abyss"
+    "abyss" = "abyss"
     "hurm" = "district"
     "kasbah" = "kasbah"
     "drift" = "drift"
@@ -368,15 +378,15 @@ while ($true) {
                         if ($isSelf -or -not $activePriv) { $activePriv = $priv }
                         
                         $stateStr = ""
-                        if ($priv.matchPresenceData -and $priv.matchPresenceData.sessionLoopState) {
+                        if ($priv.sessionLoopState) {
+                            $stateStr = $priv.sessionLoopState.ToString().ToUpper()
+                        } elseif ($priv.matchPresenceData -and $priv.matchPresenceData.sessionLoopState) {
                             $stateStr = $priv.matchPresenceData.sessionLoopState.ToString().ToUpper()
                         } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerSessionLoopState) {
                             $stateStr = $priv.partyPresenceData.partyOwnerSessionLoopState.ToString().ToUpper()
-                        } elseif ($priv.sessionLoopState) {
-                            $stateStr = $priv.sessionLoopState.ToString().ToUpper()
                         }
 
-                        if ($stateStr -eq "INGAME" -or $stateStr -eq "IN_GAME" -or $stateStr -eq "SPECTATING" -or $stateStr -eq "OBSERVING") {
+                        if ($stateStr -eq "INGAME" -or $stateStr -eq "IN_GAME" -or $stateStr -eq "SPECTATING" -or $stateStr -eq "OBSERVING" -or ($priv.partyOwnerMatchMap -ne $null)) {
                             $loopState = "INGAME"
                             
                             if ($priv.partyOwnerMatchScoreTeam -ne $null) {
@@ -403,22 +413,10 @@ while ($true) {
 
                             $roundNum = $t1Score + $t2Score + 1
 
-                            $rawMap = ""
-                            if ($priv.partyOwnerMatchMap) {
-                                $rawMap = $priv.partyOwnerMatchMap.ToString().ToLower()
-                            } elseif ($priv.matchMap) {
-                                $rawMap = $priv.matchMap.ToString().ToLower()
-                            } elseif ($priv.matchPresenceData -and $priv.matchPresenceData.matchMap) {
-                                $rawMap = $priv.matchPresenceData.matchMap.ToString().ToLower()
-                            } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchMap) {
-                                $rawMap = $priv.partyPresenceData.partyOwnerMatchMap.ToString().ToLower()
-                            } elseif ($priv.customGameData -and $priv.customGameData.mapId) {
-                                $rawMap = $priv.customGameData.mapId.ToString().ToLower()
-                            }
-
-                            if ($rawMap) {
+                            if ($rawPriv) {
+                                $rawPrivLower = $rawPriv.ToLower()
                                 foreach ($key in $mapMap.Keys) {
-                                    if ($rawMap.Contains($key)) {
+                                    if ($rawPrivLower.Contains($key)) {
                                         $detectedMap = $mapMap[$key]
                                         break
                                     }
