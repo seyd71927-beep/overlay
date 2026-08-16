@@ -119,10 +119,15 @@ class helValorantGameScore {
                     this.rightTeamGamesWon.innerHTML += `<div class="map-won-point ${i <= team2WonGames ? 'full-point' : ''}"></div>`;
                 }
 
+                if (json.switch_sides !== undefined) {
+                    this._switchSides = !!json.switch_sides;
+                }
+
                 this.leftTeamPoints = json.team_1_score || 0;
                 this.rightTeamPoints = json.team_2_score || 0;
                 this.updateTeamScores(this.leftTeamPoints, this.rightTeamPoints);
                 this.updateRoundNumer(json.round_number || (this.leftTeamPoints + this.rightTeamPoints + 1));
+                this.switchSides();
             }
         } catch (e) {
             console.error('Error init gameScore:', e);
@@ -236,9 +241,7 @@ class helValorantGameScore {
 
     updateRoundNumer(newRoundNumber) {
         if (newRoundNumber) this.roundCounter = newRoundNumber;
-        this._switchSides = (this.roundCounter > 12 && this.roundCounter <= 24) || (this.roundCounter > 24 && this.roundCounter % 2 === 0);
         if (this.roundCounterElement) this.roundCounterElement.textContent = `ROUND ${this.roundCounter}`;
-        this.switchSides();
     }
 
     switchSides() {
