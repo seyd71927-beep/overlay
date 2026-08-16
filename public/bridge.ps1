@@ -377,46 +377,46 @@ while ($true) {
                         }
 
                         if ($stateStr -eq "INGAME" -or $stateStr -eq "IN_GAME" -or $stateStr -eq "SPECTATING" -or $stateStr -eq "OBSERVING") {
-                            if ($loopState -ne "INGAME" -or $isSelf) {
-                                $loopState = "INGAME"
-                                
-                                if ($priv.partyOwnerMatchScoreTeam -ne $null) {
-                                    $t1Score = [int]$priv.partyOwnerMatchScoreTeam
-                                } elseif ($priv.partyOwnerMatchScoreAllyTeam -ne $null) {
-                                    $t1Score = [int]$priv.partyOwnerMatchScoreAllyTeam
-                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreTeam -ne $null) {
-                                    $t1Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreTeam
-                                } elseif ($priv.partyOwnerMatchScore -ne $null) {
-                                    $t1Score = [int]$priv.partyOwnerMatchScore
-                                } elseif ($priv.matchScoreTeam1 -ne $null) {
-                                    $t1Score = [int]$priv.matchScoreTeam1
-                                }
+                            $loopState = "INGAME"
+                            
+                            if ($priv.partyOwnerMatchScoreTeam -ne $null) {
+                                $t1Score = [int]$priv.partyOwnerMatchScoreTeam
+                            } elseif ($priv.partyOwnerMatchScoreAllyTeam -ne $null) {
+                                $t1Score = [int]$priv.partyOwnerMatchScoreAllyTeam
+                            } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreTeam -ne $null) {
+                                $t1Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreTeam
+                            } elseif ($priv.partyOwnerMatchScore -ne $null) {
+                                $t1Score = [int]$priv.partyOwnerMatchScore
+                            } elseif ($priv.matchScoreTeam1 -ne $null) {
+                                $t1Score = [int]$priv.matchScoreTeam1
+                            }
 
-                                if ($priv.partyOwnerMatchScoreEnemy -ne $null) {
-                                    $t2Score = [int]$priv.partyOwnerMatchScoreEnemy
-                                } elseif ($priv.partyOwnerMatchScoreEnemyTeam -ne $null) {
-                                    $t2Score = [int]$priv.partyOwnerMatchScoreEnemyTeam
-                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreEnemy -ne $null) {
-                                    $t2Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreEnemy
-                                } elseif ($priv.matchScoreTeam2 -ne $null) {
-                                    $t2Score = [int]$priv.matchScoreTeam2
-                                }
+                            if ($priv.partyOwnerMatchScoreEnemy -ne $null) {
+                                $t2Score = [int]$priv.partyOwnerMatchScoreEnemy
+                            } elseif ($priv.partyOwnerMatchScoreEnemyTeam -ne $null) {
+                                $t2Score = [int]$priv.partyOwnerMatchScoreEnemyTeam
+                            } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchScoreEnemy -ne $null) {
+                                $t2Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreEnemy
+                            } elseif ($priv.matchScoreTeam2 -ne $null) {
+                                $t2Score = [int]$priv.matchScoreTeam2
+                            }
 
-                                $roundNum = $t1Score + $t2Score + 1
+                            $roundNum = $t1Score + $t2Score + 1
 
-                                $rawMap = ""
-                                if ($priv.partyOwnerMatchMap) {
-                                    $rawMap = $priv.partyOwnerMatchMap.ToString().ToLower()
-                                } elseif ($priv.matchPresenceData -and $priv.matchPresenceData.matchMap) {
-                                    $rawMap = $priv.matchPresenceData.matchMap.ToString().ToLower()
-                                } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchMap) {
-                                    $rawMap = $priv.partyPresenceData.partyOwnerMatchMap.ToString().ToLower()
-                                } elseif ($priv.matchMap) {
-                                    $rawMap = $priv.matchMap.ToString().ToLower()
-                                } elseif ($priv.customGameData -and $priv.customGameData.mapId) {
-                                    $rawMap = $priv.customGameData.mapId.ToString().ToLower()
-                                }
+                            $rawMap = ""
+                            if ($priv.partyOwnerMatchMap) {
+                                $rawMap = $priv.partyOwnerMatchMap.ToString().ToLower()
+                            } elseif ($priv.matchMap) {
+                                $rawMap = $priv.matchMap.ToString().ToLower()
+                            } elseif ($priv.matchPresenceData -and $priv.matchPresenceData.matchMap) {
+                                $rawMap = $priv.matchPresenceData.matchMap.ToString().ToLower()
+                            } elseif ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerMatchMap) {
+                                $rawMap = $priv.partyPresenceData.partyOwnerMatchMap.ToString().ToLower()
+                            } elseif ($priv.customGameData -and $priv.customGameData.mapId) {
+                                $rawMap = $priv.customGameData.mapId.ToString().ToLower()
+                            }
 
+                            if ($rawMap) {
                                 foreach ($key in $mapMap.Keys) {
                                     if ($rawMap.Contains($key)) {
                                         $detectedMap = $mapMap[$key]
