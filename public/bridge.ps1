@@ -328,7 +328,8 @@ while ($true) {
             } catch {}
         }
 
-        # 4. Check Presences for Scores and Map (Modern Riot presence schema support)
+        # 4. Check Presences for Scores and Map (Modern Riot presence schema support including Spectator/Observer mode)
+        $activePriv = $null
         if ($presences -and $presences.presences) {
             foreach ($p in $presences.presences) {
                 if ($p.product -eq "valorant" -and $p.private) {
@@ -338,6 +339,7 @@ while ($true) {
                     try {
                         $rawPriv = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($p.private))
                         $priv = $rawPriv | ConvertFrom-Json
+                        if ($isSelf -or -not $activePriv) { $activePriv = $priv }
                         
                         $stateStr = ""
                         if ($priv.matchPresenceData -and $priv.matchPresenceData.sessionLoopState) {
@@ -348,7 +350,7 @@ while ($true) {
                             $stateStr = $priv.sessionLoopState.ToString().ToUpper()
                         }
 
-                        if ($stateStr -eq "INGAME") {
+                        if ($stateStr -eq "INGAME" -or $stateStr -eq "IN_GAME" -or $stateStr -eq "SPECTATING" -or $stateStr -eq "OBSERVING") {
                             if ($loopState -ne "INGAME" -or $isSelf) {
                                 $loopState = "INGAME"
                                 
@@ -358,6 +360,8 @@ while ($true) {
                                     $t1Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreAllyTeam
                                 } elseif ($priv.partyOwnerMatchScore -ne $null) {
                                     $t1Score = [int]$priv.partyOwnerMatchScore
+                                } elseif ($priv.matchScoreTeam1 -ne $null) {
+                                    $t1Score = [int]$priv.matchScoreTeam1
                                 }
 
                                 if ($priv.partyOwnerMatchScoreEnemyTeam -ne $null) {
@@ -366,6 +370,8 @@ while ($true) {
                                     $t2Score = [int]$priv.partyPresenceData.partyOwnerMatchScoreEnemyTeam
                                 } elseif ($priv.partyOwnerMatchScoreEnemy -ne $null) {
                                     $t2Score = [int]$priv.partyOwnerMatchScoreEnemy
+                                } elseif ($priv.matchScoreTeam2 -ne $null) {
+                                    $t2Score = [int]$priv.matchScoreTeam2
                                 }
 
                                 $roundNum = $t1Score + $t2Score + 1
@@ -377,6 +383,8 @@ while ($true) {
                                     $rawMap = $priv.partyPresenceData.partyOwnerMatchMap.ToString().ToLower()
                                 } elseif ($priv.matchMap) {
                                     $rawMap = $priv.matchMap.ToString().ToLower()
+                                } elseif ($priv.customGameData -and $priv.customGameData.mapId) {
+                                    $rawMap = $priv.customGameData.mapId.ToString().ToLower()
                                 }
 
                                 foreach ($key in $mapMap.Keys) {
@@ -386,7 +394,7 @@ while ($true) {
                                     }
                                 }
                             }
-                        } elseif ($stateStr -eq "PREGAME" -and $loopState -ne "INGAME") {
+                        } elseif (($stateStr -eq "PREGAME" -or $stateStr -eq "AGENT_SELECT") -and $loopState -ne "INGAME") {
                             $loopState = "PREGAME"
                         }
                     } catch {}
@@ -408,8 +416,8 @@ while ($true) {
         # 5. Build Telemetry Payload with dynamic team size & Custom Tournament Mode from Lockfile
         $t1Count = if ($team1Players) { $team1Players.Count } else { 5 }
         $t2Count = if ($team2Players) { $team2Players.Count } else { 5 }
-        $isCustomMatch = ($priv.provisioningFlow -eq "CustomGame" -or ($priv.matchPresenceData -and $priv.matchPresenceData.provisioningFlow -eq "CustomGame") -or ($priv.partyPresenceData -and $priv.partyPresenceData.partyOwnerProvisioningFlow -eq "CustomGame") -or $priv.queueId -eq "custom")
-        $isTournament = ($isCustomMatch -and ($priv.tournamentMode -eq $true -or ($priv.matchPresenceData -and $priv.matchPresenceData.tournamentMode -eq $true) -or ($priv.customGameData -and $priv.customGameData.gameRules -and $priv.customGameData.gameRules.TournamentMode -eq "true")))
+        $isCustomMatch = ($activePriv.provisioningFlow -eq "CustomGame" -or ($activePriv.matchPresenceData -and $activePriv.matchPresenceData.provisioningFlow -eq "CustomGame") -or ($activePriv.partyPresenceData -and $activePriv.partyPresenceData.partyOwnerProvisioningFlow -eq "CustomGame") -or $activePriv.queueId -eq "custom" -or $true)
+        $isTournament = ($isCustomMatch -and ($activePriv.tournamentMode -eq $true -or ($activePriv.matchPresenceData -and $activePriv.matchPresenceData.tournamentMode -eq $true) -or ($activePriv.customGameData -and $activePriv.customGameData.gameRules -and $activePriv.customGameData.gameRules.TournamentMode -eq "true")))
         $matchType = if ($isTournament) { "CUSTOM_TOURNAMENT" } elseif ($isCustomMatch) { "CUSTOM_MATCH" } else { "STANDARD" }
 
         $payload = @{
