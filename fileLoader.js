@@ -921,12 +921,14 @@ class fileLoader {
                     let teamPickedSide = item.teamPickedSide;
                     let teamSides = item.teamSides;
 
-                    let isExecuted = (item.executed === true || item.done === true || item.completed === true || item.isVoted === true || item.status > 0);
+                    let isExecuted = (item.executed === true || item.done === true || item.completed === true || item.isVoted === true || status > 0);
                     if (typeof item.executed === 'undefined' && typeof item.done === 'undefined' && typeof item.completed === 'undefined' && typeof item.status === 'undefined') {
                         isExecuted = true;
                     }
 
-                    if (votetype.includes('ban') || status === 1 || status === 2 || status === 20) {
+                    if (!isExecuted) {
+                        action = 'pending';
+                    } else if (votetype.includes('ban') || status === 1 || status === 2 || status === 20) {
                         action = 'ban';
                     } else if (votetype.includes('pick') || votetype.includes('decider') || votetype.includes('select') || status === 3 || status === 4 || status === 5) {
                         if (side.includes('def') || side.includes('defense')) {
@@ -940,8 +942,6 @@ class fileLoader {
                         } else {
                             action = 'attack';
                         }
-                    } else if (!isExecuted) {
-                        action = 'pending';
                     } else {
                         action = 'pending';
                     }
