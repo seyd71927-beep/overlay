@@ -2,7 +2,7 @@
     "player_0": {
         "token": "yAv2hT4URx4U",
         "is_registered": true,
-        "last_updated": 1786629266904,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[FNC] Boaster",
             "agent": "omen",
@@ -23,22 +23,23 @@
             "name": "[FNC] Boaster",
             "tag": "igl",
             "riot_id": "Acn s1ck #igl",
-            "kills": 24,
-            "deaths": 11,
-            "assists": 5,
+            "kills": 9,
+            "deaths": 2,
+            "assists": 3,
             "score": 310,
             "alive": true,
             "ult_points": 7,
             "ult_max": 7,
             "slot": 0,
-            "character": "Jett",
-            "armor": 50
+            "character": "jett",
+            "armor": 50,
+            "hp": 100
         }
     },
     "player_1": {
         "token": "BU5QwbxxTUxJ",
         "is_registered": true,
-        "last_updated": 1786629266904,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[FNC] Derke",
             "agent": "jett",
@@ -60,14 +61,18 @@
             "tag": "cris",
             "riot_id": "Acn ronny #cris",
             "slot": 1,
-            "character": "Sova",
-            "armor": 50
+            "character": "raze",
+            "armor": 50,
+            "kills": 7,
+            "deaths": 3,
+            "assists": 4,
+            "hp": 120
         }
     },
     "player_2": {
         "token": "BO3iZbRuutAC",
         "is_registered": true,
-        "last_updated": 1786629266904,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[FNC] Alfajer",
             "agent": "killjoy",
@@ -89,14 +94,18 @@
             "tag": "fln",
             "riot_id": "Igh v1n1 #fln",
             "slot": 2,
-            "character": "Omen",
-            "armor": 50
+            "character": "sova",
+            "armor": 50,
+            "kills": 4,
+            "deaths": 4,
+            "assists": 6,
+            "hp": 0
         }
     },
     "player_3": {
         "token": "tssEEXUyVlOw",
         "is_registered": true,
-        "last_updated": 1786629266905,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[FNC] Chronicle",
             "agent": "breach",
@@ -118,14 +127,18 @@
             "tag": "kid",
             "riot_id": "Addythegoat #kid",
             "slot": 3,
-            "character": "Killjoy",
-            "armor": 50
+            "character": "cypher",
+            "armor": 50,
+            "kills": 5,
+            "deaths": 2,
+            "assists": 2,
+            "hp": 65
         }
     },
     "player_4": {
         "token": "E5py5gH0eYty",
         "is_registered": true,
-        "last_updated": 1786629266905,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[FNC] Leo",
             "agent": "sova",
@@ -147,14 +160,18 @@
             "tag": "Easy",
             "riot_id": "馬特卡特山羊#Easy",
             "slot": 4,
-            "character": "Breach",
-            "armor": 50
+            "character": "kayo",
+            "armor": 50,
+            "kills": 3,
+            "deaths": 3,
+            "assists": 7,
+            "hp": 100
         }
     },
     "player_5": {
         "token": "Jm8p0vPGOadu",
         "is_registered": true,
-        "last_updated": 1786629266905,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[SEN] TenZ",
             "agent": "omen",
@@ -176,14 +193,18 @@
             "tag": "diff",
             "riot_id": "Knight #diff",
             "slot": 5,
-            "character": "Reyna",
-            "armor": 0
+            "character": "omen",
+            "armor": 0,
+            "kills": 3,
+            "deaths": 5,
+            "assists": 4,
+            "hp": 0
         }
     },
     "player_6": {
         "token": "U8o5cmidKepp",
         "is_registered": true,
-        "last_updated": 1786629266905,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[SEN] zekken",
             "agent": "raze",
@@ -205,14 +226,18 @@
             "tag": "diff",
             "riot_id": "Vajra #diff",
             "slot": 6,
-            "character": "Raze",
-            "armor": 0
+            "character": "yeti_jett",
+            "armor": 0,
+            "kills": 6,
+            "deaths": 6,
+            "assists": 1,
+            "hp": 0
         }
     },
     "player_7": {
         "token": "pMcI01u83OGZ",
         "is_registered": true,
-        "last_updated": 1786629266905,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[SEN] Sacy",
             "agent": "fade",
@@ -234,14 +259,18 @@
             "tag": "iwin",
             "riot_id": "Salamander#iwin",
             "slot": 7,
-            "character": "Viper",
-            "armor": 25
+            "character": "killjoy",
+            "armor": 25,
+            "kills": 4,
+            "deaths": 5,
+            "assists": 2,
+            "hp": 30
         }
     },
     "player_8": {
         "token": "hAkerHVS8F3E",
         "is_registered": true,
-        "last_updated": 1786629266905,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[SEN] johnqt",
             "agent": "cypher",
@@ -263,14 +292,18 @@
             "tag": "diff",
             "riot_id": "Hmza #diff",
             "slot": 8,
-            "character": "Cypher",
-            "armor": 0
+            "character": "viper",
+            "armor": 0,
+            "kills": 2,
+            "deaths": 6,
+            "assists": 3,
+            "hp": 0
         }
     },
     "player_9": {
         "token": "Y3im7MUP9pzj",
         "is_registered": true,
-        "last_updated": 1786629266905,
+        "last_updated": 1787045122004,
         "data": {
             "username": "[SEN] Zellsis",
             "agent": "kayo",
@@ -292,8 +325,12 @@
             "tag": "faked",
             "riot_id": "Desert#faked",
             "slot": 9,
-            "character": "Fade",
-            "armor": 0
+            "character": "fade",
+            "armor": 0,
+            "kills": 1,
+            "deaths": 6,
+            "assists": 2,
+            "hp": 0
         }
     }
 }
