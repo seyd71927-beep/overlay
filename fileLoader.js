@@ -850,7 +850,10 @@ class fileLoader {
 
         // Extract team names if available
         let teamNames = [];
-        if (Array.isArray(mapBanData.teams) && mapBanData.teams.length >= 2) {
+        if (mapBanData.team1Name || mapBanData.team2Name) {
+            if (mapBanData.team1Name) teamNames[0] = String(mapBanData.team1Name).trim();
+            if (mapBanData.team2Name) teamNames[1] = String(mapBanData.team2Name).trim();
+        } else if (Array.isArray(mapBanData.teams) && mapBanData.teams.length >= 2) {
             const t1 = typeof mapBanData.teams[0] === 'object' ? mapBanData.teams[0]?.name : mapBanData.teams[0];
             const t2 = typeof mapBanData.teams[1] === 'object' ? mapBanData.teams[1]?.name : mapBanData.teams[1];
             if (t1 && String(t1).trim()) teamNames[0] = String(t1).trim();
@@ -877,9 +880,11 @@ class fileLoader {
             }
         }
 
-        // Extract picks and bans from bans array, logs, or picks array
+        // Extract picks and bans from bans array, banMapList, logs, or picks array
         let rawItems = [];
-        if (Array.isArray(mapBanData.bans) && mapBanData.bans.length > 0) {
+        if (Array.isArray(mapBanData.banMapList) && mapBanData.banMapList.length > 0) {
+            rawItems = mapBanData.banMapList;
+        } else if (Array.isArray(mapBanData.bans) && mapBanData.bans.length > 0) {
             rawItems = mapBanData.bans;
         } else if (Array.isArray(mapBanData.log) && mapBanData.log.length > 0) {
             rawItems = mapBanData.log;
@@ -889,6 +894,8 @@ class fileLoader {
             rawItems = mapBanData.picks;
         } else if (Array.isArray(mapBanData.events) && mapBanData.events.length > 0) {
             rawItems = mapBanData.events;
+        } else if (Array.isArray(mapBanData.maps) && mapBanData.maps.length > 0) {
+            rawItems = mapBanData.maps;
         } else if (Array.isArray(mapBanData)) {
             rawItems = mapBanData;
         }
@@ -947,13 +954,11 @@ class fileLoader {
                     }
                 }
 
-                // Clean map name & ensure uniqueness
-                mapName = mapName.replace(/[^a-z0-9]/g, '');
-                if (!mapName || usedMaps.has(mapName)) {
-                    const availableMap = mapPool.find(m => !usedMaps.has(m)) || 'sunset';
-                    mapName = availableMap;
+                // Clean map name while preserving exact map name from MapBan payload
+                mapName = mapName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (!mapName) {
+                    mapName = 'ascent';
                 }
-                usedMaps.add(mapName);
 
                 parsedPicks.push([mapName, action]);
             }

@@ -94,12 +94,14 @@ class MapPickVetoOverlay {
                 sideBadgeHtml = `<div class="map-picked-by-side pending-side"><i class="fa-solid fa-clock" style="margin-right: 6px;"></i> PENDING</div>`;
             }
 
+            const mapDisplayName = mapName.charAt(0).toUpperCase() + mapName.slice(1);
+
             html += `
             <div class="map-pick-card ${cardTypeClass}" style="animation-delay: ${i * 80}ms;">
                 <div class="map-pick-side">${headerText}</div>
                 <div class="map-pick-image">
-                    <div class="map-image map-${mapName}" style="background-image: url('../visual_assets/map_images/${mapName}.webp'), url('/visual_assets/map_images/${mapName}.webp'); background-size: cover; background-position: center;"></div>
-                    <div class="map-name-label">${mapName}</div>
+                    <div class="map-image map-${mapName}" style="background-image: url('../visual_assets/map_images/${mapName}.webp'), url('/visual_assets/map_images/${mapName}.webp'), url('../visual_assets/map_images/haven.webp'); background-size: cover; background-position: center;"></div>
+                    <div class="map-name-label">${mapDisplayName}</div>
                     ${sideBadgeHtml}
                 </div>
             </div>`;
